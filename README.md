@@ -29,6 +29,7 @@ NODE_PATH=$(npm root -g) node tests/play-test.js
 - 진행 기록은 브라우저 localStorage(`wordchain-v2`)에 수준별로 저장
 
 ## 배포
+- 웹: https://miagua7801.github.io/wordchain/ — `main`에 push하면 GitHub Actions(`.github/workflows/deploy.yml`)가 `build.py`를 실행해 자동 배포
 - 아티팩트: https://claude.ai/artifact/NGfWkdm9cd8TZwe1x4yiXg (비공개 — 공유 메뉴에서 공개 설정 필요)
 - 학생용: `dist/word-chain-challenge.html`을 학교 홈페이지·구글 사이트 등에 업로드
 
