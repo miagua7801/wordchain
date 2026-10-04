@@ -1,0 +1,398 @@
+<title>Word Chain Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Lexend:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 한 화면 게임 — 위에 진행 상태, 가운데 컴퓨터 단어 카드, 아래에 답 영역. 단어들은 "기차 칸"처럼 이어짐 */
+:root{
+  --bg:#eef3f6; --surface:#ffffff; --surface-2:#e2eaf0; --ink:#17323f; --muted:#5b7280;
+  --accent:#0f6e7a; --accent-ink:#ffffff; --link:#e9a23b; --link-soft:#fbe6c2;
+  --good:#2e8b57; --good-soft:#d8f0e2; --bad:#c2453a; --bad-soft:#f8dcd8; --line:#c9d6de;
+  --shadow:0 2px 0 rgba(23,50,63,.12);
+  --f-display:"Jua","Noto Sans KR",system-ui,sans-serif;
+  --f-word:"Lexend","Noto Sans KR",system-ui,sans-serif;
+  --f-body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1c22; --surface:#172a33; --surface-2:#203741; --ink:#e4eef2; --muted:#9db3bd;
+  --accent:#4fb8c4; --accent-ink:#06262b; --link:#f0b456; --link-soft:#3d3220;
+  --good:#5cc489; --good-soft:#173a29; --bad:#ef7a6f; --bad-soft:#40211e; --line:#2c4651;
+  --shadow:0 2px 0 rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1c22; --surface:#172a33; --surface-2:#203741; --ink:#e4eef2; --muted:#9db3bd;
+  --accent:#4fb8c4; --accent-ink:#06262b; --link:#f0b456; --link-soft:#3d3220;
+  --good:#5cc489; --good-soft:#173a29; --bad:#ef7a6f; --bad-soft:#40211e; --line:#2c4651;
+  --shadow:0 2px 0 rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 40px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+.word{font-family:var(--f-word)}
+
+/* ===== Home ===== */
+.hero{display:flex;flex-direction:column;gap:6px;margin-block:8px 22px}
+.hero h1{font-size:clamp(30px,6vw,44px);line-height:1.15}
+.hero p{margin:0;color:var(--muted)}
+.demo-chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:10px}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.lv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}
+.lv:not(:disabled):hover{transform:translateY(-2px);border-color:var(--accent)}
+.lv:disabled{cursor:not-allowed;opacity:.62}
+.lv .num{grid-row:span 3;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-display);font-size:26px;background:var(--surface-2);color:var(--accent)}
+.lv.cleared .num{background:var(--accent);color:var(--accent-ink)}
+.lv h3{font-size:21px}
+.lv .desc{color:var(--muted);font-size:14px}
+.lv .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:var(--surface-2);font-weight:500;white-space:nowrap}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.lock{background:var(--surface-2);color:var(--muted)}
+.rules{margin-top:22px;background:var(--surface);border-radius:14px;padding:16px 18px;border:1px solid var(--line)}
+.rules h2{font-size:20px;margin-bottom:6px}
+.rules ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.linkbtn{background:none;border:none;padding:4px 2px;text-decoration:underline;color:var(--muted)}
+
+/* ===== Tiles (기차 칸) ===== */
+.tile{display:inline-flex;align-items:baseline;font-family:var(--f-word);font-weight:600;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:3px 10px;font-size:17px;letter-spacing:.02em}
+.tile .first,.tile .last{color:var(--ink);background:var(--link-soft);border-radius:4px;padding:0 2px}
+.tile .last{background:var(--link);color:#2a1a00}
+.tile.me{border-color:var(--accent)}
+.joint{width:14px;height:4px;background:var(--link);border-radius:2px;flex:none}
+
+/* ===== Game ===== */
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.back{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:6px 12px;font-weight:500}
+.topbar h2{font-size:22px;flex:1;min-width:0}
+.status{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.status .label{font-size:13px;color:var(--muted);margin-bottom:4px}
+.dots{display:flex;flex-wrap:wrap;gap:5px}
+.dot{width:20px;height:20px;border-radius:6px;background:var(--surface-2);border:2px solid var(--line);transition:background .2s}
+.dot.on{background:var(--good);border-color:var(--good)}
+.hints{display:flex;gap:4px;justify-content:flex-end}
+.bulb{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:var(--link-soft);border:2px solid var(--link)}
+.bulb.used{background:var(--surface-2);border-color:var(--line);filter:grayscale(1);opacity:.5}
+.timer{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin-top:-6px;margin-bottom:14px}
+.timer > i{display:block;height:100%;background:var(--accent);width:100%;transition:width .25s linear}
+.timer.warn > i{background:var(--bad)}
+
+.chainbox{overflow-x:auto;padding:4px 2px 10px;margin-bottom:6px}
+.chain{display:flex;align-items:center;gap:4px;width:max-content}
+.chain .tile{font-size:15px}
+
+.cpu{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;box-shadow:var(--shadow)}
+.cpu .who{font-size:13px;color:var(--muted)}
+.cpu .emoji{font-size:54px;line-height:1.1;margin-top:4px}
+.cpu .big{font-family:var(--f-word);font-weight:700;font-size:clamp(36px,9vw,54px);letter-spacing:.03em;line-height:1.15;margin-top:2px;word-break:break-word}
+.cpu .big .last{color:#2a1a00;background:var(--link);border-radius:8px;padding:0 6px;margin-left:2px}
+.cpu .ko{color:var(--muted);font-size:17px}
+.speak{margin-top:6px;background:var(--surface-2);border:none;border-radius:999px;padding:4px 12px;font-size:14px}
+.ask{text-align:center;margin:16px 0 10px;font-size:18px}
+.ask b{font-family:var(--f-word);font-size:24px;color:#2a1a00;background:var(--link);border-radius:6px;padding:0 8px}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.choice{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:var(--shadow);transition:transform .1s,border-color .1s}
+.choice:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
+.choice .e{font-size:40px;line-height:1.1}
+.choice .w{font-family:var(--f-word);font-weight:700;font-size:24px}
+.choice .k{font-size:14px;color:var(--muted)}
+.choice.gone{visibility:hidden}
+.choice.right{border-color:var(--good);background:var(--good-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+
+.typing{display:flex;gap:8px}
+.typing input{flex:1;min-width:0;font-family:var(--f-word);font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn{border:none;border-radius:12px;padding:10px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink);font-size:16px;box-shadow:var(--shadow)}
+.btn.soft{background:var(--surface-2);color:var(--ink)}
+.btn.hint{background:var(--link-soft);color:var(--ink);border:2px solid var(--link)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.msg{min-height:28px;text-align:center;margin-top:10px;font-weight:500}
+.msg.bad{color:var(--bad)} .msg.good{color:var(--good)} .msg.info{color:var(--muted)}
+.hintbox{margin-top:10px;background:var(--link-soft);border:2px dashed var(--link);border-radius:12px;padding:8px 12px;text-align:center}
+.hintbox .pat{font-family:var(--f-word);font-weight:700;font-size:24px;letter-spacing:.18em}
+
+/* ===== Overlay ===== */
+.overlay{position:fixed;inset:0;background:rgba(10,25,32,.55);display:grid;place-items:center;padding:16px;z-index:10}
+.card{background:var(--surface);color:var(--ink);border-radius:18px;padding:22px 20px;max-width:420px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.card .big-e{font-size:56px;line-height:1.1}
+.card h3{font-size:26px;margin:6px 0}
+.card p{margin:6px 0;color:var(--muted)}
+.card .ex{font-family:var(--f-word);font-weight:700;color:var(--ink)}
+.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:440px){.status{grid-template-columns:1fr}.hints{justify-content:flex-start}.status .label[style]{text-align:left!important}.topbar{justify-content:space-between}.topbar h2{order:3;flex-basis:100%}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+/*__VOCAB__*/
+</script>
+<script>
+(function(){
+// ---------- 단어장 만들기 ----------
+const DICT = new Map();
+function load(str, tier){
+  str.split(/[|\n]/).map(s=>s.trim()).filter(Boolean).forEach(e=>{
+    const sp=e.indexOf(' '); const w=e.slice(0,sp).toLowerCase(); let rest=e.slice(sp+1).trim(); let emoji='';
+    if(!DICT.has(w)) DICT.set(w,{w,ko:rest,emoji,tier});
+  });
+}
+load(VOCAB_E,1); load(VOCAB_M,2);
+DICT.forEach(d=>{ if(EMOJI[d.w]) d.emoji=EMOJI[d.w]; });
+const ALL=[...DICT.values()].filter(x=>/^[a-z]{3,}$/.test(x.w));
+const byTier = t => ALL.filter(x=>x.tier<=t);
+
+// ---------- 단계 설정 ----------
+const LEVELS=[
+  {id:1,name:'단어 보고 고르기',desc:'객관식: 이어지는 단어를 4개 중에서 골라요. 마지막 글자로 끝나는 함정 보기를 조심!',mode:'choice',n:4,pool:1,cpu:1,goal:5,min:3},
+  {id:2,name:'직접 쓰기 · 기초',desc:'주관식: 이어지는 단어를 직접 써요. 3글자 이상. 컴퓨터는 초등 수준 단어를 내요.',mode:'type',pool:1,cpu:1,goal:6,min:3},
+  {id:3,name:'직접 쓰기 · 중학',desc:'주관식: 4글자 이상 단어를 써요. 컴퓨터가 중학교 단어도 내요.',mode:'type',pool:2,cpu:2,goal:8,min:4},
+  {id:4,name:'스피드 챌린지',desc:'주관식: 20초 안에 4글자 이상 단어를 써요.',mode:'type',pool:2,cpu:2,goal:10,min:4,time:20}
+];
+const HINTS=3;
+
+// ---------- 저장 ----------
+const KEY='wordchain-v1';
+let save={unlocked:1,best:{},cleared:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.unlocked) save=Object.assign(save,s);}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+
+// ---------- 도구 ----------
+const $app=document.getElementById('app');
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const last=w=>w[w.length-1];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let soundOn=true;
+function speak(w,queue){ if(!soundOn) return; try{ const u=new SpeechSynthesisUtterance(w); u.lang='en-US'; u.rate=.85; if(!queue) speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
+function tileHTML(w,me){ if(w.length===1) return `<span class="tile${me?' me':''}"><span class="last">${esc(w)}</span></span>`;
+  return `<span class="tile${me?' me':''}"><span class="first">${esc(w[0])}</span>${esc(w.slice(1,-1))}<span class="last">${esc(last(w))}</span></span>`;}
+
+// ---------- 홈 화면 ----------
+function home(){
+  stopTimer();
+  const demo=['apple','egg','green','nose'];
+  $app.innerHTML=`
+  <header class="hero">
+    <h1>영어 끝말잇기 챌린지</h1>
+    <p>컴퓨터가 낸 단어의 <b>마지막 글자</b>로 시작하는 영어 단어를 이어 가세요.</p>
+    <div class="demo-chain" aria-label="예시: apple, egg, green, nose">${demo.map((w,i)=>(i?'<span class="joint"></span>':'')+tileHTML(w)).join('')}</div>
+  </header>
+  <section class="levels">${LEVELS.map(L=>{
+    const open=L.id<=save.unlocked, cleared=save.cleared[L.id], best=save.best[L.id]||0;
+    return `<button class="lv${cleared?' cleared':''}" data-lv="${L.id}" ${open?'':'disabled'} aria-label="${L.id}단계 ${L.name}${open?'':' (잠김)'}">
+      <span class="num">${open?L.id:'🔒'}</span>
+      <h3>${L.id}단계 · ${L.name}</h3>
+      <span class="desc">${L.desc}</span>
+      <span class="meta">
+        <span class="chip">🎯 연속 ${L.goal}번 성공</span>
+        <span class="chip">💡 힌트 ${HINTS}번</span>
+        ${cleared?'<span class="chip ok">✔ 통과</span>':''}
+        ${open&&best?`<span class="chip">최고 ${best}연속</span>`:''}
+        ${open?'':`<span class="chip lock">${L.id-1}단계를 통과하면 열려요</span>`}
+      </span></button>`;}).join('')}
+  </section>
+  <section class="rules">
+    <h2>규칙</h2>
+    <ul>
+      <li>컴퓨터 단어의 마지막 글자로 시작하는 단어를 내요. (예: tige<b>r</b> → <b>r</b>abbit)</li>
+      <li>틀리거나, 이미 나온 단어를 쓰거나, 시간이 지나면 연속 기록이 0이 돼요.</li>
+      <li>단계마다 목표만큼 <b>틀리지 않고 연속으로</b> 성공하면 다음 단계가 열려요.</li>
+      <li>막히면 💡 힌트! 한 번 도전할 때 최대 ${HINTS}번까지 쓸 수 있어요.</li>
+    </ul>
+  </section>
+  <div class="foot">
+    <span>진행 기록은 이 기기의 브라우저에 저장돼요.</span>
+    <span><button class="linkbtn" id="reset">기록 지우기</button> · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button></span>
+  </div>`;
+  $app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>start(+b.dataset.lv));
+  confirmBtn('#reset','정말 지울까요? 한 번 더 누르세요',()=>{save={unlocked:1,best:{},cleared:{}};persist();home();});
+  confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
+}
+function confirmBtn(sel,txt,fn){const b=$app.querySelector(sel);const orig=b.textContent;let armed=false,t;
+  b.onclick=()=>{if(armed){clearTimeout(t);fn();return;}armed=true;b.textContent=txt;t=setTimeout(()=>{armed=false;b.textContent=orig;},3000);};}
+
+// ---------- 게임 상태 ----------
+let G=null, timerId=null;
+function start(id){
+  const L=LEVELS[id-1];
+  const pool=byTier(L.pool).filter(x=>x.w.length>=L.min);
+  G={L,pool,cpuPool:byTier(L.cpu),streak:0,hints:HINTS,used:new Set(),chain:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0};
+  newChain();
+}
+function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
+// 컴퓨터가 낼 단어: 학생이 이어 갈 수 있는 끝 글자로 끝나는 단어
+function pickCpu(firstCh){
+  let cands=G.cpuPool.filter(x=>!G.used.has(x.w)&&(!firstCh||x.w[0]===firstCh)&&startsWith(last(x.w),G.pool).length>=(G.L.mode==='type'?3:1));
+  if(!cands.length) return null;
+  return rnd(cands);
+}
+function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
+function setCpu(c){
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,me:false}); G.hintStep=0; G.removed=new Set(); G.locked=false;
+  G.options = G.L.mode==='choice' ? makeOptions() : null;
+  render(); speak(c.w,true);
+  if(G.L.time) startTimer();
+}
+function makeOptions(){
+  const ch=last(G.cur.w);
+  const good=startsWith(ch,G.pool).filter(x=>startsWith(last(x.w),G.cpuPool).length>0);
+  const right=rnd(good.length?good:startsWith(ch,G.pool));
+  const wrongAll=G.pool.filter(x=>x.w[0]!==ch&&x.w!==G.cur.w);
+  const wrong=[];
+  if(G.L.id===1){ const trap=wrongAll.filter(x=>last(x.w)===ch); if(trap.length) wrong.push(rnd(trap)); }
+  shuffle(wrongAll).forEach(x=>{ if(wrong.length<G.L.n-1&&!wrong.includes(x)&&x.w[0]!==wrong[0]?.w[0]) wrong.push(x); });
+  return shuffle([right,...wrong]);
+}
+
+// ---------- 화면 그리기 ----------
+function render(){
+  const L=G.L, c=G.cur, ch=last(c.w);
+  const chain=G.chain.slice(-8);
+  $app.innerHTML=`
+  <div class="topbar">
+    <button class="back" id="back">← 단계 선택</button>
+    <h2>${L.id}단계 · ${L.name}</h2>
+    <button class="back" id="snd" aria-pressed="${soundOn}">${soundOn?'🔊 소리 켬':'🔈 소리 끔'}</button>
+  </div>
+  <div class="status">
+    <div><div class="label">연속 성공 ${G.streak} / ${L.goal}</div>
+      <div class="dots">${Array.from({length:L.goal},(_,i)=>`<span class="dot${i<G.streak?' on':''}"></span>`).join('')}</div></div>
+    <div><div class="label" style="text-align:right">힌트 ${G.hints}개 남음</div>
+      <div class="hints">${Array.from({length:HINTS},(_,i)=>`<span class="bulb${i>=G.hints?' used':''}">💡</span>`).join('')}</div></div>
+  </div>
+  ${L.time?`<div class="timer" id="tbar"><i style="width:${G.timeLeft/L.time*100}%"></i></div>`:''}
+  ${G.chain.length>1?`<div class="chainbox"><div class="chain">${(G.chain.length>8?'<span class="tile">…</span><span class="joint"></span>':'')+chain.map((x,i)=>(i?'<span class="joint"></span>':'')+tileHTML(x.w,x.me)).join('')}</div></div>`:''}
+  <div class="cpu pop">
+    <div class="who">🤖 컴퓨터</div>
+    ${c.emoji?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
+    <div class="big">${esc(c.w.slice(0,-1))}<span class="last">${esc(ch)}</span></div>
+    <div class="ko">${esc(c.ko)}</div>
+    <button class="speak" id="say">🔊 듣기</button>
+  </div>
+  <div class="ask"><b>${ch.toUpperCase()}</b> (${ch}) 로 시작하는 단어는?</div>
+  <div id="answer"></div>
+  <div id="hintArea"></div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <div class="row"><button class="btn hint" id="hintBtn" ${G.hints<=0?'disabled':''}>💡 힌트 쓰기 (${G.hints})</button></div>`;
+  $app.querySelector('#back').onclick=home;
+  $app.querySelector('#say').onclick=()=>{const o=soundOn;soundOn=true;speak(c.w);soundOn=o;};
+  $app.querySelector('#snd').onclick=()=>{soundOn=!soundOn;const b=$app.querySelector('#snd');b.textContent=soundOn?'🔊 소리 켬':'🔈 소리 끔';b.setAttribute('aria-pressed',soundOn);};
+  $app.querySelector('#hintBtn').onclick=useHint;
+  const ans=$app.querySelector('#answer');
+  if(L.mode==='choice'){
+    ans.innerHTML=`<div class="choices">${G.options.map((o,i)=>`<button class="choice${G.removed.has(o.w)?' gone':''}" data-i="${i}" ${G.removed.has(o.w)?'tabindex="-1"':''}>
+      ${L.id===1&&o.emoji?`<span class="e" aria-hidden="true">${o.emoji}</span>`:''}<span class="w">${esc(o.w)}</span><span class="k">${esc(o.ko)}</span></button>`).join('')}</div>`;
+    ans.querySelectorAll('.choice').forEach(b=>b.onclick=()=>pickChoice(+b.dataset.i,b));
+  }else{
+    ans.innerHTML=`<form class="typing" id="f" autocomplete="off"><input id="inp" type="text" inputmode="latin" autocapitalize="off" spellcheck="false" placeholder="${ch}..." aria-label="${ch}로 시작하는 영어 단어"><button class="btn" type="submit">내기</button></form>`;
+    const inp=ans.querySelector('#inp'); inp.focus();
+    ans.querySelector('#f').onsubmit=e=>{e.preventDefault(); submitTyped(inp.value);};
+  }
+  if(G.hintStep>0) showHint(false);
+}
+function msg(t,cls){const m=$app.querySelector('#msg'); if(m){m.textContent=t;m.className='msg '+(cls||'');}}
+
+// ---------- 정답 처리 ----------
+function pickChoice(i,btn){
+  if(G.locked) return; const o=G.options[i];
+  if(o.w[0]===last(G.cur.w)){ btn.classList.add('right'); success(o); }
+  else { btn.classList.add('wrong'); speak(o.w); const r=G.options.find(x=>x.w[0]===last(G.cur.w)); fail(`<b>${esc(o.w)}</b>는 <b>${esc(o.w[0])}</b>로 시작해요.`, r); }
+}
+function submitTyped(raw){
+  if(G.locked) return;
+  const w=raw.trim().toLowerCase(); const ch=last(G.cur.w); const inp=$app.querySelector('#inp');
+  if(!w){msg('단어를 입력하세요.','info');return;}
+  if(!/^[a-z]+$/.test(w)){msg('영어 알파벳만 써 주세요.','info');return;}
+  if(DICT.has(w)&&(w[0]!==ch||G.used.has(w))) speak(w);
+  if(w[0]!==ch){ fail(`<b>${esc(w)}</b>는 <b>${esc(w[0])}</b>로 시작해요. <b>${esc(ch)}</b>로 시작해야 해요.`, example(ch)); return; }
+  if(G.used.has(w)){ fail(`<b>${esc(w)}</b>는 이번 끝말잇기에서 이미 나온 단어예요.`, example(ch)); return; }
+  if(w.length<G.L.min){ msg(`${G.L.min}글자 이상 단어를 써 주세요.`,'info'); inp.select(); return; }
+  const d=DICT.get(w);
+  if(!d){ msg(`"${w}"는 이 앱 단어장에 없어요. 철자를 확인하거나 다른 단어를 써 보세요. (기록은 그대로)`,'info'); inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),400); inp.select(); return; }
+  success(d);
+}
+function example(ch){ const c=startsWith(ch,G.pool); return c.length?rnd(c):null; }
+function success(o){
+  G.locked=true; stopTimer(); speak(o.w); G.used.add(o.w); G.chain.push({w:o.w,me:true}); G.streak++;
+  if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
+  msg(`좋아요! ${o.w} = ${o.ko}`,'good');
+  if(G.streak>=G.L.goal){ setTimeout(passLevel,600); return; }
+  setTimeout(()=>{
+    const next=pickCpu(last(o.w));
+    if(!next){ toast('🤖','컴퓨터가 졌어요!',`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();G.chain=[];setCpu(pickCpu(null));}); return; }
+    setCpu(next);
+  },1300);
+}
+function fail(why,ex){
+  G.locked=true; stopTimer(); const had=G.streak; G.streak=0;
+  const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(ex.w)}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
+  setTimeout(()=>toast('😵','아쉬워요!',`<p>${why}</p>${exHTML}<p>연속 기록 ${had} → 0. 다시 도전해요!</p>`,'다시 시작',newChain),450);
+}
+function passLevel(){
+  const L=G.L; save.cleared[L.id]=true; if(save.unlocked<L.id+1) save.unlocked=Math.min(LEVELS.length,L.id+1); persist();
+  const nextL=LEVELS[L.id];
+  const card=toast('🏆',`${L.id}단계 통과!`,`<p>틀리지 않고 ${L.goal}번 연속 성공했어요.</p>${nextL?`<p><b>${nextL.id}단계 · ${nextL.name}</b>이 열렸어요.</p>`:'<p>모든 단계를 통과했어요! 최고예요.</p>'}`,
+    nextL?`${nextL.id}단계 도전`:'처음 화면',()=>nextL?start(nextL.id):home(),'이 단계 더 연습',()=>start(L.id));
+}
+function toast(e,title,body,label,fn,label2,fn2){
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML=`<div class="card pop" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="big-e">${e}</div><h3>${title}</h3><div>${body.startsWith('<')?body:'<p>'+body+'</p>'}</div>
+    <div class="row">${label2?`<button class="btn soft" id="ov2">${label2}</button>`:''}<button class="btn" id="ov1">${label}</button></div></div>`;
+  document.body.appendChild(ov);
+  const b1=ov.querySelector('#ov1'); b1.focus();
+  b1.onclick=()=>{ov.remove();fn();};
+  if(label2) ov.querySelector('#ov2').onclick=()=>{ov.remove();fn2();};
+  return ov;
+}
+
+// ---------- 힌트 ----------
+function useHint(){
+  if(G.locked||G.hints<=0) return;
+  const ch=last(G.cur.w);
+  if(G.L.mode==='choice'){
+    const wrongs=G.options.filter(o=>o.w[0]!==ch&&!G.removed.has(o.w));
+    if(wrongs.length<=1&&G.hintStep>0){ msg('이미 힌트를 썼어요. 남은 2개 중에서 골라 보세요!','info'); return; }
+    // 오답을 지워 2개만 남기기
+    shuffle(wrongs).slice(0,wrongs.length-1).forEach(o=>G.removed.add(o.w));
+  }else{
+    const maxStep=3;
+    if(G.hintStep>=maxStep){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
+    if(!G.hintWord||G.hintWord.w[0]!==ch||G.used.has(G.hintWord.w)) G.hintWord=rnd(startsWith(ch,G.pool).filter(x=>x.w.length>=G.L.min));
+    if(G.L.time) G.timeLeft=Math.min(G.L.time,G.timeLeft+5);
+  }
+  G.hints--; G.hintStep++;
+  const keep=$app.querySelector('#inp')?.value||'';
+  render();
+  const inp=$app.querySelector('#inp'); if(inp){inp.value=keep;}
+}
+function showHint(){
+  const area=$app.querySelector('#hintArea'); const ch=last(G.cur.w);
+  if(G.L.mode==='choice'){ area.innerHTML=`<div class="hintbox">💡 틀린 보기를 지웠어요. <b>${ch}</b>로 시작하는 단어를 찾아보세요!</div>`; return; }
+  const h=G.hintWord; if(!h) return;
+  const shown=G.hintStep; // 1: 뜻 + 첫 글자, 2: 두 글자, 3: 세 글자
+  const pat=h.w.split('').map((c,i)=>i<shown?c:'_').join(' ');
+  area.innerHTML=`<div class="hintbox">💡 <b>${esc(h.ko)}</b> ${h.emoji||''} — ${h.w.length}글자${G.L.time?' (+5초)':''}<div class="pat word">${esc(pat)}</div>${shown<3?'<small>힌트를 한 번 더 쓰면 글자가 하나 더 보여요.</small>':''}</div>`;
+}
+
+// ---------- 타이머 ----------
+function startTimer(){
+  stopTimer(); G.timeLeft=G.L.time; const t0=Date.now(); let lastTick=t0;
+  timerId=setInterval(()=>{
+    const now=Date.now(); G.timeLeft-=(now-lastTick)/1000; lastTick=now;
+    const bar=$app.querySelector('#tbar');
+    if(bar){bar.firstElementChild.style.width=Math.max(0,G.timeLeft/G.L.time*100)+'%'; bar.classList.toggle('warn',G.timeLeft<6);}
+    if(G.timeLeft<=0){ stopTimer(); fail('⏰ 시간이 다 됐어요.', example(last(G.cur.w))); }
+  },200);
+}
+function stopTimer(){ if(timerId){clearInterval(timerId);timerId=null;} }
+
+home();
+})();
+</script>
