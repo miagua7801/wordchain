@@ -155,7 +155,9 @@ function load(str, tier){
     if(!DICT.has(w)) DICT.set(w,{w,ko:rest,emoji,tier});
   });
 }
-load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2);
+load(VOCAB_NUM,1); load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2); load(VOCAB_WF_E,1); load(VOCAB_WF_M,2);
+// 수 단어(one~thousand)는 학생 답으로만 인정하고 컴퓨터는 내지 않음
+const NUMW=new Set(VOCAB_NUM.split(/[|\n]/).map(s=>s.trim().split(' ')[0]).filter(Boolean));
 // 학교 교과서(동아 윤정미) 단어: 교과서 뜻으로 맞추고 우선 출제 표시. 새 단어는 중1→초등 수준, 중2→중학 수준
 VOCAB_DONGA.forEach(([w,ko,book,page])=>{ const d=DICT.get(w);
   if(d){ d.ko=ko; d.tb=book; d.page=page; } else DICT.set(w,{w,ko,emoji:'',tier:book,tb:book,page}); });
@@ -320,8 +322,8 @@ let G=null, timerId=null;
 function start(id){
   const L=LEVELS[id-1];
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp);
-  // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)는 내지 않음
-  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0};
+  // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
+  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0};
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
@@ -329,6 +331,9 @@ function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w)
 function pickCpu(firstCh){
   let cands=G.cpuPool.filter(x=>!G.used.has(x.w)&&(!firstCh||x.w[0]===firstCh)&&startsWith(last(x.w),G.pool).length>=(G.L.mode==='type'?3:1));
   if(!cands.length) return null;
+  // 학생이 시작할 글자가 겹치지 않게: 최근 두 번 요구한 글자로 끝나는 단어는 피함 (없으면 허용)
+  const recent=G.asked.slice(-2), fresh=cands.filter(x=>!recent.includes(last(x.w)));
+  if(fresh.length) cands=fresh;
   // 이어 갈 단어가 적은 끝 글자(특히 y)는 덜 나오게
   const wt=x=>{const ch=last(x.w);let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k*TBW(x);};
   const ws=cands.map(wt), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
@@ -337,7 +342,7 @@ function pickCpu(firstCh){
 }
 function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
 function setCpu(c){
-  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,me:false}); G.hintStep=0; G.removed=new Set(); G.locked=false;
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false;
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
   if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }

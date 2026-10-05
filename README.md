@@ -9,6 +9,8 @@
   - `VOCAB_M` 중학교 수준
   - `VOCAB_TB` 중학교 교과서 자주 나오는 단어 보충
   - `VOCAB_DONGA` 학교 교과서(동아출판 2022 개정 중학 영어 윤정미 1·2) New Words 442개(중2 217 · 중1 225) — 교과서 뜻·쪽수 포함
+  - `VOCAB_NUM` 수 단어(one~twenty, thirty~ninety, hundred, thousand) — 학생 답으로만 인정, 컴퓨터는 내지 않음
+  - `VOCAB_WF_E`·`VOCAB_WF_M` 접미사로 만든 단어(동사+er/r 사람·도구, 명사+al, 명사+y/ly, 형용사+ly, 동사+ment, 형용사+ness) — 뜻 뒤에 `(sing+er)`처럼 원래 단어 표시
   - `EMOJI` 그림 단어
 - `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성
 - `tests/play-test.js` — Playwright로 도전 수준 2단계를 자동으로 40턴 플레이하며 "이미 나온 단어" 오판 여부 확인
@@ -28,6 +30,7 @@ Windows에서는 `python build.py` (Python 3.12, Node.js LTS, `npm i -g playwrig
 - 규칙 변화 비교급·최상급(bigger, happiest 등)은 학생 답으로는 인정, 컴퓨터 출제·보기·힌트에는 쓰지 않음 (better/best 등 불규칙은 출제 가능)
 - y로 끝나는 단어는 컴퓨터 출제 빈도 1/4
 - 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)는 내지 않음
+- 학생이 시작할 글자가 겹치지 않도록, 컴퓨터는 최근 두 번 요구한 글자로 끝나는 단어를 피함(다른 후보가 없을 때만 허용)
 - 스피드 챌린지 기본 제한 시간: 보통 30초 · 도전 25초. 홈 화면과 게임 화면의 −5초/+5초 버튼으로 10~90초 조절(수준·단계별 저장). 게임 중 늘리기는 바로, 줄이기는 다음 단어부터 적용
 - 영문 입력: 휴대폰은 `inputmode="email"`로 영문 자판이 뜸. PC에서 한글 자판으로 치면 같은 자리의 영문 글자로 자동 변환(두벌식 기준, 메ㅔㅣㄷ → apple)
 - 교과서 단어 우선: 컴퓨터 출제·객관식 정답·힌트·예시에서 중2 교과서 단어 8배, 중1 교과서 단어 5배 가중치. 출제 카드에 '📘 교과서 중2 · 89쪽' 표시
