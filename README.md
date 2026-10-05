@@ -12,16 +12,24 @@
   - `VOCAB_NUM` 수 단어(one~twenty, thirty~ninety, hundred, thousand) — 학생 답으로만 인정, 컴퓨터는 내지 않음
   - `VOCAB_WF_E`·`VOCAB_WF_M` 접미사로 만든 단어(동사+er/r 사람·도구, 명사+al, 명사+y/ly, 형용사+ly, 동사+ment, 형용사+ness) — 뜻 뒤에 `(sing+er)`처럼 원래 단어 표시
   - `EMOJI` 그림 단어
-- `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성
-- `tests/play-test.js` — Playwright로 도전 수준 2단계를 자동으로 40턴 플레이하며 "이미 나온 단어" 오판 여부 확인
+- `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성. 화면 아래 `버전`에 빌드 시각(한국 시간)을 넣음
+- `tests/` — Playwright 테스트. 모두 소리 없이 실행(`tests/lib.js`가 단어 읽기를 끄고 음소거)
+  - `play-test.js` 도전 2단계 40턴, "이미 나온 단어" 오판 확인
+  - `cpu-rules.js` 컴퓨터 단어 첫=끝 글자·수 단어 금지 확인
+  - `accept.js 단어…` 학생 답으로 인정되는지 확인
+  - `variety.js` 시작 글자 다양성 확인
+  - 앞에 주소를 주면 그 주소(예: GitHub Pages)를, 없으면 로컬 빌드를 테스트
+- `tools/add-words.js` — 단어 확인(`check 단어…`)·추가(`add 파일.txt`, 이미 있는 단어는 건너뜀)
+- `.claude/skills/` — Claude Code용 skill: `wordchain-test`, `wordchain-deploy`("완료배포"), `wordchain-add-words`
 - `old/` — 이전 버전
 
 ## 빌드 / 테스트
 ```
-python3 build.py
-NODE_PATH=$(npm root -g) node tests/play-test.js
+python build.py
+node tests/play-test.js
+node tests/cpu-rules.js
 ```
-Windows에서는 `python build.py` (Python 3.12, Node.js LTS, `npm i -g playwright` + `npx playwright install chromium`).
+필요: Python 3.12, Node.js LTS, `npm i -g playwright` + `npx playwright install chromium`. Git Bash의 PATH·NODE_PATH는 `~/.bashrc`에 설정.
 
 ## 게임 규칙 요약
 - 첫 화면에서 수준 선택: 기초(3단계) / 보통(4단계) / 도전(4단계, 모두 주관식)
