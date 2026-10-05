@@ -8,6 +8,7 @@
   - `VOCAB_E` 초등 권장 수준(대명사 격변화, 비교급·최상급, 기본 단어 포함)
   - `VOCAB_M` 중학교 수준
   - `VOCAB_TB` 중학교 교과서 자주 나오는 단어 보충
+  - `VOCAB_DONGA` 학교 교과서(동아출판 2022 개정 중학 영어 윤정미 1·2) New Words 442개(중2 217 · 중1 225) — 교과서 뜻·쪽수 포함
   - `EMOJI` 그림 단어
 - `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성
 - `tests/play-test.js` — Playwright로 도전 수준 2단계를 자동으로 40턴 플레이하며 "이미 나온 단어" 오판 여부 확인
@@ -18,6 +19,7 @@
 python3 build.py
 NODE_PATH=$(npm root -g) node tests/play-test.js
 ```
+Windows에서는 `python build.py` (Python 3.12, Node.js LTS, `npm i -g playwright` + `npx playwright install chromium`).
 
 ## 게임 규칙 요약
 - 첫 화면에서 수준 선택: 기초(3단계) / 보통(4단계) / 도전(4단계, 모두 주관식)
@@ -25,13 +27,16 @@ NODE_PATH=$(npm root -g) node tests/play-test.js
 - 컴퓨터 단어 길이는 단계의 `cpuMin`/`cpuMax`로 조절
 - 규칙 변화 비교급·최상급(bigger, happiest 등)은 학생 답으로는 인정, 컴퓨터 출제·보기·힌트에는 쓰지 않음 (better/best 등 불규칙은 출제 가능)
 - y로 끝나는 단어는 컴퓨터 출제 빈도 1/4
+- 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)는 내지 않음
+- 스피드 챌린지 기본 제한 시간: 보통 30초 · 도전 25초. 홈 화면과 게임 화면의 −5초/+5초 버튼으로 10~90초 조절(수준·단계별 저장). 게임 중 늘리기는 바로, 줄이기는 다음 단어부터 적용
+- 영문 입력: 휴대폰은 `inputmode="email"`로 영문 자판이 뜸. PC에서 한글 자판으로 치면 같은 자리의 영문 글자로 자동 변환(두벌식 기준, 메ㅔㅣㄷ → apple)
+- 교과서 단어 우선: 컴퓨터 출제·객관식 정답·힌트·예시에서 중2 교과서 단어 8배, 중1 교과서 단어 5배 가중치. 출제 카드에 '📘 교과서 중2 · 89쪽' 표시
 - 단어장에 없는 단어는 정답으로 인정하지 않지만 연속 기록도 깎지 않음
-- 진행 기록은 브라우저 localStorage(`wordchain-v2`)에 수준별로 저장
+- 진행 기록과 제한 시간 설정은 브라우저 localStorage(`wordchain-v2`)에 수준별로 저장
 
 ## 배포
-- 웹: https://miagua7801.github.io/wordchain/ — `main`에 push하면 GitHub Actions(`.github/workflows/deploy.yml`)가 `build.py`를 실행해 자동 배포
 - 아티팩트: https://claude.ai/artifact/NGfWkdm9cd8TZwe1x4yiXg (비공개 — 공유 메뉴에서 공개 설정 필요)
 - 학생용: `dist/word-chain-challenge.html`을 학교 홈페이지·구글 사이트 등에 업로드
 
 ## 남은 과제
-- 교육부 [별표] 기본 어휘 원본 목록, 실제 사용 교과서 단어 목록을 받으면 `vocab.js` 교체·보강
+- 교육부 [별표] 기본 어휘 원본 목록을 받으면 `vocab.js` 교체·보강

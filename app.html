@@ -79,6 +79,13 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .timer{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin-top:-6px;margin-bottom:14px}
 .timer > i{display:block;height:100%;background:var(--accent);width:100%;transition:width .25s linear}
 .timer.warn > i{background:var(--bad)}
+.timectl{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin:-6px 0 12px}
+.rules .timectl{justify-content:flex-start;margin:6px 0 0}
+.rules .note{margin:0;color:var(--muted);font-size:14px}
+.tbtn{background:var(--surface);border:2px solid var(--line);border-radius:8px;padding:2px 10px;font-weight:600;font-size:14px}
+.tbtn:hover:not(:disabled){border-color:var(--accent)}
+.tbtn:disabled{opacity:.45;cursor:not-allowed}
+.tval{min-width:3.2em;text-align:center;color:var(--ink);font-family:var(--f-word)}
 
 .chainbox{overflow-x:auto;padding:4px 2px 10px;margin-bottom:6px}
 .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px}
@@ -91,6 +98,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .cpu .big{font-family:var(--f-word);font-weight:700;font-size:clamp(36px,9vw,54px);letter-spacing:.03em;line-height:1.15;margin-top:2px;word-break:break-word}
 .cpu .big .last{color:#2a1a00;background:var(--link);border-radius:8px;padding:0 6px;margin-left:2px}
 .cpu .ko{color:var(--muted);font-size:17px}
+.tbtag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--link-soft);color:var(--ink);font-size:12px}
 .speak{margin-top:6px;background:var(--surface-2);border:none;border-radius:999px;padding:4px 12px;font-size:14px}
 .ask{text-align:center;margin:16px 0 10px;font-size:18px}
 .ask b{font-family:var(--f-word);font-size:24px;color:#2a1a00;background:var(--link);border-radius:6px;padding:0 8px}
@@ -148,6 +156,12 @@ function load(str, tier){
   });
 }
 load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2);
+// 학교 교과서(동아 윤정미) 단어: 교과서 뜻으로 맞추고 우선 출제 표시. 새 단어는 중1→초등 수준, 중2→중학 수준
+VOCAB_DONGA.forEach(([w,ko,book,page])=>{ const d=DICT.get(w);
+  if(d){ d.ko=ko; d.tb=book; d.page=page; } else DICT.set(w,{w,ko,emoji:'',tier:book,tb:book,page}); });
+// 교과서 단어를 더 자주: 중2 ×8, 중1 ×5
+const TBW=x=>x.tb===2?8:x.tb===1?5:1;
+function pickTB(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,x)=>a+TBW(x),0); let r=Math.random()*tot; for(const x of arr){ r-=TBW(x); if(r<=0) return x; } return arr[arr.length-1]; }
 // 규칙 변화 비교급·최상급 표시 (불규칙: better, best 등은 제외)
 const IRREG=new Set(['better','best','worse','worst','more','most','less','least','farther','farthest']);
 DICT.forEach(d=>{ if(/(비교급|최상급)\)$/.test(d.ko)&&!IRREG.has(d.w)) d.cmp=true; });
@@ -156,7 +170,7 @@ const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w));
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 수준별 단계 설정 ----------
-// mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 제한 시간(초)
+// mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
 const TRACKS={
   basic:{name:'기초',tag:'Basic',icon:'🌱',desc:'영어 단어가 아직 낯선 친구. 그림과 함께 쉬운 단어로 시작해요.',levels:[
     {id:1,name:'그림 보고 고르기',desc:'객관식: 그림과 뜻을 보고 3개 중에서 골라요.',mode:'choice',n:3,pool:1,cpu:1,goal:3,min:2,cpuMin:2,cpuMax:5,emoji:true},
@@ -167,13 +181,13 @@ const TRACKS={
     {id:1,name:'단어 보고 고르기',desc:'객관식: 4개 중에서 골라요. 마지막 글자로 끝나는 함정 보기를 조심!',mode:'choice',n:4,pool:1,cpu:1,goal:5,min:3,cpuMin:3,cpuMax:6},
     {id:2,name:'직접 쓰기 · 기초',desc:'주관식: 3글자 이상. 컴퓨터는 초등 수준 단어를 내요.',mode:'type',pool:1,cpu:1,goal:6,min:3,cpuMin:4},
     {id:3,name:'직접 쓰기 · 중학',desc:'주관식: 4글자 이상. 컴퓨터도 5글자 이상 중학교 단어를 내요.',mode:'type',pool:2,cpu:2,goal:8,min:4,cpuMin:5},
-    {id:4,name:'스피드 챌린지',desc:'주관식: 20초 안에 4글자 이상 단어를 써요.',mode:'type',pool:2,cpu:2,goal:10,min:4,cpuMin:5,time:20}
+    {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:10,min:4,cpuMin:5,time:30}
   ]},
   hard:{name:'도전',tag:'Advanced',icon:'🌳',desc:'영어 단어를 많이 아는 친구. 긴 단어와 빠른 속도로 겨뤄요.',levels:[
     {id:1,name:'직접 쓰기 · 기본',desc:'주관식: 4글자 이상 단어를 써요. 컴퓨터는 4글자 이상 단어를 내요.',mode:'type',pool:2,cpu:2,goal:6,min:4,cpuMin:4},
     {id:2,name:'직접 쓰기 · 중학',desc:'주관식: 4글자 이상 단어를 써요.',mode:'type',pool:2,cpu:2,goal:8,min:4,cpuMin:5},
     {id:3,name:'긴 단어 쓰기',desc:'주관식: 5글자 이상 단어만 인정돼요.',mode:'type',pool:2,cpu:2,goal:10,min:5,cpuMin:6},
-    {id:4,name:'스피드 챌린지',desc:'주관식: 15초 안에 4글자 이상 단어를 써요.',mode:'type',pool:2,cpu:2,goal:12,min:4,cpuMin:6,time:15}
+    {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:12,min:4,cpuMin:6,time:25}
   ]}
 };
 const HINTS=3;
@@ -183,10 +197,22 @@ let track=null, LEVELS=[];
 const KEY='wordchain-v2';
 let store={track:null,prog:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.prog) store=s;}catch(e){}
+store.time=store.time||{};
 const blank=()=>({unlocked:1,best:{},cleared:{}});
 let save=blank();
 function persist(){try{store.track=track;store.prog[track]=save;localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
 function setTrack(t){track=t;LEVELS=TRACKS[t].levels;save=store.prog[t]||blank();store.track=t;persist();}
+// 스피드 챌린지 제한 시간: 수준·단계별로 저장. 기본값과 같으면 지움
+const TMIN=10, TMAX=90, TSTEP=5;
+const timeOf=L=>store.time[track+'-'+L.id]||L.time;
+function setTime(L,t){ t=Math.max(TMIN,Math.min(TMAX,t)); if(t===L.time) delete store.time[track+'-'+L.id]; else store.time[track+'-'+L.id]=t; persist(); return t; }
+function timeCtlHTML(L){ const t=timeOf(L);
+  return `<div class="timectl"><span>⏱ 제한 시간</span><button class="tbtn" data-d="-${TSTEP}" ${t<=TMIN?'disabled':''} aria-label="${TSTEP}초 줄이기">−${TSTEP}초</button><b class="tval" aria-live="polite">${t}초</b><button class="tbtn" data-d="${TSTEP}" ${t>=TMAX?'disabled':''} aria-label="${TSTEP}초 늘리기">+${TSTEP}초</button></div>`; }
+function bindTimeCtl(root,L,after){ root.querySelectorAll('.timectl .tbtn').forEach(b=>b.onclick=()=>{
+  const d=+b.dataset.d, t=setTime(L,timeOf(L)+d); const box=b.closest('.timectl');
+  box.querySelector('.tval').textContent=t+'초';
+  box.querySelector('[data-d^="-"]').disabled=t<=TMIN; box.querySelector('[data-d]:not([data-d^="-"])').disabled=t>=TMAX;
+  after&&after(t,d); }); }
 
 // ---------- 수준 선택 화면 ----------
 function chooseTrack(){
@@ -219,6 +245,17 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const last=w=>w[w.length-1];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 한글 자판(두벌식)으로 친 글자를 같은 자리의 영문 글자로 바꿈: 메ㅔㅣㄷ → apple
+const KO_KEY={'ㅂ':'q','ㅈ':'w','ㄷ':'e','ㄱ':'r','ㅅ':'t','ㅛ':'y','ㅕ':'u','ㅑ':'i','ㅐ':'o','ㅔ':'p','ㅁ':'a','ㄴ':'s','ㅇ':'d','ㄹ':'f','ㅎ':'g','ㅗ':'h','ㅓ':'j','ㅏ':'k','ㅣ':'l','ㅋ':'z','ㅌ':'x','ㅊ':'c','ㅍ':'v','ㅠ':'b','ㅜ':'n','ㅡ':'m',
+  'ㅃ':'q','ㅉ':'w','ㄸ':'e','ㄲ':'r','ㅆ':'t','ㅒ':'o','ㅖ':'p','ㅘ':'hk','ㅙ':'ho','ㅚ':'hl','ㅝ':'nj','ㅞ':'np','ㅟ':'nl','ㅢ':'ml',
+  'ㄳ':'rt','ㄵ':'sw','ㄶ':'sg','ㄺ':'fr','ㄻ':'fa','ㄼ':'fq','ㄽ':'ft','ㄾ':'fx','ㄿ':'fv','ㅀ':'fg','ㅄ':'qt'};
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ', JUNG='ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ', JONG=' ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ';
+const KO_RE=/[ㄱ-ㅣ가-힣]/;
+function koToEn(s){ return [...s].map(c=>{ const n=c.charCodeAt(0)-0xac00;
+  if(n>=0&&n<11172){ const t=n%28; return KO_KEY[CHO[Math.floor(n/588)]]+KO_KEY[JUNG[Math.floor(n%588/28)]]+(t?KO_KEY[JONG[t]]:''); }
+  return KO_KEY[c]||c; }).join(''); }
+function latinize(inp){ const v=inp.value; if(!KO_RE.test(v)) return false;
+  const pos=koToEn(v.slice(0,inp.selectionStart)).length; inp.value=koToEn(v); inp.setSelectionRange(pos,pos); return true; }
 let soundOn=true;
 function speak(w,queue){ if(!soundOn) return; try{ const u=new SpeechSynthesisUtterance(w); u.lang='en-US'; u.rate=.85; if(!queue) speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
 function tileHTML(w,me){ if(w.length===1) return `<span class="tile${me?' me':''}"><span class="last">${esc(w)}</span></span>`;
@@ -244,11 +281,17 @@ function home(){
       <span class="meta">
         <span class="chip">🎯 연속 ${L.goal}번 성공</span>
         <span class="chip">💡 힌트 ${HINTS}번</span>
+        ${L.time?`<span class="chip">⏱ ${timeOf(L)}초</span>`:''}
         ${cleared?'<span class="chip ok">✔ 통과</span>':''}
         ${open&&best?`<span class="chip">최고 ${best}연속</span>`:''}
         ${open?'':`<span class="chip lock">${L.id-1}단계를 통과하면 열려요</span>`}
       </span></button>`;}).join('')}
   </section>
+  ${LEVELS.filter(L=>L.time).map(L=>`<section class="rules" data-tl="${L.id}">
+    <h2>⏱ ${L.id}단계 ${L.name} 제한 시간</h2>
+    <p class="note">타이핑이 느리거나 오타를 고칠 시간이 부족하면 늘려 보세요. (기본 ${L.time}초, ${TMIN}~${TMAX}초)</p>
+    ${timeCtlHTML(L)}
+  </section>`).join('')}
   <section class="rules">
     <h2>규칙</h2>
     <ul>
@@ -263,6 +306,8 @@ function home(){
     <span><button class="linkbtn" id="reset">이 수준 기록 지우기</button> · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button></span>
   </div>`;
   $app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>start(+b.dataset.lv));
+  $app.querySelectorAll('[data-tl]').forEach(s=>{ const L=LEVELS[s.dataset.tl-1];
+    bindTimeCtl(s,L,t=>{ const c=$app.querySelector(`.lv[data-lv="${L.id}"] .meta .chip:nth-child(3)`); if(c) c.textContent=`⏱ ${t}초`; }); });
   $app.querySelector('#chg').onclick=chooseTrack;
   confirmBtn('#reset','정말 지울까요? 한 번 더 누르세요',()=>{save=blank();persist();home();});
   confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
@@ -275,7 +320,8 @@ let G=null, timerId=null;
 function start(id){
   const L=LEVELS[id-1];
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp);
-  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0};
+  // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)는 내지 않음
+  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0};
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
@@ -284,7 +330,7 @@ function pickCpu(firstCh){
   let cands=G.cpuPool.filter(x=>!G.used.has(x.w)&&(!firstCh||x.w[0]===firstCh)&&startsWith(last(x.w),G.pool).length>=(G.L.mode==='type'?3:1));
   if(!cands.length) return null;
   // 이어 갈 단어가 적은 끝 글자(특히 y)는 덜 나오게
-  const wt=x=>{const ch=last(x.w);let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k;};
+  const wt=x=>{const ch=last(x.w);let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k*TBW(x);};
   const ws=cands.map(wt), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
   for(let i=0;i<cands.length;i++){ r-=ws[i]; if(r<=0) return cands[i]; }
   return cands[cands.length-1];
@@ -293,13 +339,15 @@ function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c
 function setCpu(c){
   G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,me:false}); G.hintStep=0; G.removed=new Set(); G.locked=false;
   G.options = G.L.mode==='choice' ? makeOptions() : null;
+  // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
+  if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }
   render(); speak(c.w,true);
   if(G.L.time) startTimer();
 }
 function makeOptions(){
   const ch=last(G.cur.w);
   const good=startsWith(ch,G.pool).filter(x=>startsWith(last(x.w),G.cpuPool).length>0);
-  const right=rnd(good.length?good:startsWith(ch,G.pool));
+  const right=pickTB(good.length?good:startsWith(ch,G.pool));
   const wrongAll=G.pool.filter(x=>x.w[0]!==ch&&x.w!==G.cur.w);
   const wrong=[];
   if(G.L.n>=4){ const trap=wrongAll.filter(x=>last(x.w)===ch); if(trap.length) wrong.push(rnd(trap)); }
@@ -322,10 +370,10 @@ function render(){
     <div><div class="label" style="text-align:right">힌트 ${G.hints}개 남음</div>
       <div class="hints">${Array.from({length:HINTS},(_,i)=>`<span class="bulb${i>=G.hints?' used':''}">💡</span>`).join('')}</div></div>
   </div>
-  ${L.time?`<div class="timer" id="tbar"><i style="width:${G.timeLeft/L.time*100}%"></i></div>`:''}
+  ${L.time?`<div class="timer" id="tbar"><i style="width:${G.timeLeft/G.lim*100}%"></i></div>${timeCtlHTML(L)}`:''}
   ${G.chain.length>1?`<div class="chainbox"><div class="chain">${G.chain.map((x,i)=>(i?'<span class="joint"></span>':'')+tileHTML(x.w,x.me)).join('')}</div></div>`:''}
   <div class="cpu pop">
-    <div class="who">🤖 컴퓨터</div>
+    <div class="who">🤖 컴퓨터${c.tb?` <span class="tbtag">📘 교과서 중${c.tb} · ${c.page}쪽</span>`:''}</div>
     ${c.emoji?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
     <div class="big">${esc(c.w.slice(0,-1))}<span class="last">${esc(ch)}</span></div>
     <div class="ko">${esc(c.ko)}</div>
@@ -340,14 +388,21 @@ function render(){
   $app.querySelector('#say').onclick=()=>{const o=soundOn;soundOn=true;speak(c.w);soundOn=o;};
   $app.querySelector('#snd').onclick=()=>{soundOn=!soundOn;const b=$app.querySelector('#snd');b.textContent=soundOn?'🔊 소리 켬':'🔈 소리 끔';b.setAttribute('aria-pressed',soundOn);};
   $app.querySelector('#hintBtn').onclick=useHint;
+  // 시간 늘리기는 이번 단어에 바로 적용, 줄이기는 다음 단어부터
+  if(L.time) bindTimeCtl($app,L,(t,d)=>{
+    if(d>0&&!G.locked){ G.lim=Math.max(G.lim,t); G.timeLeft=G.lim+G.bonus-G.elapsed; msg(`제한 시간 ${t}초 — 이번 단어부터 적용돼요.`,'info'); }
+    else msg(`제한 시간 ${t}초 — 다음 단어부터 적용돼요.`,'info');
+    $app.querySelector('#inp')?.focus(); });
   const ans=$app.querySelector('#answer');
   if(L.mode==='choice'){
     ans.innerHTML=`<div class="choices">${G.options.map((o,i)=>`<button class="choice${G.removed.has(o.w)?' gone':''}" data-i="${i}" ${G.removed.has(o.w)?'tabindex="-1"':''}>
       ${L.emoji&&o.emoji?`<span class="e" aria-hidden="true">${o.emoji}</span>`:''}<span class="w">${esc(o.w)}</span><span class="k">${esc(o.ko)}</span></button>`).join('')}</div>`;
     ans.querySelectorAll('.choice').forEach(b=>b.onclick=()=>pickChoice(+b.dataset.i,b));
   }else{
-    ans.innerHTML=`<form class="typing" id="f" autocomplete="off"><input id="inp" type="text" inputmode="latin" autocapitalize="off" spellcheck="false" placeholder="${ch}..." aria-label="${ch}로 시작하는 영어 단어"><button class="btn" type="submit">내기</button></form>`;
+    // inputmode=email: 휴대폰에서 영문 자판이 뜸. lang=en: 일부 PC 브라우저가 영문 입력기로 전환
+    ans.innerHTML=`<form class="typing" id="f" autocomplete="off"><input id="inp" type="text" lang="en" inputmode="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${ch}..." aria-label="${ch}로 시작하는 영어 단어"><button class="btn" type="submit">내기</button></form>`;
     const inp=ans.querySelector('#inp'); inp.focus();
+    inp.addEventListener('input',()=>{ if(latinize(inp)) msg('한글 자판으로 친 글자를 영어로 바꿨어요. 한/영 키를 눌러 영어 자판으로 바꾸면 편해요.','info'); });
     ans.querySelector('#f').onsubmit=e=>{e.preventDefault(); submitTyped(inp.value);};
   }
   if(G.hintStep>0) showHint(false);
@@ -374,7 +429,7 @@ function submitTyped(raw){
   if(!d){ msg(`"${w}"는 이 앱 단어장에 없어서 정답으로 인정되지 않아요. 철자를 확인하거나 다른 단어를 써 보세요. 틀린 것으로 치지 않으니 연속 성공 횟수는 그대로예요.`,'info'); inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),400); inp.select(); return; }
   success(d);
 }
-function example(ch){ const c=startsWith(ch,G.pool); return c.length?rnd(c):null; }
+function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickTB(c):null; }
 function success(o){
   G.locked=true; stopTimer(); speak(o.w); G.used.add(o.w); G.chain.push({w:o.w,me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
@@ -421,8 +476,8 @@ function useHint(){
   }else{
     const maxStep=3;
     if(G.hintStep>=maxStep){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
-    if(!G.hintWord||G.hintWord.w[0]!==ch||G.used.has(G.hintWord.w)) G.hintWord=rnd(startsWith(ch,G.pool).filter(x=>x.w.length>=G.L.min));
-    if(G.L.time) G.timeLeft=Math.min(G.L.time,G.timeLeft+5);
+    if(!G.hintWord||G.hintWord.w[0]!==ch||G.used.has(G.hintWord.w)) G.hintWord=pickTB(startsWith(ch,G.pool).filter(x=>x.w.length>=G.L.min));
+    if(G.L.time){ G.bonus=Math.min(G.bonus+5,G.elapsed); G.timeLeft=G.lim+G.bonus-G.elapsed; }
   }
   G.hints--; G.hintStep++;
   const keep=$app.querySelector('#inp')?.value||'';
@@ -440,11 +495,11 @@ function showHint(){
 
 // ---------- 타이머 ----------
 function startTimer(){
-  stopTimer(); G.timeLeft=G.L.time; const t0=Date.now(); let lastTick=t0;
+  stopTimer(); let lastTick=Date.now();
   timerId=setInterval(()=>{
-    const now=Date.now(); G.timeLeft-=(now-lastTick)/1000; lastTick=now;
+    const now=Date.now(); G.elapsed+=(now-lastTick)/1000; lastTick=now; G.timeLeft=G.lim+G.bonus-G.elapsed;
     const bar=$app.querySelector('#tbar');
-    if(bar){bar.firstElementChild.style.width=Math.max(0,G.timeLeft/G.L.time*100)+'%'; bar.classList.toggle('warn',G.timeLeft<6);}
+    if(bar){bar.firstElementChild.style.width=Math.max(0,G.timeLeft/G.lim*100)+'%'; bar.classList.toggle('warn',G.timeLeft<6);}
     if(G.timeLeft<=0){ stopTimer(); fail('⏰ 시간이 다 됐어요.', example(last(G.cur.w))); }
   },200);
 }
