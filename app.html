@@ -98,7 +98,6 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .cpu .big{font-family:var(--f-word);font-weight:700;font-size:clamp(36px,9vw,54px);letter-spacing:.03em;line-height:1.15;margin-top:2px;word-break:break-word}
 .cpu .big .last{color:#2a1a00;background:var(--link);border-radius:8px;padding:0 6px;margin-left:2px}
 .cpu .ko{color:var(--muted);font-size:17px}
-.tbtag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--link-soft);color:var(--ink);font-size:12px}
 .speak{margin-top:6px;background:var(--surface-2);border:none;border-radius:999px;padding:4px 12px;font-size:14px}
 .ask{text-align:center;margin:16px 0 10px;font-size:18px}
 .ask b{font-family:var(--f-word);font-size:24px;color:#2a1a00;background:var(--link);border-radius:6px;padding:0 8px}
@@ -158,7 +157,7 @@ function load(str, tier){
 load(VOCAB_NUM,1); load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2); load(VOCAB_WF_E,1); load(VOCAB_WF_M,2);
 // 수 단어(one~thousand)는 학생 답으로만 인정하고 컴퓨터는 내지 않음
 const NUMW=new Set(VOCAB_NUM.split(/[|\n]/).map(s=>s.trim().split(' ')[0]).filter(Boolean));
-// 학교 교과서(동아 윤정미) 단어: 교과서 뜻으로 맞추고 우선 출제 표시. 새 단어는 중1→초등 수준, 중2→중학 수준
+// 학교 교과서(동아 윤정미) 단어: 교과서 뜻으로 맞추고 우선 출제. 새 단어는 중1→초등 수준, 중2→중학 수준
 VOCAB_DONGA.forEach(([w,ko,book,page])=>{ const d=DICT.get(w);
   if(d){ d.ko=ko; d.tb=book; d.page=page; } else DICT.set(w,{w,ko,emoji:'',tier:book,tb:book,page}); });
 // 교과서 단어를 더 자주: 중2 ×8, 중1 ×5
@@ -334,11 +333,14 @@ function pickCpu(firstCh){
   // 학생이 시작할 글자가 겹치지 않게: 최근 두 번 요구한 글자로 끝나는 단어는 피함 (없으면 허용)
   const recent=G.asked.slice(-2), fresh=cands.filter(x=>!recent.includes(last(x.w)));
   if(fresh.length) cands=fresh;
+  // 끝 글자를 먼저 고르게 뽑고(b·p·f처럼 드문 끝 글자도 나오게) 그 글자로 끝나는 단어 중에서 고름
   // 이어 갈 단어가 적은 끝 글자(특히 y)는 덜 나오게
-  const wt=x=>{const ch=last(x.w);let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k*TBW(x);};
-  const ws=cands.map(wt), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
-  for(let i=0;i<cands.length;i++){ r-=ws[i]; if(r<=0) return cands[i]; }
-  return cands[cands.length-1];
+  const groups=new Map(); cands.forEach(x=>{const ch=last(x.w); if(!groups.has(ch)) groups.set(ch,[]); groups.get(ch).push(x);});
+  const letters=[...groups.keys()];
+  const lw=ch=>{let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k;};
+  const ws=letters.map(lw), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
+  for(let i=0;i<letters.length;i++){ r-=ws[i]; if(r<=0) return pickTB(groups.get(letters[i])); }
+  return pickTB(groups.get(letters[letters.length-1]));
 }
 function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
 function setCpu(c){
@@ -378,7 +380,7 @@ function render(){
   ${L.time?`<div class="timer" id="tbar"><i style="width:${G.timeLeft/G.lim*100}%"></i></div>${timeCtlHTML(L)}`:''}
   ${G.chain.length>1?`<div class="chainbox"><div class="chain">${G.chain.map((x,i)=>(i?'<span class="joint"></span>':'')+tileHTML(x.w,x.me)).join('')}</div></div>`:''}
   <div class="cpu pop">
-    <div class="who">🤖 컴퓨터${c.tb?` <span class="tbtag">📘 교과서 중${c.tb} · ${c.page}쪽</span>`:''}</div>
+    <div class="who">🤖 컴퓨터</div>
     ${c.emoji?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
     <div class="big">${esc(c.w.slice(0,-1))}<span class="last">${esc(ch)}</span></div>
     <div class="ko">${esc(c.ko)}</div>
