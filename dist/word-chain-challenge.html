@@ -60,6 +60,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .rules h2{font-size:20px;margin-bottom:6px}
 .rules ul{margin:0;padding-left:20px;display:grid;gap:4px}
 .foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.ver{font-size:12px;opacity:.8}
 .linkbtn{background:none;border:none;padding:4px 2px;text-decoration:underline;color:var(--muted)}
 
 /* ===== Tiles (기차 칸) ===== */
@@ -373,11 +374,12 @@ function chooseTrack(){
         ${store.track===k?'<span class="chip">지난번 선택</span>':''}
       </span></button>`;}).join('')}
   </section>
-  <div class="foot"><span>수준은 언제든 바꿀 수 있고, 수준마다 진행 기록이 따로 저장돼요.</span></div>`;
+  <div class="foot"><span>수준은 언제든 바꿀 수 있고, 수준마다 진행 기록이 따로 저장돼요.</span><span class="ver">버전 ${BUILD}</span></div>`;
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{setTrack(b.dataset.t);home();});
 }
 
 // ---------- 도구 ----------
+const BUILD='2026-10-05 16:20'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -440,7 +442,7 @@ function home(){
     </ul>
   </section>
   <div class="foot">
-    <span>진행 기록은 이 기기의 브라우저에 저장돼요.</span>
+    <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver">· 버전 ${BUILD}</span></span>
     <span><button class="linkbtn" id="reset">이 수준 기록 지우기</button> · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button></span>
   </div>`;
   $app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>start(+b.dataset.lv));
