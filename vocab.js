@@ -85,3 +85,6 @@ wheelchair 휠체어|whistle 호루라기|wooden 나무로 된|workshop 워크�
 yogurt 요구르트|youtuber 유튜버|
 zero 0|zookeeper 사육사
 `;
+
+// (예전 단어장 — 삭제됨)
+const VOCAB_OLD = [];
