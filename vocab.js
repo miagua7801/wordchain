@@ -88,3 +88,31 @@ zero 0|zookeeper 사육사
 
 // (예전 단어장 — 삭제됨)
 const VOCAB_OLD = [];
+
+// 수 (학생 답으로만 인정, 컴퓨터는 내지 않음)
+const VOCAB_NUM = `
+one 1, 하나|two 2, 둘|three 3, 셋|four 4, 넷|five 5, 다섯|six 6, 여섯|seven 7, 일곱|eight 8, 여덟|nine 9, 아홉|ten 10, 열|
+eleven 11, 열하나|twelve 12, 열둘|thirteen 13, 열셋|fourteen 14, 열넷|fifteen 15, 열다섯|sixteen 16, 열여섯|seventeen 17, 열일곱|eighteen 18, 열여덟|nineteen 19, 열아홉|twenty 20, 스물|
+thirty 30, 서른|forty 40, 마흔|fifty 50, 쉰|sixty 60, 예순|seventy 70, 일흔|eighty 80, 여든|ninety 90, 아흔|hundred 100, 백|thousand 1000, 천
+`;
+
+// 단어 만들기(접미사) — 괄호 안은 원래 단어 + 접미사. WF_E: 초등 수준, WF_M: 중학교 수준
+// 동사+er/r → 사람·도구, 명사+al → 형용사, 명사+y/ly → 형용사, 형용사+ly → 부사, 동사+ment → 명사, 형용사+ness → 명사
+const VOCAB_WF_E = `
+player 선수 (play+er)|singer 가수 (sing+er)|dancer 무용수 (dance+r)|writer 작가 (write+r)|driver 운전자 (drive+r)|runner 달리는 사람 (run+ner)|swimmer 수영하는 사람 (swim+mer)|baker 제빵사 (bake+r)|farmer 농부 (farm+er)|painter 화가 (paint+er)|worker 노동자 (work+er)|helper 돕는 사람 (help+er)|speaker 연설자, 스피커 (speak+er)|listener 듣는 사람 (listen+er)|learner 학습자 (learn+er)|builder 건축업자 (build+er)|winner 우승자 (win+ner)|loser 패자 (lose+r)|user 사용자 (use+r)|maker 만드는 사람 (make+r)|jumper 뛰는 사람 (jump+er)|hunter 사냥꾼 (hunt+er)|fighter 싸우는 사람 (fight+er)|climber 등산가 (climb+er)|
+printer 프린터 (print+er)|heater 난방기 (heat+er)|toaster 토스터 (toast+er)|timer 타이머 (time+r)|marker 마커 펜 (mark+er)|ruler 자, 통치자 (rule+r)|sticker 스티커 (stick+er)|opener 따개 (open+er)|washer 세탁기 (wash+er)|dryer 건조기 (dry+er)|mixer 믹서 (mix+er)|cutter 자르는 도구 (cut+ter)|locker 사물함 (lock+er)|
+sunny 화창한 (sun+ny)|rainy 비가 오는 (rain+y)|cloudy 흐린 (cloud+y)|windy 바람 부는 (wind+y)|snowy 눈이 오는 (snow+y)|foggy 안개 낀 (fog+gy)|stormy 폭풍우가 치는 (storm+y)|salty 짠 (salt+y)|sandy 모래투성이의 (sand+y)|rocky 바위가 많은 (rock+y)|messy 지저분한 (mess+y)|sleepy 졸린 (sleep+y)|juicy 즙이 많은 (juice+y)|icy 얼음같이 찬 (ice+y)|dusty 먼지투성이의 (dust+y)|muddy 진흙투성이의 (mud+dy)|oily 기름기 많은 (oil+y)|smelly 냄새나는 (smell+y)|tasty 맛있는 (taste+y)|hilly 언덕이 많은 (hill+y)|
+weekly 매주의 (week+ly)|monthly 매달의 (month+ly)|
+quickly 빨리 (quick+ly)|slowly 천천히 (slow+ly)|quietly 조용히 (quiet+ly)|loudly 큰 소리로 (loud+ly)|happily 행복하게 (happy+ly, y→i)|sadly 슬프게 (sad+ly)|kindly 친절하게 (kind+ly)|badly 나쁘게 (bad+ly)|softly 부드럽게 (soft+ly)|safely 안전하게 (safe+ly)|nicely 멋지게 (nice+ly)|bravely 용감하게 (brave+ly)|warmly 따뜻하게 (warm+ly)|
+happiness 행복 (happy+ness, y→i)|sadness 슬픔 (sad+ness)|darkness 어둠 (dark+ness)|goodness 선량함 (good+ness)|softness 부드러움 (soft+ness)
+`;
+const VOCAB_WF_M = `
+explorer 탐험가 (explore+r)|designer 디자이너 (design+er)|producer 생산자 (produce+r)|dreamer 꿈꾸는 사람 (dream+er)|thinker 사상가 (think+er)|believer 믿는 사람 (believe+r)|keeper 지키는 사람 (keep+er)|buyer 구매자 (buy+er)|seller 판매자 (sell+er)|sender 보내는 사람 (send+er)|receiver 받는 사람, 수화기 (receive+r)|voter 투표자 (vote+r)|robber 강도 (rob+ber)|skater 스케이트 타는 사람 (skate+r)|diver 잠수부 (dive+r)|hiker 도보 여행자 (hike+r)|shopper 쇼핑객 (shop+per)|jogger 조깅하는 사람 (jog+ger)|beginner 초보자 (begin+ner)|planner 계획하는 사람, 일정표 (plan+ner)|traveler 여행자 (travel+er)|viewer 시청자 (view+er)|caller 전화 건 사람 (call+er)|
+recorder 녹음기 (record+er)|sharpener 연필깎이 (sharpen+er)|blender 믹서기 (blend+er)|freezer 냉동고 (freeze+r)|charger 충전기 (charge+r)|holder 받침, 보유자 (hold+er)|hanger 옷걸이 (hang+er)|scanner 스캐너 (scan+ner)|stapler 스테이플러 (staple+r)|cooker 조리 기구 (cook+er)|boiler 보일러 (boil+er)|lighter 라이터 (light+er)|
+national 국가의 (nation+al)|natural 자연의 (nature+al)|cultural 문화의 (culture+al)|musical 음악의, 뮤지컬 (music+al)|original 원래의 (origin+al)|magical 마법의 (magic+al)|seasonal 계절의 (season+al)|central 중심의 (center+al)|regional 지역의 (region+al)|formal 격식을 차린 (form+al)|coastal 해안의 (coast+al)|historical 역사의 (history+al)|additional 추가의 (addition+al)|accidental 우연한 (accident+al)|environmental 환경의 (environment+al)|educational 교육의 (education+al)|comical 웃기는 (comic+al)|logical 논리적인 (logic+al)|
+wealthy 부유한 (wealth+y)|grassy 풀이 무성한 (grass+y)|bossy 이래라저래라 하는 (boss+y)|creamy 크림 같은 (cream+y)|smoky 연기가 자욱한 (smoke+y)|sweaty 땀투성이의 (sweat+y)|
+hourly 매시간의 (hour+ly)|nightly 매일 밤의 (night+ly)|costly 값비싼 (cost+ly)|motherly 어머니 같은 (mother+ly)|fatherly 아버지 같은 (father+ly)|brotherly 형제 같은 (brother+ly)|timely 시기적절한 (time+ly)|orderly 질서 정연한 (order+ly)|cowardly 겁 많은 (coward+ly)|
+carefully 조심스럽게 (careful+ly)|clearly 분명히 (clear+ly)|freely 자유롭게 (free+ly)|gladly 기꺼이 (glad+ly)|politely 공손하게 (polite+ly)|angrily 화가 나서 (angry+ly, y→i)|busily 바쁘게 (busy+ly, y→i)|deeply 깊이 (deep+ly)|wildly 거칠게 (wild+ly)|wisely 현명하게 (wise+ly)|simply 간단히 (simple+ly)|gently 부드럽게 (gentle+ly)|honestly 정직하게 (honest+ly)|seriously 심각하게 (serious+ly)|perfectly 완벽하게 (perfect+ly)|usually 보통 (usual+ly)|strongly 강하게 (strong+ly)|brightly 밝게 (bright+ly)|heavily 심하게 (heavy+ly, y→i)|nearly 거의 (near+ly)|hardly 거의 ~않다 (hard+ly, 뜻 주의)|
+development 발달 (develop+ment)|payment 지불 (pay+ment)|treatment 치료, 대우 (treat+ment)|enjoyment 즐거움 (enjoy+ment)|excitement 흥분 (excite+ment)|improvement 향상 (improve+ment)|management 경영, 관리 (manage+ment)|measurement 측정 (measure+ment)|argument 논쟁 (argue+ment, e 탈락)|judgment 판단 (judge+ment, e 탈락)|punishment 처벌 (punish+ment)|announcement 발표 (announce+ment)|encouragement 격려 (encourage+ment)|disappointment 실망 (disappoint+ment)|entertainment 오락 (entertain+ment)|equipment 장비 (equip+ment)|employment 고용 (employ+ment)|
+weakness 약점 (weak+ness)|sickness 병 (sick+ness)|loneliness 외로움 (lonely+ness, y→i)|brightness 밝기 (bright+ness)|fairness 공정함 (fair+ness)|freshness 신선함 (fresh+ness)|laziness 게으름 (lazy+ness, y→i)|emptiness 공허함 (empty+ness, y→i)|fitness 건강 (fit+ness)|greatness 위대함 (great+ness)|madness 광기 (mad+ness)|politeness 공손함 (polite+ness)|shyness 수줍음 (shy+ness)|tiredness 피로 (tired+ness)|usefulness 유용함 (useful+ness)|helpfulness 도움이 됨 (helpful+ness)|carelessness 부주의 (careless+ness)|thickness 두께 (thick+ness)|coldness 차가움 (cold+ness)|rudeness 무례함 (rude+ness)|awareness 인식 (aware+ness)|sweetness 단맛 (sweet+ness)|quietness 고요함 (quiet+ness)
+`;
