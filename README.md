@@ -18,6 +18,7 @@
   - `cpu-rules.js` 컴퓨터 단어 첫=끝 글자·수 단어 금지 확인
   - `accept.js 단어…` 학생 답으로 인정되는지 확인
   - `variety.js` 시작 글자 다양성 확인
+  - `ime.js` 한글 자판으로 칠 때 글자가 빠지거나 겹치지 않는지 확인(입력기 조합 흉내)
   - 앞에 주소를 주면 그 주소(예: GitHub Pages)를, 없으면 로컬 빌드를 테스트
 - `tools/add-words.js` — 단어 확인(`check 단어…`)·추가(`add 파일.txt`, 이미 있는 단어는 건너뜀)
 - `.claude/skills/` — Claude Code용 skill: `wordchain-test`, `wordchain-deploy`("완료배포"), `wordchain-add-words`
