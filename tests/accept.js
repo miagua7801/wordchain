@@ -8,16 +8,16 @@ const {target,open,startLevel,cpuWord,skip}=require('./lib');
   const res={};
   for(let i=0;i<250&&Object.keys(res).length<words.length;i++){
     const ch=(await cpuWord(p)).slice(-1);
-    const w=words.find(x=>x[0]===ch&&!(x in res));
+    const w=words.find(x=>x[0].toLowerCase()===ch&&!(x in res));
     if(!w){ await skip(p); continue; }
     await p.fill('#inp',w); await p.press('#inp','Enter'); await p.waitForTimeout(200);
     const m=await p.textContent('#msg'); const ov=await p.$('.overlay');
-    res[w]=m.startsWith('좋아요')?'인정':ov?'오답: '+(await ov.textContent()).slice(0,60):'불인정: '+m.slice(0,50);
+    res[w]=m.startsWith('좋아요')?'인정 ('+m+')':ov?'오답: '+(await ov.textContent()).slice(0,60):'불인정: '+m.slice(0,50);
     console.log(w,'→',res[w]);
     await p.waitForTimeout(1500);
     if(await p.$('#ov2')) await p.click('#ov2'); else if(await p.$('#ov1')) await p.click('#ov1');
   }
   for(const w of words) if(!res[w]) console.log(w,'→ 못 해 봄(그 글자로 시작할 차례가 안 옴)');
   if(errs.length) console.log('errors',errs);
-  await b.close(); process.exit(Object.values(res).some(r=>r!=='인정')||errs.length?1:0);
+  await b.close(); process.exit(Object.values(res).some(r=>!r.startsWith('인정'))||errs.length?1:0);
 })();

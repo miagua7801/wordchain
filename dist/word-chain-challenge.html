@@ -112,7 +112,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .choice{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:8px 16px;min-height:58px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;text-align:left;box-shadow:var(--shadow);transition:transform .1s,border-color .1s}
 .choice:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
 .choice .w{font-family:var(--f-word);font-weight:600;font-size:26px;line-height:1.15}
-.choice .w .f{font-weight:700;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:5px}
+/* 첫 글자 밑줄: g·j·p·q·y처럼 아래로 내려오는 글자에서도 끊기지 않게, 꼬리보다 아래에 끊김 없이 그림 */
+.choice .w .f{font-weight:700;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:.45em;text-decoration-skip-ink:none}
 .choice .k{font-size:17px;color:var(--ink-2);text-align:right}
 .choice.gone{visibility:hidden}
 .choice.right{border-color:var(--good);background:var(--good-soft)}
@@ -171,7 +172,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 @media (min-width:600px){
   .choices.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .choices.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .choice{flex-direction:column;justify-content:center;text-align:center;gap:4px;padding:12px 8px;min-height:92px}
+  .choice{flex-direction:column;justify-content:center;text-align:center;gap:12px;padding:12px 8px;min-height:92px}
   .choice .k{text-align:center}
   .choices.n4 .choice .w{font-size:22px}
 }
@@ -222,6 +223,7 @@ first 첫 번째의|second 두 번째의|third 세 번째의|as ~처럼, ~로서
 fourth 네 번째의|fifth 다섯 번째의|sixth 여섯 번째의|seventh 일곱 번째의|eighth 여덟 번째의|ninth 아홉 번째의|tenth 열 번째의|so 그래서, 아주|also 또한|too 너무, ~도|at ~에|by ~옆에, ~에 의해|of ~의|on ~위에|to ~로, ~에게|for ~을 위해|into ~안으로|outside 밖에|lamb 새끼 양 (b 묵음)|comb 빗 (b 묵음)|knight 기사 (k 묵음)|knot 매듭 (k 묵음)|wrap 싸다, 포장하다 (w 묵음)|wrist 손목 (w 묵음)|autumn 가을 (n 묵음)|palm 손바닥 (l 묵음)|sword 칼, 검 (w 묵음)|sub 대신하는 사람, 보조의 (substitute 줄임)
 these 이것들 (this 복수)|those 저것들 (that 복수)|goose 거위|ox 황소|shelf 선반|loaf 빵 한 덩어리|deer 사슴 (단수·복수 같음)|children 아이들 (child 복수)|men 남자들 (man 복수)|women 여자들 (woman 복수)|feet 발 (foot 복수)|teeth 이, 치아 (tooth 복수)|mice 쥐들 (mouse 복수)|geese 거위들 (goose 복수)|knives 칼들 (knife 복수, f→ves)|leaves 잎들 (leaf 복수, f→ves)|wolves 늑대들 (wolf 복수, f→ves)|wives 아내들 (wife 복수, f→ves)|lives 삶, 생명들 (life 복수, f→ves)|halves 절반들 (half 복수, f→ves)
 cab 택시|tub 통, 욕조|bulb 전구|rib 갈비뼈|grab 움켜잡다|rob 강탈하다|web 거미줄, 웹
+drumstick 드럼 채|everything 모든 것|exciting 신나는, 흥미진진한|rugby 럭비|sunlight 햇빛, 햇살|sometimes 때때로, 가끔|everyone 모든 사람, 모두|pitcher 투수|suit 의상; 정장|dangerous 위험한|lighthouse 등대|observatory 전망대|rise (해·달이) 뜨다; 오르다|scary 무서운, 겁나는|September 9월|shine 비추다; 빛나다|steep 가파른|sunrise 해돋이, 일출|dip 살짝 담그다|shrimp 새우|sour 신맛의|Thai 태국의, 태국인[어]의|anyone 누구, 누구나|Dutch 네덜란드의, 네덜란드인[어]의|lifetime 일생, 평생, 생애|weak 약한|classmate 학급 친구|dictionary 사전|package 소포|real 진짜의|apart 떨어져|floorball 플로어볼|French 프랑스의, 프랑스인의, 프랑스어의|bent 굽은, 구부러진|missing 없어진, 실종된|stomachache 복통, 위통|weigh 무게가 ~이다|blonde 금발 머리인|curly 곱슬곱슬한|enemy 적|peaceful 평화로운|ponytail 말총머리|slim 날씬한|thin 마른, 여윈|scenery 경치, 풍경|sink 가라앉다|someday 언젠가|starry 별이 총총한|bounce 튀다, 튀기다|everywhere 모든 곳(에), 어디나|punch 주먹으로 치다, 때리다|challenging 흥미를 돋우는, 해 볼 만한|following 다음의, 다음에 나오는|sure 확신하는|bin (쓰레기) 통|completely 완전히|broken 깨진|seaweed 해초|slippery 미끄러운, 미끈거리는|anything 아무것도|hairy 털이 많은, 털이 뒤덮인|spider 거미|batsman (크리켓에서) 타자|cameraman 카메라맨, 촬영 기사|camping 캠핑, 야영|carsick 차멀미를 하는|Chinese 중국어|cone 원뿔|cricket 크리켓|curvy 굴곡이 많은|disagree 의견이 다르다|donkey 당나귀|dung 똥, 배설물|earflap (방한모의) 귀덮개|edit 편집하다|English 영어|goggles 고글|hiking 하이킹, 도보 여행|interesting 흥미로운, 신나는|Korean 한국어|liquid 액체|logic 논리|lunchtime 점심시간|maybe 어쩌면, 아마|melt 녹다, 녹이다|nail 못 / 못으로 박다|nobody 아무도|pack (짐을) 싸다, 꾸리다|pan (손잡이가 달린 얕은) 냄비|physical 육체의|pour 붓다|rap 랩 (음악)|rough 거친|sausage 소시지|shoulder 어깨|slogan 구호, 슬로건|solid 고체|stair 계단|state 상태|teamwork 팀워크, 협동 작업|turtle 거북|visor (모자의) 챙|woodshop 목공
 `;
 const VOCAB_M = `
 ability 능력|absent 결석한|accept 받아들이다|accident 사고|achieve 성취하다|active 활동적인|activity 활동|actor 배우|actually 실제로|address 주소|adult 어른|adventure 모험|advice 조언|advise 충고하다|against ~에 반대하여|agency 대리점|agreement 동의|ahead 앞에|aim 목표|alarm 경보|alive 살아 있는|allow 허락하다|almost 거의|alone 혼자|already 이미|amazing 놀라운|amount 양|ancient 고대의|anger 분노|announce 발표하다|annoy 짜증 나게 하다|anymore 더 이상|apartment 아파트|appear 나타나다|area 지역|argue 논쟁하다|army 군대|arrow 화살|article 기사|artist 예술가|asleep 잠든|attack 공격하다|attend 참석하다|attention 주의|audience 청중|avoid 피하다|award 상|aware 알고 있는|
@@ -255,6 +257,7 @@ eleventh 열한 번째의|twelfth 열두 번째의|twentieth 스무 번째의|hu
 oxen 황소들 (ox 복수)|shelves 선반들 (shelf 복수, f→ves)|thieves 도둑들 (thief 복수, f→ves)|loaves 빵 덩어리들 (loaf 복수, f→ves)
 treat 대하다, 치료하다, 대접|upcycle 업사이클하다 (버린 물건을 더 좋은 물건으로)|upcycling 업사이클링 (up+cycle+ing)|lawyer 변호사|programmer 프로그래머|developer 개발자|photographer 사진작가|musician 음악가|actress 여배우|author 작가, 저자|journalist 기자|announcer 아나운서|waiter 종업원|waitress 여종업원|cashier 계산원|businessman 사업가|banker 은행원|accountant 회계사|secretary 비서|officer 경찰관, 장교|mechanic 정비사|electrician 전기 기사|carpenter 목수|gardener 정원사|fisherman 어부|hairdresser 미용사|barber 이발사|tailor 재단사|librarian 사서|professor 교수|counselor 상담사|pharmacist 약사|surgeon 외과 의사|veterinarian 수의사|attendant 승무원, 안내원|postman 우체부|referee 심판|comedian 코미디언|magician 마술사|sculptor 조각가|cartoonist 만화가|animator 애니메이터|interpreter 통역사|diplomat 외교관|politician 정치인|mayor 시장|employee 직원|employer 고용주|staff 직원(전체)|colleague 동료|occupation 직업|profession 전문직|salary 월급|wage 임금|retire 은퇴하다
 eventually 결국|sense 감각, 의미|guitarist 기타리스트 (guitar+ist)|crew 승무원, 선원|inform 알리다|effective 효과적인|effectively 효과적으로 (effective+ly)|vary 다르다, 바꾸다|variety 다양성, 여러 가지 (vary→variety)|differ 다르다|difference 차이 (differ→difference)|herb 허브|verb 동사|adverb 부사|crib 아기 침대|knob 손잡이 (k 묵음)|scrub 문질러 닦다|sob 흐느끼다|disturb 방해하다|absorb 흡수하다|superb 최고의|suburb 교외
+addiction 중독|batter 반죽|blink 눈을 깜박이다|bookstore 서점|classical 고전적인|coconut 코코넛 열매|combination 조합, 결합|contrast 차이, 대조|corndog 콘도그, 핫도그|counter 계산대, 판매대|crow 까마귀|detail 세부 사항|doughnut 도넛|ever 줄곧, 내내|fable 우화, 동화|fabric 직물, 천|fasten 매다, 잠그다|floss 치실질을 하다 / 치실|gorilla 고릴라|intelligent 똑똑한|jar 병, 단지|kit 도구 세트|myth 신화|navy 남색|octopus 문어|outline 윤곽, 외형|pad 패드|parrot 앵무새|photograph 사진|pile 쌓다, 포개다|pork 돼지고기|prove 입증하다, 증명하다|publish 출판하다, 발행하다|quilt 퀼트, 누비이불|recently 최근에|romantic 로맨틱한, 낭만적인|royal 왕실의|rubber 고무|shell (딱딱한) 껍데기, 껍질|signature 서명|silver 은, 은색|similarly 유사하게|skip 빼먹다, 거르다|snake 뱀|sore 아픈, 따가운|spaceship 우주선|strap 끈, 줄|stripe 줄무늬|succeed 성공하다|such 그런, 그러한|sudden 갑작스러운|sunset 해 질 녘, 일몰|survey 설문 조사 / 조사하다|swallow 삼키다|tea (음료) 차|thrilling 아주 신나는|tool 도구, 수단|toothache 치통|towards ~쪽으로, ~을 향하여|upgrade 개선, 향상|violinist 바이올린 연주자|warn 경고하다|wax 밀랍, 왁스|zombie 좀비|analyze 분석하다|antique 골동품의, 골동품|attach 붙이다, 첨부하다|bold 용감한, 대담한|British 영국인의|carp 잉어|civilization 문명|comfort 위로, 위안|compliment 칭찬|confidently 자신 있게|crisp 바삭바삭한|database 데이터베이스|dealer 딜러, 중개인|disappointed 실망한|dynasty 왕조, 시대|engineering 공학|exchange 교환하다|flu 독감, 유행성 감기|hesitate 망설이다, 주저하다|hurricane 허리케인|identify 확인하다, 알아보다|industry 산업, 공업|international 국제적인|invisible (눈에) 보이지 않는|Italian 이탈리아의, 이탈리아 사람·말|justice 정의, 공정|loose 헐거워진|loyalty 충실, 충성|majority 대다수|massage 마사지, 안마|mushroom 버섯|originally 원래, 본래|originate ~에서 비롯되다|pacer 페이서|particular 특정한|passport 여권|pause 중지, 중단|pit (자동차 경주의) 피트|predict 예측하다|priceless 대단히 귀중한|professional 전문적인|purchase 구입, 구매|pursue 추구하다, 쫓다|quantity 양, 수량, 분량|realize 실현하다|refund 환불|register 등록하다|remaining 남아 있는|remind ~을 상기시키다|rent 빌리다|reproduction 복제품|satisfy 만족시키다|saw 톱|scratch 긁다, 할퀴다|scream 비명을 지르다|shampoo 샴푸|slave 노예|slice 얇게 썬 조각, 한 조각|Spanish 스페인의|spender 돈을 쓰는 사람|stable 안정적인|stomach 위, 복부, 배|symbolic 상징적인|symptom 증상, 징후|tight 빠듯한|trace 흔적, 자취|trader 상인, 거래자|tribe 부족, 종족|trophy 트로피|upload ~을 전송하다, 업로드하다|valuable 귀중한, 소중한|Mars 화성|feedback 반응, 피드백|respond 대답하다|awful 끔찍한|composer 작곡가|definitely 단연, 틀림없이|madly 미친 듯이|pianist 피아니스트|powerful 힘 있는, 강렬한|recent 최근의|chase 뒤쫓다|competition 대회, 시합; 경쟁|sled 썰매|single 단 하나의|boiling 끓는, 끓어오르는|freeze 얼다, 얼어붙다|overall 종합적인, 전체의|participant 참가자|relay 릴레이 경주, 계주|tough 힘든, 어려운|blend 섞다|smooth (덩어리 없이) 고루 잘 섞인|source 원천|adapt 적응하다|apply 지원하다|deaf 청각 장애가 있는, 귀가 먼|length 기간, 길이|necessary 필요한, 없어서는 안 될|bronze 청동|mop 대걸레로 닦다|principal 교장|thunder 천둥|creatively 창의적으로|mess 엉망인 상태|string 끈, 줄|stuck 움직일 수 없는|extremely 극단적으로, 극도로|harmful 해로운|pollen 꽃가루, 화분|pollination 수분 (작용)|population 인구, 개체 수|process 과정|neighborhood 근처, 이웃|recording 녹음, 녹화|select 선택하다, 선정하다|site 현장, 장소|spot (특정한) 장소, 자리|assign (사람을) 배치하다|awake 잠들지 않은, 깨어 있는|convenient 편리한|dirt 흙|shiny 빛나는, 반짝거리는|tube 통, 관|unfortunately 불행히도|afford ~을 할 형편이 되다|cheek 볼, 뺨|educator 교육자|landfill 쓰레기 매립지|mostly 대부분, 일반적으로|patience 인내심|talented 재능 있는|thrilled 황홀해하는, 아주 신이 난|tune 곡, 곡조, 선율|curved 곡선 모양의, 굽은|delicate 부서지기 쉬운, 섬세한|exhibit 전시하다|exist 존재하다|imitate 모방하다|indoors 실내로, 실내에|obvious 분명한, 명백한|pleasing 즐거운, 기분 좋은|arctic 북극 (지방)|calculate 계산하다|clam 조개|smash 때려 부수다, 깨뜨리다|species (분류상의) 종|surface 수면, 표면|tightly 단단히, 꽉|chain 사슬로 묶다〔매다〕|contribute 기여하다, 공헌하다|due ~하기로 되어 있는〔예정된〕|dynamite 다이너마이트|headline (신문 기사 등의) 표제|merchant 상인|mistakenly 실수로|regret 후회하다|spill 쏟아지다, 흐르다, 쏟다|drawer 서랍|scan 정밀 검사〔촬영〕하다|sensor 센서, 감지기
 `;
 // 그림(이모지)이 있는 단어
 const EMOJI = {ant:'🐜',arm:'💪',art:'🎨',bag:'👜',bed:'🛏️',bee:'🐝',bus:'🚌',box:'📦',boy:'👦',bird:'🐦',book:'📖',ball:'⚽',bear:'🐻',boat:'⛵',bell:'🔔',bicycle:'🚲',bike:'🚲',balloon:'🎈',banana:'🍌',bread:'🍞',cat:'🐱',cap:'🧢',car:'🚗',cow:'🐄',cup:'☕',cake:'🎂',corn:'🌽',candy:'🍬',carrot:'🥕',chair:'🪑',cheese:'🧀',chicken:'🐔',clock:'⏰',cloud:'☁️',cookie:'🍪',crown:'👑',dog:'🐶',doll:'🪆',door:'🚪',duck:'🦆',drum:'🥁',dolphin:'🐬',egg:'🥚',ear:'👂',eye:'👁️',earth:'🌍',elephant:'🐘',eagle:'🦅',fish:'🐟',frog:'🐸',fox:'🦊',foot:'🦶',fire:'🔥',fork:'🍴',flag:'🚩',flower:'🌸',gift:'🎁',ghost:'👻',girl:'👧',grape:'🍇',giraffe:'🦒',guitar:'🎸',gold:'🥇',hat:'🎩',hand:'✋',home:'🏠',house:'🏠',horse:'🐴',heart:'❤️',honey:'🍯',ice:'🧊',island:'🏝️',jam:'🍓',juice:'🧃',jacket:'🧥',key:'🔑',king:'🤴',knife:'🔪',leg:'🦵',lion:'🦁',leaf:'🍃',lip:'👄',milk:'🥛',moon:'🌙',mouse:'🐭',map:'🗺️',monkey:'🐒',mountain:'⛰️',money:'💰',nose:'👃',note:'📝',onion:'🧅',orange:'🍊',ocean:'🌊',pen:'🖊️',pig:'🐷',pear:'🍐',pencil:'✏️',potato:'🥔',puppy:'🐶',queen:'👸',rabbit:'🐰',rain:'🌧️',rainbow:'🌈',ring:'💍',robot:'🤖',rose:'🌹',road:'🛣️',sun:'☀️',sea:'🌊',sock:'🧦',star:'⭐',ship:'🚢',snow:'❄️',shoe:'👟',soccer:'⚽',sheep:'🐑',strawberry:'🍓',tiger:'🐯',tree:'🌳',toy:'🧸',train:'🚆',tomato:'🍅',tooth:'🦷',umbrella:'☂️',uncle:'🧔',water:'💧',watch:'⌚',whale:'🐋',wing:'🪽',window:'🪟',zebra:'🦓',zoo:'🦁',baseball:'⚾',basketball:'🏀',camera:'📷',computer:'💻',scissors:'✂️',telephone:'☎️',textbook:'📘',towel:'🧺',tennis:'🎾',castle:'🏰',candle:'🕯️',coin:'🪙',dragon:'🐉',hamburger:'🍔',burger:'🍔',laptop:'💻',smartphone:'📱',salad:'🥗',trash:'🗑️',wallet:'👛',wheel:'🛞',feather:'🪶',dessert:'🍰',bomb:'💣',chopstick:'🥢',pizza:'🍕',panda:'🐼',owl:'🦉',wolf:'🐺',kite:'🪁',lamp:'💡',lock:'🔒',nest:'🪺',tent:'⛺',taxi:'🚕',van:'🚐',web:'🕸️',yoyo:'🪀',igloo:'🛖',jeans:'👖',koala:'🐨',seal:'🦭',crab:'🦀',goat:'🐐',worm:'🪱'};
@@ -326,8 +329,8 @@ acceptance 수락 (accept→acceptance)|admiration 감탄, 존경 (admire→admi
 const DICT = new Map();
 function load(str, tier){
   str.split(/[|\n]/).map(s=>s.trim()).filter(Boolean).forEach(e=>{
-    const sp=e.indexOf(' '); const w=e.slice(0,sp).toLowerCase(); let rest=e.slice(sp+1).trim(); let emoji='';
-    if(!DICT.has(w)) DICT.set(w,{w,ko:rest,emoji,tier});
+    const sp=e.indexOf(' '); const raw=e.slice(0,sp), w=raw.toLowerCase(); let rest=e.slice(sp+1).trim(); let emoji='';
+    if(!DICT.has(w)) DICT.set(w,{w,ko:rest,emoji,tier,d:raw!==w?raw:undefined});
   });
 }
 load(VOCAB_NUM,1); load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2); load(VOCAB_WF_E,1); load(VOCAB_WF_M,2);
@@ -343,13 +346,15 @@ function pickTB(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,
 const IRREG=new Set(['better','best','worse','worst','more','most','less','least','farther','farthest']);
 DICT.forEach(d=>{ if(/(비교급|최상급)\)$/.test(d.ko)&&!IRREG.has(d.w)) d.cmp=true; });
 DICT.forEach(d=>{ if(EMOJI[d.w]) d.emoji=EMOJI[d.w]; });
+// 화면에 보일 표기: 고유명사(September, Korean 등)는 대문자로
+const disp=x=>x.d||x.w;
 const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w));
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
 const TRACKS={
-  basic:{name:'기초',tag:'Basic',icon:'🌱',desc:'영어 단어가 아직 낯선 친구. 그림과 함께 쉬운 단어로 시작해요.',levels:[
+  basic:{name:'기초',tag:'Basic',icon:'🌱',desc:'영어 단어가 아직 낯선 친구. 뜻을 보며 쉬운 단어부터 골라 봐요.',levels:[
     {id:1,name:'뜻 보고 고르기',desc:'객관식: 뜻을 보고 3개 중에서 골라요.',mode:'choice',n:3,pool:1,cpu:1,goal:3,min:2,cpuMin:2,cpuMax:5},
     {id:2,name:'단어 고르기',desc:'객관식: 4개 중에서 골라요. 함정 보기를 조심!',mode:'choice',n:4,pool:1,cpu:1,goal:4,min:2,cpuMin:3,cpuMax:6},
     {id:3,name:'직접 쓰기',desc:'주관식: 2글자 이상 단어를 직접 써요. (me, us 같은 대명사도 OK)',mode:'type',pool:1,cpu:1,goal:5,min:2,cpuMin:3}
@@ -417,7 +422,7 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-06 09:33'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-07 08:48'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -525,7 +530,7 @@ function pickCpu(firstCh){
 }
 function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
 function setCpu(c){
-  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false;
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false;
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
   if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }
@@ -558,11 +563,11 @@ function render(){
     <button class="btn hint" id="hintBtn" ${G.hints<=0?'disabled':''}>💡 힌트 (${G.hints})</button>
   </div>
   ${L.time?`<div class="timer" id="tbar"><i style="width:${G.timeLeft/G.lim*100}%"></i></div>${timeCtlHTML(L)}`:''}
-  ${G.chain.length>1?`<div class="chainbox"><div class="chain">${G.chain.map((x,i)=>(i?'<span class="joint"></span>':'')+tileHTML(x.w,x.me)).join('')}</div></div>`:''}
+  ${G.chain.length>1?`<div class="chainbox"><div class="chain">${G.chain.map((x,i)=>(i?'<span class="joint"></span>':'')+tileHTML(x.d||x.w,x.me)).join('')}</div></div>`:''}
   <div class="cpu pop">
     <div class="who">🤖 컴퓨터</div>
     ${c.emoji&&L.mode!=='choice'?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
-    <div class="big">${esc(c.w.slice(0,-1))}<span class="last">${esc(ch)}</span></div>
+    <div class="big">${esc(disp(c).slice(0,-1))}<span class="last">${esc(ch)}</span></div>
     <div class="ko">${esc(c.ko)}</div>
     <button class="speak" id="say">🔊 듣기</button>
   </div>
@@ -585,7 +590,7 @@ function render(){
   if(L.mode==='choice'){
     // 한 줄에 보기 하나: 단어(첫 글자 강조) · 뜻. 그림은 쓰지 않음
     ans.innerHTML=`<div class="choices n${G.options.length}">${G.options.map((o,i)=>`<button class="choice${G.removed.has(o.w)?' gone':''}" data-i="${i}" ${G.removed.has(o.w)?'tabindex="-1"':''}>
-      <span class="w"><span class="f">${esc(o.w[0])}</span>${esc(o.w.slice(1))}</span><span class="k">${esc(plainKo(o.ko))}</span></button>`).join('')}</div>`;
+      <span class="w"><span class="f">${esc(disp(o)[0])}</span>${esc(disp(o).slice(1))}</span><span class="k">${esc(plainKo(o.ko))}</span></button>`).join('')}</div>`;
     ans.querySelectorAll('.choice').forEach(b=>b.onclick=()=>pickChoice(+b.dataset.i,b));
   }else{
     // inputmode=email: 휴대폰에서 영문 자판이 뜸. lang=en: 일부 PC 브라우저가 영문 입력기로 전환
@@ -608,7 +613,7 @@ function msg(t,cls){const m=$app.querySelector('#msg'); if(m){m.textContent=t;m.
 function pickChoice(i,btn){
   if(G.locked) return; const o=G.options[i];
   if(o.w[0]===last(G.cur.w)){ btn.classList.add('right'); success(o); }
-  else { btn.classList.add('wrong'); speak(o.w); const r=G.options.find(x=>x.w[0]===last(G.cur.w)); fail(`<b>${esc(o.w)}</b>는 <b>${esc(o.w[0])}</b>로 시작해요.`, r); }
+  else { btn.classList.add('wrong'); speak(o.w); const r=G.options.find(x=>x.w[0]===last(G.cur.w)); fail(`<b>${esc(disp(o))}</b>는 <b>${esc(o.w[0])}</b>로 시작해요.`, r); }
 }
 function submitTyped(raw){
   if(G.locked) return;
@@ -626,9 +631,9 @@ function submitTyped(raw){
 }
 function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickTB(c):null; }
 function success(o){
-  G.locked=true; stopTimer(); speak(o.w); G.used.add(o.w); G.chain.push({w:o.w,me:true}); G.streak++;
+  G.locked=true; stopTimer(); speak(o.w); G.used.add(o.w); G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
-  msg(`좋아요! ${o.w} = ${o.ko}`,'good');
+  msg(`좋아요! ${disp(o)} = ${o.ko}`,'good');
   if(G.streak>=G.L.goal){ const g0=G; setTimeout(()=>{ if(G===g0) passLevel(); },600); return; }
   const g=G;
   setTimeout(()=>{ if(G!==g) return;
@@ -639,7 +644,7 @@ function success(o){
 }
 function fail(why,ex){
   G.locked=true; stopTimer(); const had=G.streak; G.streak=0;
-  const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(ex.w)}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
+  const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(disp(ex))}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
   const gf=G; setTimeout(()=>G===gf&&toast('😵','아쉬워요!',`<p>${why}</p>${exHTML}<p>연속 기록 ${had} → 0. 다시 도전해요!</p>`,'다시 시작',newChain),450);
 }
 function passLevel(){
@@ -684,7 +689,7 @@ function showHint(){
   if(G.L.mode==='choice'){ area.innerHTML=`<div class="hintbox">💡 틀린 보기를 지웠어요. <b>${ch}</b>로 시작하는 단어를 찾아보세요!</div>`; return; }
   const h=G.hintWord; if(!h) return;
   const shown=G.hintStep; // 1: 뜻 + 첫 글자, 2: 두 글자, 3: 세 글자
-  const pat=h.w.split('').map((c,i)=>i<shown?c:'_').join(' ');
+  const pat=disp(h).split('').map((c,i)=>i<shown?c:'_').join(' ');
   area.innerHTML=`<div class="hintbox">💡 <b>${esc(h.ko)}</b> ${h.emoji||''} — ${h.w.length}글자${G.L.time?' (+5초)':''}<div class="pat word">${esc(pat)}</div>${shown<3?'<small>힌트를 한 번 더 쓰면 글자가 하나 더 보여요.</small>':''}</div>`;
 }
 
