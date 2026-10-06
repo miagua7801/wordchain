@@ -15,7 +15,7 @@ function load(){
   const m=new Function(src+';return {VOCAB_E,VOCAB_M,VOCAB_TB,VOCAB_DONGA,VOCAB_NUM,VOCAB_WF_E,VOCAB_WF_M}')();
   const where=new Map(); // 단어 → [목록, 뜻]
   for(const k of ['VOCAB_NUM','VOCAB_E','VOCAB_M','VOCAB_TB','VOCAB_WF_E','VOCAB_WF_M'])
-    for(const e of split(m[k])){ const i=e.indexOf(' '); const w=e.slice(0,i); if(!where.has(w)) where.set(w,[k,e.slice(i+1)]); }
+    for(const e of split(m[k])){ const i=e.indexOf(' '); const w=e.slice(0,i).toLowerCase(); if(!where.has(w)) where.set(w,[k,e.slice(i+1)]); }
   for(const [w,ko] of m.VOCAB_DONGA) where.set(w,['VOCAB_DONGA',ko]);
   return {src,where};
 }
