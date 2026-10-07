@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 const fs=require('fs');
 (async()=>{
- const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:420,height:900}}); await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(){},cancel(){}}}));
+ const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:420,height:900}}); await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(u){setTimeout(()=>u.onend&&u.onend(),0);},cancel(){}}}));
  const errs=[]; p.on('pageerror',e=>errs.push(e.message));
  await p.goto('file://'+process.cwd()+'/dist/word-chain-challenge.html'); await p.waitForTimeout(300);
  const words=await p.evaluate(()=>{const s=VOCAB_E+'|'+VOCAB_M+'|'+VOCAB_TB;return s.split(/[|\n]/).map(x=>x.trim()).filter(Boolean).map(x=>x.split(' ')[0]).filter(w=>/^[a-z]{2,}$/.test(w));});

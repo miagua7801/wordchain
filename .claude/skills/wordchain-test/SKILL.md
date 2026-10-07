@@ -20,6 +20,7 @@ description: 영어 끝말잇기 앱을 소리 없이(단어 읽기 음소거) �
 | `node tests/accept.js [주소] word1 word2 …` | 학생 답으로 인정되는지 | 단어 수에 비례 |
 | `node tests/variety.js [주소] [턴 수]` | 시작 글자가 최근 2번과 겹친 횟수, 글자 종류 | ~3분 |
 | `node tests/ime.js [주소]` | 한글 자판(입력기 조합)으로 칠 때 글자가 빠지거나 겹치지 않는지 | ~10초 |
+| `node tests/speech.js [주소]` | 단어 읽기: 앞에 무음 여유, 끊은 뒤 쉬었다 읽기, 학생 단어 다 읽은 뒤 컴퓨터 단어 (가짜 음성 엔진, 소리 없음) | ~10초 |
 
 - `[주소]`를 빼면 로컬 빌드(`dist/word-chain-challenge.html`), 주면 그 주소(예: `https://miagua7801.github.io/wordchain/`).
 - `accept.js`는 컴퓨터 단어가 해당 글자로 끝날 때까지 넘기며 시험한다. v·j·q처럼 끝 글자로 거의 안 나오는 글자로 시작하는 단어는 '못 해 봄'이 되므로, 그런 단어는 `vocab.js`에 들어갔는지만 확인한다.
