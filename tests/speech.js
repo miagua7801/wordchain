@@ -19,7 +19,7 @@ const {target}=require('./lib');
   const words=await p.evaluate(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{3,}$/.test(w)&&!/(er|est)$/.test(w)));
   const cw=await p.$eval('.cpu .big',e=>e.textContent); const ans=words.find(w=>w[0]===cw.slice(-1)&&w!==cw);
   await p.fill('#inp',ans); await p.press('#inp','Enter');
-  await p.waitForTimeout(3500);
+  await p.waitForTimeout(5000);
   await p.click('#say'); await p.waitForTimeout(100); await p.click('#say'); // 읽는 도중에 다시 듣기 → 끊고 다시 읽기
   await p.waitForTimeout(1500);
   const log=await p.evaluate(()=>window.__tts);
@@ -28,7 +28,7 @@ const {target}=require('./lib');
   const words2=speaks.filter(e=>e.vol!==0);
   ok(words2.every(w=>{ const i=speaks.indexOf(w); return i>0&&speaks[i-1].vol===0; }),'모든 단어 앞에 소리 없는 여유가 있음');
   const sEnd=log.find(e=>e.ev==='end'&&e.text===ans); const next=words2.find(e=>e.text!==ans&&e.t>(sEnd?sEnd.t:0)&&e.text!==cw);
-  ok(sEnd&&next&&next.t-sEnd.t>=350,`학생 단어(${ans})를 다 읽고 ${next?next.t-sEnd.t:'?'}ms 뒤 컴퓨터 단어(${next&&next.text})를 읽음`);
+  ok(sEnd&&next&&next.t-sEnd.t>=900,`학생 단어(${ans})를 다 읽고 ${next?next.t-sEnd.t:'?'}ms 뒤 컴퓨터 단어(${next&&next.text})를 읽음`);
   const c=log.findIndex(e=>e.ev==='cancel'); const after=log.slice(c+1).find(e=>e.ev==='speak');
   ok(c>=0&&after&&after.t-log[c].t>=150,`끊은 뒤 ${after?after.t-log[c].t:'?'}ms 쉬고 다시 읽음`);
   await b.close(); process.exit(fail?1:0);
