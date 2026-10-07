@@ -9,7 +9,7 @@ function target(arg){ return arg && /^https?:|^file:/.test(arg) ? arg : pathToFi
 async function open(opts={}){
   const b=await chromium.launch({args:['--mute-audio']});
   const p=await b.newPage(opts);
-  await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(){},cancel(){}}}));
+  await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(u){setTimeout(()=>u.onend&&u.onend(),0);},cancel(){}}}));
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));
   return {b,p,errs};
 }
