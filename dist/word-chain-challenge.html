@@ -400,6 +400,7 @@ function bindTimeCtl(root,L,after){ root.querySelectorAll('.timectl .tbtn').forE
 
 // ---------- 수준 선택 화면 ----------
 function chooseTrack(){
+  audioKeepAlive(false);
   stopTimer();
   $app.innerHTML=`
   <header class="hero">
@@ -424,7 +425,7 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-07 12:12'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-07 12:26'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -449,12 +450,32 @@ const sndHTML=()=>soundOn?'🔊<span class="t"> 소리 켬</span>':'🔈<span cl
 // 단어 읽기: 앞소리가 잘리지 않게 ① 읽던 소리를 끊은 뒤엔 잠깐 쉬고 ② 소리 없는 짧은 여유(잠든 스피커 깨우기) 뒤에 ③ 조금 천천히 읽음.
 // 다 읽으면 끝나는 Promise를 돌려줌(소리 꺼짐·오류면 바로, 끝 신호가 안 오는 브라우저는 시간이 지나면 끝남)
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+// 읽기 속도와 흐름의 여유 시간(쫓기는 느낌이 없도록)
+const SPEECH_RATE=.7;        // 단어 읽는 속도(1이 보통)
+const AFTER_ANSWER=1000;     // 학생 단어를 다 읽고 쉬는 시간(ms)
+const MIN_TURN_GAP=2000;     // 학생이 답한 뒤 컴퓨터 단어가 나오기까지 최소 시간(ms)
+const SAY_DELAY=500;         // 컴퓨터 단어가 화면에 나온 뒤 읽기 시작까지(ms)
+// 블루투스 이어폰은 소리가 끊기면 연결을 쉬게 해 첫소리가 잘림 →
+// 게임 화면에 있는 동안 들리지 않을 만큼 작은 소리를 계속 흘려 연결이 쉬지 않게 함(사용자가 버튼을 누를 때 시작)
+let actx=null;
+function audioKeepAlive(on){
+  try{
+    if(!on){ if(actx&&actx.state==='running') actx.suspend(); return; }
+    if(!actx){
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      actx=new AC(); const buf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*1e-5; // 약 -100dB: 들리지 않음
+      const src=actx.createBufferSource(); src.buffer=buf; src.loop=true; src.connect(actx.destination); src.start();
+    }
+    if(actx.state==='suspended') actx.resume();
+  }catch(e){}
+}
 function speak(w,queue){
   return new Promise(res=>{
     if(!soundOn||!window.speechSynthesis) return res();
     try{
       const ss=speechSynthesis, pad=new SpeechSynthesisUtterance('.'), u=new SpeechSynthesisUtterance(w);
-      pad.lang=u.lang='en-US'; pad.volume=0; u.rate=.8;
+      pad.lang=u.lang='en-US'; pad.volume=0; u.rate=SPEECH_RATE;
       let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
       u.onend=fin; u.onerror=fin; setTimeout(fin,1500+w.length*250);
       const go=()=>{ ss.speak(pad); ss.speak(u); };
@@ -467,6 +488,7 @@ function tileHTML(w,me){ if(w.length===1) return `<span class="tile${me?' me':''
 
 // ---------- 홈 화면 ----------
 function home(){
+  audioKeepAlive(false);
   stopTimer();
   const demo=['apple','egg','green','nose'];
   $app.innerHTML=`
@@ -522,6 +544,7 @@ function confirmBtn(sel,txt,fn){const b=$app.querySelector(sel);const orig=b.tex
 // ---------- 게임 상태 ----------
 let G=null, timerId=null;
 function start(id){
+  audioKeepAlive(soundOn);
   const L=LEVELS[id-1];
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp);
   // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
@@ -551,7 +574,7 @@ function setCpu(c){
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
   if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }
-  render(); speak(c.w,true);
+  render(); setTimeout(()=>{ if(G&&G.cur===c) speak(c.w,true); },SAY_DELAY);
   if(G.L.time) startTimer();
 }
 function makeOptions(){
@@ -595,8 +618,8 @@ function render(){
   // 끝말잇기 줄은 한 줄로 두고 가장 최근 단어가 보이게
   const cb=$app.querySelector('.chainbox'); if(cb) cb.scrollLeft=cb.scrollWidth;
   $app.querySelector('#back').onclick=home;
-  $app.querySelector('#say').onclick=()=>{const o=soundOn;soundOn=true;speak(c.w);soundOn=o;};
-  $app.querySelector('#snd').onclick=()=>{soundOn=!soundOn;const b=$app.querySelector('#snd');b.innerHTML=sndHTML();b.setAttribute('aria-pressed',soundOn);};
+  $app.querySelector('#say').onclick=()=>{audioKeepAlive(true);const o=soundOn;soundOn=true;speak(c.w);soundOn=o;};
+  $app.querySelector('#snd').onclick=()=>{soundOn=!soundOn;audioKeepAlive(soundOn);const b=$app.querySelector('#snd');b.innerHTML=sndHTML();b.setAttribute('aria-pressed',soundOn);};
   $app.querySelector('#hintBtn').onclick=useHint;
   // 시간 늘리기는 이번 단어에 바로 적용, 줄이기는 다음 단어부터
   if(L.time) bindTimeCtl($app,L,(t,d)=>{
@@ -653,8 +676,8 @@ function success(o){
   msg(`좋아요! ${disp(o)} = ${o.ko}`,'good');
   if(G.streak>=G.L.goal){ const g0=G; setTimeout(()=>{ if(G===g0) passLevel(); },600); return; }
   const g=G;
-  // 학생 단어를 다 읽고 잠깐 쉰 뒤에 컴퓨터 단어로(최소 1.3초)
-  Promise.all([spoken.then(()=>wait(soundOn?400:0)),wait(1300)]).then(()=>{ if(G!==g) return;
+  // 학생 단어를 다 읽고 1초 쉰 뒤에 컴퓨터 단어로(최소 2초)
+  Promise.all([spoken.then(()=>wait(soundOn?AFTER_ANSWER:0)),wait(MIN_TURN_GAP)]).then(()=>{ if(G!==g) return;
     const next=pickCpu(last(o.w));
     if(!next){ toast('🤖','컴퓨터가 졌어요!',`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();G.chain=[];setCpu(pickCpu(null));}); return; }
     setCpu(next);

@@ -22,7 +22,7 @@ const fs=require('fs');
    await p.fill('#inp',ans); await p.press('#inp','Enter'); turns++;
    await p.waitForTimeout(150);
    const m=await p.$('.overlay'); if(m){const t=await m.textContent(); if(t.includes('이미')) {falseUsed++; console.log('FALSE USED',ans,chain);} if(t.includes('통과')){console.log('passed after',turns);} await p.click('#ov1');}
-   else await p.waitForTimeout(1400);
+   else await p.waitForTimeout(2600);
  }
  console.log('turns',turns,'falseUsed',falseUsed,'cpu -er/-est words',cmpSeen);
  await p.screenshot({path:'s8.png'});

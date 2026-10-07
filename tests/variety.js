@@ -14,7 +14,7 @@ const {target,open,startLevel,cpuWord}=require('./lib');
       if(asked.slice(-2).includes(ch)) rep++; asked.push(ch);
       const used=new Set(await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent))); used.add(cw);
       const ans=words.find(w=>w[0]===ch&&!used.has(w)&&!mine.has(w)); if(!ans) break; mine.add(ans);
-      await p.fill('#inp',ans); await p.press('#inp','Enter'); await p.waitForTimeout(1500);
+      await p.fill('#inp',ans); await p.press('#inp','Enter'); await p.waitForTimeout(2600);
     }
     console.log(`${t} ${lv}: 시작 글자 ${asked.join('')} | 최근 2번과 겹침 ${rep}/${asked.length} | 글자 종류 ${new Set(asked).size}`);
   }
