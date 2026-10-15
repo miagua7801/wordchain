@@ -9,7 +9,7 @@ description: 완료배포 — 영어 끝말잇기 앱의 변경을 빌드·소�
 
 ## 순서
 1. **빌드**: `python build.py` → `dist/wordchain.html`(아티팩트용, gitignore), `dist/word-chain-challenge.html`(학생용, 커밋함)
-2. **테스트** (wordchain-test skill, 소리 없음): `node tests/play-test.js`, `node tests/cpu-rules.js` 를 백그라운드로 실행. 실패하면 **여기서 멈추고** 결과를 보고한다.
+2. **테스트** (wordchain-test skill, 소리 없음): `node tests/levels.js`, `node tests/play-test.js`, `node tests/cpu-rules.js` 를 백그라운드로 실행. 바꾼 기능에 맞는 테스트(judge·notebook·basic·listen·score)도 함께. 실패하면 **여기서 멈추고** 결과를 보고한다.
    - 이번 변경으로 추가한 단어가 있으면 `node tests/accept.js 단어…` 로 몇 개 확인.
 3. **커밋**: `git status`로 바뀐 파일 확인 → 관련 파일만 `git add` (app.html, vocab.js, README.md, build.py, tests/, dist/word-chain-challenge.html, .claude/skills/).
    - 메시지는 한국어, 제목 한 줄 + 빈 줄 + `- ` 항목들. 마지막 줄에 시스템이 지정한 Co-Authored-By 표기.
