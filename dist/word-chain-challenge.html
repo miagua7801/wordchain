@@ -144,7 +144,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .trow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .temoji{font-size:40px;line-height:1.1}.tko{font-size:20px;font-weight:700;color:var(--ink)}
 .target .speak{margin-top:0}
-.diff{font-weight:600;color:var(--accent)}
+.diff{font-weight:600;color:var(--accent);white-space:nowrap}
 .slots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
 .slot{min-width:42px;height:50px;border-radius:10px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-family:var(--f-word);font-weight:700;font-size:26px}
 .slot.fixed{background:var(--surface-2);border-color:var(--surface-2)}.slot.on{border-color:var(--accent)}.slot.blank{border-style:dashed;border-color:var(--link)}
@@ -152,7 +152,6 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .blk{min-width:52px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-family:var(--f-word);font-weight:700;font-size:26px;box-shadow:var(--shadow)}
 .blk:hover:not(:disabled){border-color:var(--accent)}.blk:disabled{opacity:.25}
 .note.center{text-align:center;margin:0 0 6px}
-.spell .choice .k{font-size:13px;color:var(--muted)}
 .listenbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 10px}
 .tgl{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:600;min-height:40px}
 .tgl[aria-pressed="true"]{border-color:var(--accent);background:var(--good-soft)}
@@ -423,6 +422,8 @@ const SETTINGS={
   skipStreak:5,
   // 듣고 쓰기: 다시 듣기 횟수(보통 2~4단계 토글 / 도전 5단계 듣기 챌린지)
   listen:{normalReplays:2, hardReplays:1},
+  // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
+  basicSpeech:{rate:0.6, targetGap:1500},
   // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘(중2·중1) + 단어장 밖 단어
   // combo: [콤보 수 이상, 배율] (큰 것부터), listen: 듣고 쓰기 배율. 힌트를 쓴 턴은 길이·기본 어휘 보너스만 없어짐
   score:{base:10, lenFrom:5, lenPer:2, tb2:5, tb1:3, outside:3, combo:[[10,2],[5,1.5],[3,1.2]], listen:1.5},
@@ -709,7 +710,7 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-15 13:23'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-15 15:45'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -772,7 +773,7 @@ function speak(w,queue){
     if(!soundOn||!window.speechSynthesis) return res();
     try{
       const ss=speechSynthesis, pad=new SpeechSynthesisUtterance('.'), u=new SpeechSynthesisUtterance(w);
-      pad.lang=u.lang='en-US'; pad.volume=0; u.rate=SPEECH_RATE;
+      pad.lang=u.lang='en-US'; pad.volume=0; u.rate=track==='basic'?SETTINGS.basicSpeech.rate:SPEECH_RATE;
       let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
       u.onend=fin; u.onerror=fin; setTimeout(fin,1500+w.length*250);
       const go=()=>{ ss.speak(pad); ss.speak(u); };
@@ -900,7 +901,9 @@ function setCpu(c){
   if(GUIDED(G.L.mode)){ G.target=chooseTarget(last(c.w)); prepGuided(); }
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
   if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }
-  render(); setTimeout(()=>{ if(G&&G.cur===c){ speak(c.w,true); if(G.target&&GUIDED(G.L.mode)) speak(G.target.w,true); } },SAY_DELAY);
+  // 컴퓨터 단어를 읽고, 기초 1~3단계면 잠깐 쉰 뒤 학생이 완성할 다음 단어를 읽음
+  render(); setTimeout(()=>{ if(!(G&&G.cur===c)) return; const said=speak(c.w,true);
+    if(G.target&&GUIDED(G.L.mode)){ const t=G.target; said.then(()=>wait(soundOn?SETTINGS.basicSpeech.targetGap:0)).then(()=>{ if(G&&G.cur===c&&!G.locked) speak(t.w,true); }); } },SAY_DELAY);
   if(G.L.time) startTimer();
 }
 function makeOptions(){
@@ -974,7 +977,7 @@ const slotHTML=(c,cls)=>`<span class="slot${cls?' '+cls:''}">${c?esc(c):''}</spa
 function renderGuided(){
   const ans=$app.querySelector('#answer'), t=G.target, w=t.w, m=G.L.mode;
   if(m==='spell'){
-    ans.innerHTML=`<div class="choices spell n${G.options.length}">${G.options.map((o,i)=>`<button class="choice" data-v="${esc(o)}"><span class="w"><span class="f">${esc(o[0])}</span>${esc(o.slice(1))}</span><span class="k">${i+1}</span></button>`).join('')}</div>`;
+    ans.innerHTML=`<div class="choices spell n${G.options.length}">${G.options.map((o,i)=>`<button class="choice" data-v="${esc(o)}"><span class="w"><span class="f">${esc(o[0])}</span>${esc(o.slice(1))}</span></button>`).join('')}</div>`;
     ans.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{ if(G.locked) return; b.classList.add(b.dataset.v===w?'right':'wrong'); guidedAnswer(b.dataset.v); });
     numberKeys(ans);
   }

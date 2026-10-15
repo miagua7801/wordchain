@@ -87,6 +87,7 @@ node tests/cpu-rules.js
 | `adapt.upAfter` · `adapt.downAfter` | 기초 자동 조절: 연속 정답/오답 횟수 | 3 · 2 |
 | `skipStreak` | 건너뛰기 도전에 필요한 연속 성공(1단계 목표보다 크면 목표 수) | 5 |
 | `listen.normalReplays` · `listen.hardReplays` | 듣고 쓰기 다시 듣기 횟수(보통 · 듣기 챌린지) | 2 · 1 |
+| `basicSpeech.rate` · `basicSpeech.targetGap` | 기초 수준 읽기 속도 · 컴퓨터 단어를 읽고 다음 단어를 읽기까지 쉬는 시간(ms) | 0.6 · 1500 |
 | `score` | 점수 기본·보너스·콤보 배율·듣고 쓰기 배율 | 위 규칙 |
 | `combo.show` · `combo.celebrate` | 콤보 표시 시작 · 축하 효과 | 3 · [5,10] |
 | `badge` | 배지 조건 숫자 | 위 규칙 |

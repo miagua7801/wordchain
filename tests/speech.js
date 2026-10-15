@@ -8,7 +8,7 @@ const {target}=require('./lib');
   await p.addInitScript(()=>{
     const log=[]; window.__tts=log; let busy=0; const t0=performance.now(); const now=()=>Math.round(performance.now()-t0);
     const ss={ get speaking(){return busy>0;}, get pending(){return false;},
-      speak(u){ log.push({t:now(),ev:'speak',text:u.text,vol:u.volume}); busy++; const dur=u.volume===0?100:700; // 단어는 0.7초 읽는 척
+      speak(u){ log.push({t:now(),ev:'speak',text:u.text,vol:u.volume,rate:u.rate}); busy++; const dur=u.volume===0?100:700; // 단어는 0.7초 읽는 척
         setTimeout(()=>{ busy--; log.push({t:now(),ev:'end',text:u.text}); u.onend&&u.onend(); },dur); },
       cancel(){ log.push({t:now(),ev:'cancel'}); busy=0; } };
     Object.defineProperty(window,'speechSynthesis',{value:ss});
@@ -31,5 +31,12 @@ const {target}=require('./lib');
   ok(sEnd&&next&&next.t-sEnd.t>=900,`학생 단어(${ans})를 다 읽고 ${next?next.t-sEnd.t:'?'}ms 뒤 컴퓨터 단어(${next&&next.text})를 읽음`);
   const c=log.findIndex(e=>e.ev==='cancel'); const after=log.slice(c+1).find(e=>e.ev==='speak');
   ok(c>=0&&after&&after.t-log[c].t>=150,`끊은 뒤 ${after?after.t-log[c].t:'?'}ms 쉬고 다시 읽음`);
+  // 기초 1~3단계: 더 천천히 읽고, 컴퓨터 단어를 다 읽은 뒤 쉬었다가 다음 단어(학생이 완성할 단어)를 읽음
+  await p.evaluate(()=>{ window.__tts.length=0; });
+  await p.click('#back'); await p.click('[data-lv="1"]'); await p.waitForTimeout(4500);
+  const L2=await p.evaluate(()=>window.__tts), cpuW=await p.evaluate(()=>window.__wordchain.cpu()), tgt=await p.evaluate(()=>window.__wordchain.target());
+  const cEnd=L2.find(e=>e.ev==='end'&&e.text===cpuW), tSp=L2.find(e=>e.ev==='speak'&&e.text===tgt), cSp=L2.find(e=>e.ev==='speak'&&e.text===cpuW);
+  ok(cSp&&cSp.rate<0.65,`기초 읽기 속도 ${cSp&&cSp.rate.toFixed(2)}배`);
+  ok(cEnd&&tSp&&tSp.t-cEnd.t>=1400,`컴퓨터 단어(${cpuW})를 다 읽고 ${tSp&&cEnd?tSp.t-cEnd.t:'?'}ms 뒤 다음 단어(${tgt})를 읽음`);
   await b.close(); process.exit(fail?1:0);
 })();
