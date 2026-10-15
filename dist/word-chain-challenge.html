@@ -162,6 +162,16 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .lbox{width:22px;height:26px;border:2px solid var(--line);border-radius:6px;background:var(--surface-2)}
 .lbox:last-child{border-color:var(--link);background:var(--link-soft)}
 .speak:disabled{opacity:.45;cursor:not-allowed}
+.score{font-weight:700;color:var(--ink)}
+.combo{font-weight:700;color:var(--bad)}
+.card .sum{color:var(--ink)}
+.badge-note{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:pop .35s ease}
+.burst{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-family:var(--f-display);font-size:40px;color:var(--bad);z-index:15;pointer-events:none;animation:burst 1.3s ease forwards}
+@keyframes burst{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.bdg{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:12px 8px;border:2px solid var(--line);border-radius:14px;background:var(--surface);opacity:.45;filter:grayscale(1)}
+.bdg.got{opacity:1;filter:none;border-color:var(--link)}
+.bdg .bi{font-size:34px;line-height:1.2}.bdg small{color:var(--muted);font-size:12px}.bdg .bd{color:var(--accent)}
 .hintbox .pat{font-family:var(--f-word);font-weight:700;font-size:24px;letter-spacing:.18em}
 
 /* ===== Overlay ===== */
@@ -413,6 +423,13 @@ const SETTINGS={
   skipStreak:5,
   // 듣고 쓰기: 다시 듣기 횟수(보통 2~4단계 토글 / 도전 5단계 듣기 챌린지)
   listen:{normalReplays:2, hardReplays:1},
+  // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘(중2·중1) + 단어장 밖 단어
+  // combo: [콤보 수 이상, 배율] (큰 것부터), listen: 듣고 쓰기 배율. 힌트를 쓴 턴은 길이·기본 어휘 보너스만 없어짐
+  score:{base:10, lenFrom:5, lenPer:2, tb2:5, tb1:3, outside:3, combo:[[10,2],[5,1.5],[3,1.2]], listen:1.5},
+  // 콤보: show 콤보부터 표시, celebrate 콤보에서 짧은 축하 효과
+  combo:{show:3, celebrate:[5,10]},
+  // 배지 조건 숫자
+  badge:{fire:[5,10], longWord:7, textbook:[10,30], outside:5, comeback:5, review:10, ears:5},
 };
 
 // ---------- 단어장 만들기 ----------
@@ -475,7 +492,7 @@ function suggest(w){
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b)};
+window.__wordchain={judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h),tb:w=>DICT.get(w)?.tb||0,state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo}:null};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -595,6 +612,7 @@ function renderReview(){
   enInput(inp,$app.querySelector('#f'),v=>{
     if(R.done) return; const a=v.trim().toLowerCase(); if(!a){ msg('단어를 써 주세요.','info'); return; }
     R.done=true; const ok=a===d.w, r=nbResult(d.w,ok); if(ok) R.right++;
+    if(Object.keys(nb.learned).length>=B.review) award('review');
     msg(ok?(r==='learned'?`✔ 맞았어요! ${word} — 도장을 다 모아 '외운 단어'로 옮겼어요 🎉`:`✔ 맞았어요! ${word} = ${plainKo(d.ko)}`):`✗ 정답은 ${word}예요. 내일 다시 복습해요.`,ok?'good':'bad');
     speak(d.w); inp.disabled=true;
     const nr=$app.querySelector('#nextRow'); nr.innerHTML=`<button class="btn" id="next">${R.i+1<R.list.length?'다음 단어 →':'끝내기'}</button>`;
@@ -619,6 +637,47 @@ function notebook(){
   $app.querySelector('#back').onclick=()=>track?home():chooseTrack();
   if(due) $app.querySelector('#rv').onclick=startReview;
   confirmBtn('#nbclear','정말 비울까요? 한 번 더 누르세요',()=>{ nb={items:{},learned:{},tbSeen:[]}; nbSave(); notebook(); });
+}
+
+// ---------- 배지 ----------
+// 이 기기의 localStorage(wordchain-badges-v1)에 [{id, date}]만 저장 — 이름 등 개인 정보 없음
+const BADGE_KEY='wordchain-badges-v1', B=SETTINGS.badge;
+let badges=[]; try{ const s=JSON.parse(localStorage.getItem(BADGE_KEY)); if(Array.isArray(s)) badges=s; }catch(e){}
+const BADGES=[
+  {id:'first',icon:'👣',name:'첫걸음',cond:'첫 정답'},
+  {id:'fire5',icon:'🔥',name:'불꽃 '+B.fire[0],cond:B.fire[0]+'콤보 달성'},
+  {id:'fire10',icon:'🔥',name:'불꽃 '+B.fire[1],cond:B.fire[1]+'콤보 달성'},
+  {id:'long',icon:'📏',name:'긴 단어',cond:B.longWord+'글자 이상 단어로 정답'},
+  {id:'tb10',icon:'📘',name:'기본 어휘 탐험가 '+B.textbook[0],cond:`서로 다른 기본 어휘 단어 ${B.textbook[0]}개로 정답 (누적)`},
+  {id:'tb30',icon:'📚',name:'기본 어휘 탐험가 '+B.textbook[1],cond:`서로 다른 기본 어휘 단어 ${B.textbook[1]}개로 정답 (누적)`},
+  {id:'outside',icon:'📗',name:'사전 밖 모험가',cond:`단어장 밖 올바른 단어 ${B.outside}개 (누적)`},
+  {id:'nohint',icon:'🧠',name:'힌트 없이',cond:'힌트를 한 번도 쓰지 않고 단계 통과'},
+  {id:'comeback',icon:'💪',name:'다시 일어서기',cond:`틀린 직후 판에서 ${B.comeback}연속 성공`},
+  {id:'review',icon:'📒',name:'복습왕',cond:`단어 수첩에서 '외운 단어' ${B.review}개`},
+  {id:'ears',icon:'🎧',name:'귀가 밝아요',cond:`듣고 쓰기 모드로 ${B.ears}연속 성공`},
+  {id:'master-basic',icon:'🌱',name:'기초 정복',cond:'기초 수준의 모든 단계 통과'},
+  {id:'master-normal',icon:'🌿',name:'보통 정복',cond:'보통 수준의 모든 단계 통과'},
+  {id:'master-hard',icon:'🌳',name:'도전 정복',cond:'도전 수준의 모든 단계 통과'},
+];
+const hasBadge=id=>badges.some(b=>b.id===id);
+function award(id){
+  if(hasBadge(id)) return; const d=BADGES.find(b=>b.id===id); if(!d) return;
+  badges.push({id,date:today()}); try{ localStorage.setItem(BADGE_KEY,JSON.stringify(badges)); }catch(e){}
+  if(G&&G.newBadges) G.newBadges.push(id);
+  // 화면 아래 3초 알림
+  const n=document.createElement('div'); n.className='badge-note'; n.setAttribute('role','status'); n.textContent=`🏅 새 배지: ${d.icon} ${d.name}`;
+  document.body.appendChild(n); setTimeout(()=>n.remove(),3000);
+}
+// 누적 기록(배지용): 서로 다른 기본 어휘 정답 단어, 단어장 밖 단어 수 — wordchain-v2 안 stats
+function stat(){ store.stats=store.stats||{tb:[],outside:0}; return store.stats; }
+function badgeScreen(){
+  stopTimer();
+  $app.innerHTML=`
+  <div class="topbar"><button class="back" id="back">← 돌아가기</button><h2>🏅 배지 <span class="word">${badges.length} / ${BADGES.length}</span></h2></div>
+  <div class="badges">${BADGES.map(d=>{ const got=badges.find(b=>b.id===d.id);
+    return `<div class="bdg${got?' got':''}"><span class="bi" aria-hidden="true">${d.icon}</span><b>${esc(d.name)}</b><small>${esc(d.cond)}</small><small class="bd">${got?'✔ '+got.date.slice(5).replace('-','/')+' 획득':'아직 못 얻었어요'}</small></div>`; }).join('')}</div>
+  <div class="foot"><span>배지는 이 기기의 브라우저에만 저장돼요.</span></div>`;
+  $app.querySelector('#back').onclick=()=>track?home():chooseTrack();
 }
 
 // ---------- 수준 선택 화면 ----------
@@ -650,7 +709,7 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-15 13:08'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-15 13:23'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -756,7 +815,7 @@ function home(){
   <header class="hero">
     <h1>영어 끝말잇기 챌린지</h1>
     <p>컴퓨터가 낸 단어의 <b>마지막 글자</b>로 시작하는 영어 단어를 이어 가세요.</p>
-    <div class="trackbar"><span class="chip">${TRACKS[track].icon} 수준: <b>${TRACKS[track].name}</b></span><button class="back" id="chg">수준 바꾸기</button><button class="back" id="nbBtn">📒 단어 수첩</button>${nbDue().length?`<button class="btn soft" id="rv">오늘의 복습 ${nbDue().length}개</button>`:''}</div>
+    <div class="trackbar"><span class="chip">${TRACKS[track].icon} 수준: <b>${TRACKS[track].name}</b></span><button class="back" id="chg">수준 바꾸기</button><button class="back" id="nbBtn">📒 단어 수첩</button><button class="back" id="bdBtn">🏅 배지</button>${nbDue().length?`<button class="btn soft" id="rv">오늘의 복습 ${nbDue().length}개</button>`:''}</div>
     <div class="demo-chain" aria-label="예시: apple, egg, green, nose">${demo.map((w,i)=>(i?'<span class="joint"></span>':'')+tileHTML(w)).join('')}</div>
   </header>
   <section class="levels">${LEVELS.map(L=>{
@@ -771,6 +830,7 @@ function home(){
         ${L.time?`<span class="chip">⏱ ${timeOf(L)}초</span>`:''}
         ${cleared?'<span class="chip ok">✔ 통과</span>':''}
         ${open&&best?`<span class="chip">최고 ${best}연속</span>`:''}
+        ${open&&save.bestScore&&save.bestScore[L.id]?`<span class="chip">⭐ 최고 ${save.bestScore[L.id]}점</span>`:''}
         ${open?'':`<span class="chip lock">${L.id-1}단계를 통과하면 열려요</span>`}
       </span></button>`;}).join('')}
   </section>
@@ -797,6 +857,7 @@ function home(){
     bindTimeCtl(s,L,t=>{ const c=$app.querySelector(`.lv[data-lv="${L.id}"] .meta .chip:nth-child(3)`); if(c) c.textContent=`⏱ ${t}초`; }); });
   $app.querySelector('#chg').onclick=chooseTrack;
   $app.querySelector('#nbBtn').onclick=notebook;
+  $app.querySelector('#bdBtn').onclick=badgeScreen;
   $app.querySelector('#rv')?.addEventListener('click',startReview);
   confirmBtn('#reset','정말 지울까요? 한 번 더 누르세요',()=>{save=blank();persist();home();});
   confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
@@ -811,7 +872,7 @@ function start(id){
   const L=LEVELS[id-1];
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp);
   // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
-  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id]};
+  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0};
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
@@ -834,7 +895,7 @@ function pickCpu(firstCh){
 function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
 function setCpu(c){
   G.listen=listenOn(G.L); G.revealed=false; G.replays=G.L.listen==='force'?SETTINGS.listen.hardReplays:SETTINGS.listen.normalReplays;
-  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent='';
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent=''; G.turnHint=false;
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   if(GUIDED(G.L.mode)){ G.target=chooseTarget(last(c.w)); prepGuided(); }
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
@@ -945,6 +1006,34 @@ function renderGuided(){
   }
 }
 
+// ---------- 콤보·점수·배지 ----------
+function calcScore(o,combo,listen,hint){
+  const S=SETTINGS.score, n=o.w.length; let bonus=0;
+  if(n>=S.lenFrom) bonus+=(n-S.lenFrom+1)*S.lenPer;
+  if(o.tb===2) bonus+=S.tb2; else if(o.tb===1) bonus+=S.tb1;
+  if(hint) bonus=0;                                          // 힌트를 쓴 턴은 길이·기본 어휘 보너스만 없어짐
+  const mult=(S.combo.find(([c])=>combo>=c)||[0,1])[1]*(listen?S.listen:1);
+  return Math.floor((S.base+bonus+(o.outside?S.outside:0))*mult);
+}
+const scoreFor=o=>calcScore(o,G.combo,G.listen,G.turnHint);
+function checkBadges(o){
+  award('first');
+  if(G.combo>=B.fire[0]) award('fire5'); if(G.combo>=B.fire[1]) award('fire10');
+  if(o.w.length>=B.longWord) award('long');
+  const st=stat();
+  if(o.tb&&!o.outside&&!st.tb.includes(o.w)){ st.tb.push(o.w); persist(); }
+  if(st.tb.length>=B.textbook[0]) award('tb10'); if(st.tb.length>=B.textbook[1]) award('tb30');
+  if(o.outside){ st.outside++; persist(); if(st.outside>=B.outside) award('outside'); }
+  if(G.failedBefore&&G.streak>=B.comeback) award('comeback');
+  if(G.listen){ G.listenRun++; if(G.listenRun>=B.ears) award('ears'); } else G.listenRun=0;
+}
+// 5·10콤보 축하(동작 줄이기 설정이면 생략)
+function celebrate(n){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const el=document.createElement('div'); el.className='burst'; el.setAttribute('aria-hidden','true'); el.textContent=`🔥 ${n}콤보! 🎉`;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),1300);
+}
+
 // ---------- 화면 그리기 ----------
 function render(){
   const L=G.L, c=G.cur, ch=last(c.w), hide=G.listen&&!G.revealed, cs=hide?G.chain.slice(0,-1):G.chain;
@@ -955,7 +1044,7 @@ function render(){
     <button class="back" id="snd" aria-pressed="${soundOn}" aria-label="소리">${sndHTML()}</button>
   </div>
   <div class="status">
-    <div><div class="label">연속 성공 ${G.streak} / ${L.goal}${GUIDED(L.mode)?` · <span class="diff" title="자동 조절 난이도">난이도 ${G.diff+1}${G.diffMove==='up'?' ▲':G.diffMove==='down'?' ▼':''}</span>`:''}</div>
+    <div><div class="label"><span id="score" class="score">⭐ ${G.score}점</span> · 연속 성공 ${G.streak} / ${L.goal}<span id="combo" class="combo">${G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:''}</span>${GUIDED(L.mode)?` · <span class="diff" title="자동 조절 난이도">난이도 ${G.diff+1}${G.diffMove==='up'?' ▲':G.diffMove==='down'?' ▼':''}</span>`:''}</div>
       <div class="dots">${Array.from({length:L.goal},(_,i)=>`<span class="dot${i<G.streak?' on':''}"></span>`).join('')}</div></div>
     <button class="btn hint" id="hintBtn" ${G.hints<=0?'disabled':''}>💡 힌트 (${G.hints})</button>
   </div>
@@ -968,7 +1057,7 @@ function render(){
     ${L.listen==='force'?'':`<div class="lboxes" aria-label="${c.w.length}글자">${'<span class="lbox"></span>'.repeat(c.w.length)}</div>`}
     <button class="speak" id="say" ${G.replays<=0?'disabled':''}>🔊 다시 듣기 (${G.replays})</button>
   </div>
-  <div class="ask">🎧 들은 단어의 <b class="plain">마지막 글자</b>로 시작하는 단어는?</div>`:`<div class="cpu pop">
+  <div class="ask">🎧 들은 단어의 <b class="plain">끝 글자</b>로 시작하는 단어는?</div>`:`<div class="cpu pop">
     <div class="who">🤖 컴퓨터</div>
     ${c.emoji&&L.mode==='type'?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
     <div class="big">${esc(disp(c).slice(0,-1))}<span class="last">${esc(ch)}</span></div>
@@ -1009,7 +1098,7 @@ function render(){
     numberKeys(ans);
   }else{
     // inputmode=email: 휴대폰에서 영문 자판이 뜸. lang=en: 일부 PC 브라우저가 영문 입력기로 전환
-    ans.innerHTML=enFormHTML(`${ch}...`,`${ch}로 시작하는 영어 단어`,'내기');
+    ans.innerHTML=hide?enFormHTML("들은 단어의 끝 글자로…","들은 단어의 끝 글자로 시작하는 영어 단어","내기"):enFormHTML(`${ch}...`,`${ch}로 시작하는 영어 단어`,"내기");
     enInput(ans.querySelector('#inp'),ans.querySelector('#f'),submitTyped);
   }
   if(G.hintStep>0) showHint(false);
@@ -1048,10 +1137,16 @@ function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickTB(c):n
 function success(o){
   G.locked=true; stopTimer(); const spoken=speak(o.w); G.used.add(o.w);
   adapt(true); if(G.clean) G.cleanRun++;
+  G.combo++; G.bestCombo=Math.max(G.bestCombo,G.combo); const pts=scoreFor(o); G.score+=pts;
+  save.bestScore=save.bestScore||{}; if(G.score>(save.bestScore[G.L.id]||0)){ save.bestScore[G.L.id]=G.score; persist(); }
+  checkBadges(o);
+  const sc=$app.querySelector('#score'), cb2=$app.querySelector('#combo');
+  if(sc) sc.textContent=`⭐ ${G.score}점`; if(cb2) cb2.textContent=G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:'';
+  if(SETTINGS.combo.celebrate.includes(G.combo)) celebrate(G.combo);
   if(o.tb&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbAdd(o.w,'textbook'); } G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
   if(G.listen&&!G.revealed){ G.revealed=true; render(); }
-  msg(o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`,'good');
+  msg((o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`)+` (+${pts}점)`,'good');
   if(G.streak>=G.L.goal){ const g0=G; setTimeout(()=>{ if(G===g0) passLevel(); },600); return; }
   const g=G;
   // 학생 단어를 다 읽고 1초 쉰 뒤에 컴퓨터 단어로(최소 2초)
@@ -1064,7 +1159,7 @@ function success(o){
 function fail(why,ex){
   G.locked=true; stopTimer(); const had=G.streak; G.streak=0;
   if(ex) nbAdd(ex.w,'wrong');
-  adapt(false); G.clean=false; G.cleanRun=0;
+  adapt(false); G.clean=false; G.cleanRun=0; G.combo=0; G.failedBefore=true; G.listenRun=0;
   let revealHTML='';
   if(G.listen&&!G.revealed){ G.revealed=true; render(); revealHTML=`<p>🎧 컴퓨터 단어는 <span class="ex">${esc(disp(G.cur))}</span> (${esc(plainKo(G.cur.ko))})였어요.</p>${G.silent?`<p>💡 ${esc(G.silent)}</p>`:''}`; }
   const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(disp(ex))}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
@@ -1072,8 +1167,11 @@ function fail(why,ex){
 }
 function passLevel(){
   const L=G.L; save.cleared[L.id]=true; if(save.unlocked<L.id+1) save.unlocked=Math.min(LEVELS.length,L.id+1); persist();
+  if(!G.hintUsed) award('nohint');
+  if(LEVELS.every(x=>save.cleared[x.id])) award('master-'+track);
   const nextL=LEVELS[L.id];
-  const card=toast('🏆',`${L.id}단계 통과!`,`<p>틀리지 않고 ${L.goal}번 연속 성공했어요.</p>${nextL?`<p><b>${nextL.id}단계 · ${nextL.name}</b>이 열렸어요.</p>`:`<p>${TRACKS[track].name} 수준의 모든 단계를 통과했어요! ${track!=='hard'?'다음 수준에도 도전해 보세요.':'최고예요.'}</p>`}`,
+  const got=G.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
+  const card=toast('🏆',`${L.id}단계 통과!`,`<p>틀리지 않고 ${L.goal}번 연속 성공했어요.</p><p class="sum">⭐ 이번 판 <b>${G.score}점</b> · 🔥 최고 콤보 <b>${G.bestCombo}</b></p>${got.length?`<p class="sum">🏅 이번에 얻은 배지: ${got.map(b=>b.icon+' '+esc(b.name)).join(', ')}</p>`:''}${nextL?`<p><b>${nextL.id}단계 · ${nextL.name}</b>이 열렸어요.</p>`:`<p>${TRACKS[track].name} 수준의 모든 단계를 통과했어요! ${track!=='hard'?'다음 수준에도 도전해 보세요.':'최고예요.'}</p>`}`,
     nextL?`${nextL.id}단계 도전`:'수준 선택',()=>nextL?start(nextL.id):chooseTrack(),'이 단계 더 연습',()=>start(L.id));
   if(track==='basic'&&L.id===1&&G.firstTime&&G.clean&&G.cleanRun>=Math.min(SETTINGS.skipStreak,L.goal)&&LEVELS.length>=3){
     card.querySelector('.card div:nth-of-type(2)').insertAdjacentHTML('beforeend','<p>🚀 힌트도 실수도 없이 해냈어요! 쉽게 느껴지면 3단계로 바로 가도 돼요.</p>');
@@ -1103,11 +1201,11 @@ function useHint(){
       G.reveal++; G.placed.forEach(p=>p.used=false); G.placed=[];
       for(let k=1;k<=G.reveal;k++){ const b=G.blocks.find(x=>!x.used&&x.c===w[k]); if(b){ b.used=true; G.placed.push(b); } } }
     if(m==='blanks'){ if(G.blankIdx.length<=1){ msg('마지막 빈칸은 직접 채워 보세요!','info'); return; } G.blankIdx.shift(); G.reveal++; }
-    nbAdd(w,'hint'); G.clean=false; G.hintUsed=true; G.hints--; G.hintStep++;
+    nbAdd(w,'hint'); G.clean=false; G.hintUsed=true; G.turnHint=true; G.hints--; G.hintStep++;
     const keepPlaced=G.placed; render(); G.placed=keepPlaced; if(G.blockDraw&&m==='blocks') G.blockDraw();
     msg('💡 한 글자를 더 보여 줬어요.','info'); return;
   }
-  G.hintUsed=true; G.clean=false;
+  G.hintUsed=true; G.clean=false; G.turnHint=true;
   if(G.L.mode==='choice'){
     const wrongs=G.options.filter(o=>o.w[0]!==ch&&!G.removed.has(o.w));
     if(wrongs.length<=1&&G.hintStep>0){ msg('이미 힌트를 썼어요. 남은 2개 중에서 골라 보세요!','info'); return; }

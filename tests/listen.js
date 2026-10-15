@@ -41,7 +41,7 @@ const {target,open,startLevel}=require('./lib');
   await p.goto(url); await p.click('[data-t="hard"]'); await p.waitForTimeout(200);
   ok((await p.$$('.levels .lv')).length===5&&!(await p.$eval('[data-lv="5"]',e=>e.disabled)),'도전 5단계: 4단계를 통과했으면 열림');
   await p.click('[data-lv="5"]'); await p.waitForTimeout(300);
-  ok(!!(await p.$('.cpu.listen'))&&!(await p.$('.lbox'))&&(await p.textContent('#say')).includes('(1)')&&!(await p.$('#lsn')),'듣기 챌린지: 처음부터 소리로만, 다시 듣기 1번, 글자 수 없음');
+  ok(!(await p.getAttribute('#inp','placeholder')).includes('...')&&!!(await p.$('.cpu.listen'))&&!(await p.$('.lbox'))&&(await p.textContent('#say')).includes('(1)')&&!(await p.$('#lsn')),'듣기 챌린지: 처음부터 소리로만, 다시 듣기 1번, 글자 수 없음');
   await p.click('#snd'); await p.waitForTimeout(100);
   ok((await p.textContent('#msg')).includes('끌 수 없어요'),'듣기 챌린지에서는 소리를 끌 수 없음');
   if(errs.length) console.log('errors',errs);
