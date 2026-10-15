@@ -186,6 +186,14 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 </script>
 <script>
 (function(){
+// ========== 선생님이 바꿀 수 있는 설정 ==========
+const SETTINGS={
+  // 단어 판정: 단어장에도 영어 단어 목록에도 없는 단어를 썼을 때 다시 쓸 기회(0이면 바로 오답)
+  wrongRetry:1,
+  // 철자 도움: 보여 줄 비슷한 단어장 단어 수, 허용하는 글자 차이(편집 거리)
+  suggestMax:3, suggestDist:2,
+};
+
 // ---------- 단어장 만들기 ----------
 const DICT = new Map();
 function load(str, tier){
@@ -211,6 +219,42 @@ DICT.forEach(d=>{ if(EMOJI[d.w]) d.emoji=EMOJI[d.w]; });
 const disp=x=>x.d||x.w;
 const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w));
 const byTier = t => ALL.filter(x=>x.tier<=t);
+
+// ---------- 단어 판정: 단어장 단어 / 단어장 밖 올바른 단어 / 틀린 단어 ----------
+// 영어 단어 목록(wordlist.js, SCOWL size 60). 없으면 단어장 단어의 규칙 변화형만 올바른 단어로 인정
+const WORDS=new Set(typeof WORDLIST==='string'?WORDLIST.split('|'):[]);
+function isInflection(w){
+  const b=[], n=w.length, dbl=s=>s.length>2&&s[s.length-1]===s[s.length-2]?s.slice(0,-1):null;
+  if(w.endsWith('ies')) b.push(w.slice(0,-3)+'y');
+  if(w.endsWith('es')) b.push(w.slice(0,-2));
+  if(w.endsWith('s')) b.push(w.slice(0,-1));
+  if(w.endsWith('ied')) b.push(w.slice(0,-3)+'y');
+  if(w.endsWith('ed')){ const s=w.slice(0,-2); b.push(s, w.slice(0,-1), dbl(s)); }
+  if(w.endsWith('ing')){ const s=w.slice(0,-3); b.push(s, s+'e', dbl(s)); }
+  return n>2&&b.some(x=>x&&DICT.has(x));
+}
+const isEnglish=w=>WORDS.has(w)||isInflection(w);
+// 철자 차이(바꾸기·넣기·빼기·이웃 글자 순서 바꾸기를 1로 셈)
+function editDist(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  const d=[]; for(let i=0;i<=a.length;i++){ d[i]=[i]; for(let j=1;j<=b.length;j++) d[i][j]=i?0:j; }
+  for(let i=1;i<=a.length;i++){ let rowMin=Infinity;
+    for(let j=1;j<=b.length;j++){ const c=a[i-1]===b[j-1]?0:1;
+      d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);
+      rowMin=Math.min(rowMin,d[i][j]); }
+    if(rowMin>max) return max+1; }
+  return d[a.length][b.length];
+}
+// 틀린 단어와 비슷한(같은 첫 글자, 글자 차이 1~2) 단어장 단어
+function suggest(w){
+  return ALL.filter(x=>x.w[0]===w[0]&&!x.cmp&&x.w!==w).map(x=>({x,d:editDist(w,x.w,SETTINGS.suggestDist)}))
+    .filter(o=>o.d<=SETTINGS.suggestDist).sort((a,b)=>a.d-b.d||TBW(b.x)-TBW(a.x)||Math.abs(a.x.w.length-w.length)-Math.abs(b.x.w.length-w.length))
+    .slice(0,SETTINGS.suggestMax).map(o=>disp(o.x));
+}
+const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
+// 자동 테스트용(읽기 전용)
+window.__wordchain={judge,suggest};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -429,7 +473,7 @@ function pickCpu(firstCh){
 }
 function newChain(){ G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
 function setCpu(c){
-  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false;
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0;
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
   if(G.L.time){ G.lim=timeOf(G.L); G.elapsed=0; G.bonus=0; G.timeLeft=G.lim; }
@@ -525,14 +569,21 @@ function submitTyped(raw){
     fail(`<b>${esc(w)}</b>는 이번 끝말잇기에서 ${k>=0?`${k+1}번째에 ${who} `:''}이미 쓴 단어예요. 위의 단어 줄에서 확인해 보세요.`, example(ch)); return; }
   if(w.length<G.L.min){ msg(`${G.L.min}글자 이상 단어를 써 주세요.`,'info'); inp.select(); return; }
   const d=DICT.get(w);
-  if(!d){ msg(`"${w}"는 이 앱 단어장에 없어서 정답으로 인정되지 않아요. 철자를 확인하거나 다른 단어를 써 보세요. 틀린 것으로 치지 않으니 연속 성공 횟수는 그대로예요.`,'info'); inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),400); inp.select(); return; }
-  success(d);
+  if(d){ success(d); return; }
+  // 단어장 밖이지만 올바른 영어 단어: 정답(뜻은 표시하지 않음)
+  if(isEnglish(w)){ success({w,ko:'',outside:true}); return; }
+  // 틀린 단어: 철자 도움을 보여 주고 다시 쓸 기회(SETTINGS.wrongRetry번), 그다음은 오답
+  const sug=suggest(w); G.wrongTries=(G.wrongTries||0)+1;
+  if(G.wrongTries<=SETTINGS.wrongRetry){
+    msg(`"${w}"는 영어 단어 목록에 없어요. ${sug.length?`혹시 이 단어인가요? ${sug.join(' · ')}`:'철자를 다시 확인해 보세요.'} 한 번 더 써 보세요.`,'bad');
+    inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),400); inp.select(); return; }
+  fail(`<b>${esc(w)}</b>는 영어 단어 목록에 없어요.${sug.length?` 혹시 <b>${sug.map(esc).join(' · ')}</b>?`:''}`, example(ch));
 }
 function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickTB(c):null; }
 function success(o){
   G.locked=true; stopTimer(); const spoken=speak(o.w); G.used.add(o.w); G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
-  msg(`좋아요! ${disp(o)} = ${o.ko}`,'good');
+  msg(o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`,'good');
   if(G.streak>=G.L.goal){ const g0=G; setTimeout(()=>{ if(G===g0) passLevel(); },600); return; }
   const g=G;
   // 학생 단어를 다 읽고 1초 쉰 뒤에 컴퓨터 단어로(최소 2초)
