@@ -14,7 +14,7 @@ const {target}=require('./lib');
     Object.defineProperty(window,'speechSynthesis',{value:ss});
   });
   await p.goto(url); await p.evaluate(()=>localStorage.clear()); await p.goto(url);
-  await p.click('[data-t="basic"]'); await p.click('#teacher'); await p.click('#teacher'); await p.click('[data-lv="3"]');
+  await p.click('[data-t="basic"]'); await p.click('#teacher'); await p.click('#teacher'); await p.click('[data-lv="4"]');
   await p.waitForTimeout(1200);
   const words=await p.evaluate(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{3,}$/.test(w)&&!/(er|est)$/.test(w)));
   const cw=await p.$eval('.cpu .big',e=>e.textContent); const ans=words.find(w=>w[0]===cw.slice(-1)&&w!==cw);

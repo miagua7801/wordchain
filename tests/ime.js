@@ -11,7 +11,7 @@ const CASES={
 (async()=>{
   const url=target(process.argv[2]);
   const {b,p,errs}=await open(); const cdp=await p.context().newCDPSession(p);
-  await startLevel(p,url,'basic',3); let fail=0;
+  await startLevel(p,url,'basic',4); let fail=0;
   for(const [word,steps] of Object.entries(CASES)){
     await p.fill('#inp',''); await p.focus('#inp');
     for(const comp of steps){

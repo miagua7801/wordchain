@@ -5,7 +5,7 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   const {b,p,errs}=await open();
   await p.goto(url);
   const words=await p.evaluate(()=>(VOCAB_E+'|'+VOCAB_M+'|'+VOCAB_TB).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)&&!/(er|est)$/.test(w)));
-  for(const [t,lv] of [['basic',3],['normal',3],['hard',1]]){
+  for(const [t,lv] of [['basic',4],['normal',3],['hard',1]]){
     await startLevel(p,url,t,lv);
     const asked=[], mine=new Set(); let rep=0;
     for(let i=0;i<turns;i++){

@@ -4,7 +4,7 @@ const {target,open,startLevel,cpuWord,skip}=require('./lib');
 (async()=>{
   const args=process.argv.slice(2); const url=target(args[0]); const words=/^https?:|^file:/.test(args[0]||'')?args.slice(1):args;
   const {b,p,errs}=await open();
-  await startLevel(p,url,'basic',3); // 2글자 이상 인정되는 단계
+  await startLevel(p,url,'basic',4); // 2글자 이상 인정되는 직접 쓰기 단계
   const res={};
   for(let i=0;i<250&&Object.keys(res).length<words.length;i++){
     const ch=(await cpuWord(p)).slice(-1);

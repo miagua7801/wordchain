@@ -4,7 +4,7 @@ const NUM=/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\w+t
 (async()=>{
   const url=target(process.argv[2]); const n=+(process.argv.find(a=>/^\d+$/.test(a))||40);
   const {b,p,errs}=await open(); let fail=0;
-  for(const [t,lv] of [['basic',1],['basic',3],['normal',3],['hard',1],['hard',3]]){
+  for(const [t,lv] of [['basic',1],['basic',4],['normal',3],['hard',1],['hard',3]]){
     await startLevel(p,url,t,lv); const bad=new Set();
     for(let i=0;i<n;i++){ const w=await cpuWord(p); if(w[0]===w[w.length-1]) bad.add(w); if(NUM.test(w)) bad.add('수:'+w); await skip(p); }
     if(bad.size) fail++;
