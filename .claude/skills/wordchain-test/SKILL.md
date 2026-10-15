@@ -21,6 +21,7 @@ description: 영어 끝말잇기 앱을 소리 없이(단어 읽기 음소거) �
 | `node tests/basic.js [주소]` | 기초 4단계·틀린 보기·자동 조절·건너뛰기·진도 초기화 | ~1분 |
 | `node tests/listen.js [주소]` | 듣고 쓰기 토글·듣기 챌린지·공개·끝 글자 설명 | ~40초 |
 | `node tests/score.js [주소]` | 콤보·점수·배지·통과 화면 | ~1분 |
+| `node tests/blocklist.js [주소]` | 금지어: 소스에서 안 읽힘, 출력에 없음, 정상 단어 안 막힘, 입력 시 읽지 않음·기록 안 함 | ~30초 |
 | `node tests/play-test.js` | 도전 2단계 40턴, "이미 나온 단어" 오판·오류 | ~1분 |
 | `node tests/cpu-rules.js [주소] [단계당 수]` | 컴퓨터 단어 첫=끝 글자 금지, 수 단어 금지 | ~1분 |
 | `node tests/accept.js [주소] word1 word2 …` | 학생 답으로 인정되는지 | 단어 수에 비례 |

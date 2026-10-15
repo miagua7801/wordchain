@@ -13,7 +13,8 @@
   - `VOCAB_WF_E`·`VOCAB_WF_M` 접미사로 만든 단어(동사+er/r 사람·도구, 명사+al, 명사+y/ly, 형용사+ly, 동사+ment, 형용사+ness) — 뜻 뒤에 `(sing+er)`처럼 원래 단어 표시
   - `EMOJI` 그림 단어
 - `wordlist.js` — 영어 단어 목록 79,200개(SCOWL size 60, 미국식 철자, 소문자 알파벳 단어만, 욕설·비속어 제외). 단어장 밖 단어가 올바른 영어 단어인지 판정. `tools/make-wordlist.py`로 다시 만들 수 있음
-- `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성. 화면 아래 `버전`에 빌드 시각(한국 시간)을 넣음
+- `blocklist.js` — 부적절한 단어 목록(영어 욕설·성적 어휘·혐오 표현, 한국어 욕설의 로마자·영문 자판 표기). base64로 인코딩해 페이지 소스에서 바로 읽히지 않고 실행할 때 풂. `tools/blocklist.py`로 관리
+- `build.py` — `dist/wordchain.html`(claude.ai 아티팩트용, doctype 없음)과 `dist/word-chain-challenge.html`(학생 배포용 단독 HTML) 생성. 화면 아래 `버전`에 빌드 시각(한국 시간)을 넣음. 빌드할 때 영어 단어 목록에서 금지어를 모두 뺌
 - `tests/` — Playwright 테스트. 모두 소리 없이 실행(`tests/lib.js`가 단어 읽기를 끄고 음소거)
   - `play-test.js` 도전 2단계 40턴, "이미 나온 단어" 오판 확인
   - `cpu-rules.js` 컴퓨터 단어 첫=끝 글자·수 단어 금지 확인
@@ -25,9 +26,11 @@
   - `basic.js` 기초 4단계(철자 고르기·글자 블록·빈칸 채우기·직접 쓰기), 틀린 보기 규칙, 자동 조절, 건너뛰기 도전, 진도 초기화 확인
   - `listen.js` 듣고 쓰기: 토글, 듣기 챌린지, 다시 듣기, 글자 수, 공개, 끝 글자 설명, 소리 끔 확인
   - `score.js` 콤보·점수·배지: 점수 규칙, 콤보, 축하 효과, 최고 점수, 배지 저장·알림·화면, 통과 화면 확인
+  - `blocklist.js` 금지어: 소스에서 안 읽힘, 출력에 없음, 정상 단어가 안 막힘, 입력 시 읽지 않음·기록 안 함·3번째 새 판
   - `levels.js` 수준별 1·2단계를 정답으로 자동 플레이해 통과·오류 확인
   - `notebook.js` 단어 수첩: 오늘의 복습, 도장·복습 간격, 외운 단어, 수첩 비우기, 단어 모으기 확인
   - 앞에 주소를 주면 그 주소(예: GitHub Pages)를, 없으면 로컬 빌드를 테스트
+- `tools/blocklist.py` — 금지어 목록 보기·추가·삭제·확인
 - `tools/add-words.js` — 단어 확인(`check 단어…`)·추가(`add 파일.txt`, 이미 있는 단어는 건너뜀)
 - `.claude/skills/` — Claude Code용 skill: `wordchain-test`, `wordchain-deploy`("완료배포"), `wordchain-add-words`
 - `old/` — 이전 버전
@@ -74,6 +77,11 @@ node tests/cpu-rules.js
   - 배지 14개: 첫걸음, 불꽃 5/10, 긴 단어(7글자 이상), 기본 어휘 탐험가 10/30(서로 다른 기본 어휘 단어, 누적), 사전 밖 모험가(단어장 밖 단어 5개, 누적), 힌트 없이(단계 통과), 다시 일어서기(틀린 직후 판에서 5연속), 복습왕(외운 단어 10개), 귀가 밝아요(듣고 쓰기 5연속), 기초·보통·도전 정복. 처음 얻으면 화면 아래 3초 알림, 단계 목록 "🏅 배지"에서 얻은 배지와 못 얻은 배지(조건, 흐리게)를 봄
   - 단계 통과 화면에 이번 판 점수·최고 콤보·이번에 얻은 배지
   - 점수 값은 `SETTINGS.score`, 콤보는 `SETTINGS.combo`, 배지 조건 숫자는 `SETTINGS.badge`
+- 부적절한 단어 차단
+  - 판정 순서: 단어장 단어면 항상 허용 → 금지어 확인 → 단어장 밖 판정 → 철자 도움
+  - 비교는 대소문자 무시, 같은 글자 3번 이상 반복은 2번으로 줄임(일부러 늘여 쓴 입력은 1번으로 줄인 형태도 비교). 정확히 같은 금지어는 항상, 강한 표현은 단어장 밖 입력 안에 들어 있기만 해도 막음(class, grape, assistant, saltwater 같은 정상 단어는 테스트로 확인)
+  - 금지어를 쓰면 소리로 읽지 않고, 단어를 다시 보여 주지 않고, 입력 칸을 비운 뒤 "이 단어는 사용할 수 없어요. 다른 단어를 써 보세요."만 표시. 정답·점수·콤보·배지·단어 수첩·연속 기록에 반영하지 않음. 한 판에서 3번째면 오답 처리(연속 기록 0) 후 새 판. 입력 내용·횟수는 저장하지 않음
+  - 컴퓨터 출제·힌트·예시·객관식 보기·듣고 쓰기·단어 수첩 복습·철자 도움에는 금지어가 나오지 않음
 - 키보드만으로 조작: 모든 버튼은 Tab·Enter, 객관식·철자 고르기는 숫자 키 1~4, 글자 블록은 글자 키·Backspace
 - 진행 기록과 제한 시간 설정은 브라우저 localStorage(`wordchain-v2`)에 수준별로 저장
 
@@ -102,6 +110,19 @@ node tests/cpu-rules.js
 | `wordchain-badges-v1` | 얻은 배지 `[{id, date}]` |
 
 이름·학번·목소리 등은 받거나 저장하지 않는다. 음성 인식은 쓰지 않고 음성 합성(speechSynthesis)만 쓴다.
+
+## 금지어 목록 고치기 (선생님용)
+목록은 `blocklist.js`에 인코딩되어 있어 직접 열어 고치지 않고 명령으로 고친다. 고친 뒤에는 `python build.py`로 다시 빌드한다.
+```
+python tools/blocklist.py show                    # 목록 보기
+python tools/blocklist.py add 단어 단어            # 정확히 같을 때 막는 단어 추가
+python tools/blocklist.py add --strong 표현        # 단어장 밖 입력 안에 들어 있기만 해도 막는 강한 표현 추가
+python tools/blocklist.py allow 단어               # 강한 표현이 들어 있어도 허용할 정상 단어(예: snigger)
+python tools/blocklist.py remove 단어              # 삭제
+python tools/blocklist.py check 단어 단어          # 막히는지 확인
+```
+- 강한 표현은 정상 단어 안에 들어 있을 수 있으니 추가한 뒤 `node tests/blocklist.js`로 정상 단어가 막히지 않는지 확인한다(예: 'twat'은 saltwater·wristwatch를 막아서 정확히 같을 때만 막도록 둠)
+- 단어장(vocab.js)에 있는 단어는 금지어 목록과 관계없이 항상 허용된다. 단어장 단어를 막고 싶으면 단어장에서 지운다
 
 ## 단어 목록 라이선스
 `wordlist.js`는 SCOWL/ESDB(https://wordlist.aspell.net)로 만든 목록이다.
