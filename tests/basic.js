@@ -32,12 +32,16 @@ const {target,open,startLevel}=require('./lib');
   const st2=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordchain-v2')).prog.basic);
   ok(st2.cleared[1]&&st2.cleared[2]&&(await p.textContent('.topbar h2')).includes('3단계'),'건너뛰기: 1·2단계 통과 처리 후 3단계 시작');
 
-  // 3단계 빈칸 채우기: 빈칸 글자만 써서 정답
-  const t3=await T(); const blanks=await p.$$eval('#bslots .slot',a=>a.map(s=>s.classList.contains('blank')));
-  const fillLetters=t3.split('').filter((c,i)=>blanks[i]).join('');
-  ok(blanks.filter(Boolean).length===1,'3단계: 처음 빈칸 1칸');
-  await p.fill('#inp',fillLetters); await p.press('#inp','Enter'); await p.waitForTimeout(200);
-  ok((await p.textContent('#msg')).startsWith('좋아요'),`빈칸 글자(${fillLetters})로 ${t3} 완성`);
+  // 3단계 빈칸 채우기: 빈칸 칸에 바로 글자를 씀(첫 글자는 주어진 글자로 빈칸이 되지 않음)
+  const t3=await T(); const bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));
+  ok(bins.length===1&&!bins.includes(0)&&(await p.$$('#bslots .slot.given')).length===1,'3단계: 처음 빈칸 1칸, 첫 글자는 주어진 글자');
+  await p.keyboard.type(bins.map(i=>t3[i]).join('')); await p.keyboard.press('Enter'); await p.waitForTimeout(200);
+  ok((await p.textContent('#msg')).startsWith('좋아요'),`빈칸 칸에 ${bins.map(i=>t3[i]).join('')}을 써서 ${t3} 완성`);
+  // 긴 단어도 글자 칸이 한 줄(휴대폰 너비)
+  await p.setViewportSize({width:360,height:640}); await p.evaluate(()=>window.__wordchain.forceTarget('upstairs')); await p.waitForTimeout(200);
+  const tops=await p.$$eval('#bslots .slot',a=>[...new Set(a.map(s=>Math.round(s.getBoundingClientRect().top)))]);
+  ok(tops.length===1,'휴대폰에서 upstairs(8글자) 글자 칸이 한 줄');
+  await p.setViewportSize({width:1280,height:720});
 
   // 2단계 글자 블록: 키보드로 조립, 되돌리기, 틀리면 오답
   await startLevel(p,url,'basic',2); await p.waitForTimeout(300);

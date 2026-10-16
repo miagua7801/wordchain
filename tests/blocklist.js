@@ -43,13 +43,15 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
     await p.fill('#inp',w); await p.press('#inp','Enter'); await p.waitForTimeout(600);
     const said=(await H(()=>window.__said)).slice(said0), m=await p.textContent('#msg'), v=await p.inputValue('#inp'), st=await H(()=>window.__wordchain.state());
     ok(said.length===0,`${i+1}번째 금지어: 소리로 읽지 않음(TTS 호출 ${said.length}번)`);
-    ok(m==='이 단어는 사용할 수 없어요. 다른 단어를 써 보세요.'&&v===''&&!(await p.textContent('#app')).toLowerCase().includes(w.toLowerCase()),`${i+1}번째 금지어: 안내 문구만 표시, 입력 칸 비움, 화면에 다시 안 보임`);
+    const cls=await p.getAttribute('#msg','class');
+    ok(m==='다른 단어를 써 보세요.'&&cls==='msg info'&&v===''&&!(await p.textContent('#app')).toLowerCase().includes(w.toLowerCase()),`${i+1}번째 금지어: 평범한 안내("다른 단어를 써 보세요.", 일반 색), 입력 칸 비움, 화면에 다시 안 보임`);
     ok(st.streak===before.streak&&st.score===before.score&&st.combo===before.combo&&!(await p.$('.overlay')),`${i+1}번째 금지어: 연속 기록·점수·콤보 그대로(${st.streak}연속, ${st.score}점)`);
   }
   const stored=await H(()=>Object.keys(localStorage).map(k=>localStorage.getItem(k)).join(' ').toLowerCase());
   ok(!stored.includes(e0)&&!stored.includes(s0),'localStorage 어디에도 금지어 입력이 저장되지 않음');
   await p.fill('#inp',s0); await p.press('#inp','Enter'); await p.waitForTimeout(800);
-  ok(!!(await p.$('.overlay'))&&(await H(()=>window.__wordchain.state())).streak===0,'3번째 금지어: 오답 처리(연속 기록 0)');
+  const ovt=await p.textContent('.overlay');
+  ok(ovt.includes('아쉬워요!')&&ovt.includes('새 판으로 다시 도전해요')&&!/사용할 수 없|금지/.test(ovt)&&(await H(()=>window.__wordchain.state())).streak===0,'3번째 금지어: 평범한 오답 화면(이유 설명 없음), 연속 기록 0');
   await p.click('#ov1'); await p.waitForTimeout(400);
   ok(!(await p.$('.chain'))&&!(await p.$('.overlay')),'새 판 시작');
 
@@ -60,7 +62,7 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   const said1=await H(()=>window.__said.length);
   await p.fill('#inp',e0); await p.press('#inp','Enter'); await p.waitForTimeout(300);
   const nb=await H(()=>JSON.parse(localStorage.getItem('wordchain-notebook-v1')).items.tiger);
-  ok((await p.textContent('#msg')).startsWith('이 단어는 사용할 수 없어요')&&nb.stamps===1&&!(await H(()=>window.__said)).slice(said1).includes(e0),'복습: 금지어는 기록하지 않고 읽지 않음');
+  ok((await p.textContent('#msg'))==='다른 단어를 써 보세요.'&&nb.stamps===1&&!(await H(()=>window.__said)).slice(said1).includes(e0),'복습: 금지어는 기록하지 않고 읽지 않음');
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();
