@@ -33,6 +33,9 @@ const {target,open,startLevel}=require('./lib');
   ok(!!(await p.$('.cpu .big .last.land'))&&!!(await p.$('#bslots .bin.first.ok.land')),'3단계: 첫 글자를 맞히면 끝 글자와 첫 칸이 함께 반짝임');
   await p.emulateMedia({reducedMotion:'reduce'}); await startLevel(p,url,'basic',1); await p.waitForTimeout(500);
   ok(!(await p.$('.hand')),'동작 줄이기 설정이면 건너가기 효과 없음');
+  // 넓은 화면(크롬북·노트북)도 같은 효과
+  await p.emulateMedia({reducedMotion:'no-preference'}); await p.setViewportSize({width:1280,height:720}); await startLevel(p,url,'basic',1); await p.waitForTimeout(500);
+  ok((await p.$$('.hand')).length===3&&!(await p.$('svg.link')),'넓은 화면 기초 1단계: 연결선 없이 끝 글자가 첫 글자 자리 3곳으로 건너감');
   ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close();
   console.log(fail?`실패 ${fail}개`:'모두 통과'); process.exit(fail?1:0);
 })();
