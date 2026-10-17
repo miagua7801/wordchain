@@ -584,7 +584,7 @@ function renderReview(){
 // 단어 수첩 화면: 모은 단어(뜻·도장·다음 복습), 외운 단어, 수첩 비우기
 function notebook(){
   stopTimer();
-  // 단어장에서 빠진 단어(예전 단어장 전용 단어 등)는 저장은 그대로 두고 화면·개수에서만 뺌
+  // 단어장에서 빠진 단어(예전 단어장에만 있던 단어 등)는 저장은 그대로 두고 화면·개수에서만 뺌
   const items=Object.values(nb.items).filter(x=>DICT.has(x.w)).sort((a,b)=>a.due.localeCompare(b.due)), learned=Object.values(nb.learned).filter(x=>DICT.has(x.w)), due=nbDue().length;
   const row=x=>{ const d=DICT.get(x.w); return d?`<li class="nbrow"><b class="word">${esc(disp(d))}</b><span class="nbko">${esc(plainKo(d.ko))}</span>${stampHTML(x.stamps)}<small>${NB_REASON[x.reason]||''} · 다음 복습 ${dueText(x.due)}</small></li>`:''; };
   $app.innerHTML=`

@@ -19,7 +19,7 @@
 - `tests/` — Playwright 테스트. 모두 소리 없이 실행(`tests/lib.js`가 단어 읽기를 끄고 음소거)
   - `play-test.js` 도전 2단계 40턴, "이미 나온 단어" 오판 확인
   - `cpu-rules.js` 컴퓨터 단어 첫=끝 글자·수 단어 금지, 단어장 단어만(level 3·인정 전용 단어 금지) 확인
-  - `core-vocab.js` 기본 어휘: 빌드에 예전 단어장 자료(뜻·쪽수·단어장 이름 문구) 없음, 기본 어휘 가중치 ×5, level 3는 출제 안 하고 학생 답으로 인정, 기본 어휘 탐험가 배지(예전 배지 유지)·수첩 사유
+  - `core-vocab.js` 기본 어휘: 빌드에 예전 단어장 자료(뜻·쪽수·자료 이름) 없음, 기본 어휘 가중치 ×5, level 3는 출제 안 하고 학생 답으로 인정, 기본 어휘 탐험가 배지(예전 배지 유지)·수첩 사유
   - `accept.js 단어…` 학생 답으로 인정되는지 확인
   - `variety.js` 시작 글자 다양성 확인
   - `ime.js` 한글 자판으로 칠 때 글자가 빠지거나 겹치지 않는지 확인(입력기 조합 흉내)
@@ -41,7 +41,7 @@
 - `tools/extract-curriculum.py` — 기본 어휘 PDF(`data/basic-vocab.pdf`) → `data/curriculum-vocab.json`(`{word, forms, level, raw}`)과 `data/extract-report.md`(개수·검증). `pdftotext -raw` 사용, 글자가 없는 쪽이 있으면 멈춤(OCR 안 함)
 - `tools/make-core-vocab.py` — `data/curriculum-vocab.json` + `data/new-meanings-review.tsv`(새로 쓴 뜻: 단어·뜻·level) → `vocab.js`의 `VOCAB_CORE`·`VOCAB_CORE_ACCEPT`, 보고서 끝 '단어장 반영' 절. 뜻을 고치려면 TSV를 고치고 이 스크립트 → `python build.py`
 - `data/` — 기본 어휘 원본 PDF, 추출 결과, 보고서, 새 뜻 검토 파일
-- `private/` — 저장소에 올리지 않는 자료(`.gitignore`). `private/old-vocab.js`: 예전 예전 단어장 단어장 보관본 — 앱·빌드에서 쓰지 않음(`tests/core-vocab.js`가 있으면 빌드에 그 뜻이 없는지 비교)
+- `private/` — 저장소에 올리지 않는 자료(`.gitignore`). `private/old-vocab.js`: 예전 단어장 보관본 — 앱·빌드에서 쓰지 않음(`tests/core-vocab.js`가 있으면 빌드에 그 뜻이 없는지 비교, `tools/make-core-vocab.py`는 비교 결과를 `private/old-vocab-report.md`에만 씀)
 - `.claude/skills/` — Claude Code용 skill: `wordchain-test`, `wordchain-deploy`("완료배포"), `wordchain-add-words`
 - `old/` — 이전 버전
 
@@ -176,7 +176,7 @@ python tools/blocklist.py check 단어 단어          # 막히는지 확인
 - 출처: 교육부 고시 영어과 교육과정 [별표] 기본 어휘 목록(인쇄 쪽 402~434). 법령·고시 등 공공 문서로 저작권 보호 대상이 아니다(저작권법 제7조)
 - 표시 해석(범례 쪽은 원본 PDF에 없음): `*` 초등 권장 어휘 → level 1, `**` 중학교 어휘 → level 2, 표시 없음 → 고등학교 수준 → level 3
 - 괄호 안 단어(`act* (actual, interact)`)는 앞 단어의 level을 따르는 파생어로 함께 인정, 빗금 철자(`color* / colour*`)는 미국식을 기본으로 하고 나머지는 학생 답으로만 인정. 띄어쓰기·하이픈이 있는 표현(twenty-first 등)은 끝말잇기 단어에서 뺌. 자세한 개수·처리 내역은 `data/extract-report.md`
-- 뜻: 기존 단어장(VOCAB_E·M·TB·NUM·WF)에 있는 단어는 그 뜻, 없는 level 1·2 단어 659개는 새로 쓴 짧은 사전식 뜻(`data/new-meanings-review.tsv`). 예전 단어장의 뜻풀이·쪽수는 쓰지 않는다
+- 뜻: 기존 단어장(VOCAB_E·M·TB·NUM·WF)에 있는 단어는 그 뜻, 없는 level 1·2 단어 659개는 새로 쓴 짧은 사전식 뜻(`data/new-meanings-review.tsv`)
 
 ### 영어 단어 목록(SCOWL)
 `wordlist.js`는 SCOWL/ESDB(https://wordlist.aspell.net)로 만든 목록이다.

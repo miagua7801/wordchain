@@ -1,4 +1,4 @@
-// 단어장: "단어 뜻 [이모지]" — tier 1(그림 단어), 2(기초), 3(기본 어휘 확장)
+// 단어장: "단어 뜻 [이모지]" — tier 1(그림 단어), 2(기초), 3(확장)
 const WORDS_T1 = `
 ant 개미 🐜|arm 팔 💪|art 미술 🎨
 bag 가방 👜|bat 박쥐 🦇|bed 침대 🛏️|bee 벌 🐝|bus 버스 🚌|box 상자 📦|boy 소년 👦|bird 새 🐦|book 책 📖|ball 공 ⚽|bear 곰 🐻|boat 보트 ⛵|bike 자전거 🚲|bell 종 🔔

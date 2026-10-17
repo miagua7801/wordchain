@@ -1,4 +1,4 @@
-// 교육부 기본 어휘: 빌드에 예전 단어장 자료(뜻·쪽수·"기본 어휘" 문구)가 없음, 기본 어휘 가중치, level 3·인정 전용 단어는 컴퓨터가 안 내고 학생 답으로는 인정,
+// 교육부 기본 어휘: 빌드에 예전 단어장 자료(뜻·쪽수·자료 이름)가 없음, 기본 어휘 가중치, level 3·인정 전용 단어는 컴퓨터가 안 내고 학생 답으로는 인정,
 // 이름 바뀐 배지(기본 어휘 탐험가)·예전 배지 유지·수첩 사유. node tests/core-vocab.js [주소]
 const fs=require('fs'), path=require('path');
 const {target,open}=require('./lib');
@@ -9,18 +9,20 @@ const {target,open}=require('./lib');
   const day=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   await p.goto(url); await H(()=>localStorage.clear()); await p.goto(url);
 
-  // 1. 빌드 결과: 예전 단어장 자료·문구 없음 ('textbook 교과서'는 단어 뜻이라 제외, '동아리'는 다른 말)
+  // 1. 빌드 결과: 예전 단어장 자료·이름 없음. 찾을 말은 저장소에 글자 그대로 적지 않으려고 유니코드 번호로 씀
+  //    TB: 예전 표시 문구(단어 textbook의 뜻은 허용), OLD: 예전 자료 이름(뒤에 '리'가 붙은 말은 다른 말)
   const html=await H(()=>document.documentElement.outerHTML);
-  const tbN=(html.match(/기본 어휘/g)||[]).length-(html.match(/textbook 교과서/g)||[]).length;
-  ok(tbN===0,`"기본 어휘" 문구 없음 (단어 textbook의 뜻 제외) — ${tbN}개`);
-  ok(!/VOCAB_OLD| |예전(?!리)/.test(html),'VOCAB_OLD·"예전"·" " 없음');
+  const TB='\uAD50\uACFC\uC11C', OLD=new RegExp('VOCAB_\u0044ONGA|\uC724\uC815\uBBF8|\uB3D9\uC544(?!\uB9AC)');
+  const tbN=html.split(TB).length-html.split('textbook '+TB).length;
+  ok(tbN===0,`예전 자료 표시 문구 없음 (단어 textbook의 뜻 제외) — ${tbN}개`);
+  ok(!OLD.test(html),'예전 자료 이름 없음');
   ok(!/\["[a-z]+", "[^"]*", [12], \d+\]/.test(html),'[단어, 뜻, 학년, 쪽] 형식(쪽수) 자료 없음');
   const priv=path.resolve(__dirname,'../private/old-vocab.js');
   if(fs.existsSync(priv)){
-    const don=JSON.parse(fs.readFileSync(priv,'utf8').match(/const VOCAB_OLD = (\[.*?\]);/s)[1]);
+    const don=JSON.parse(fs.readFileSync(priv,'utf8').match(/const \w+ = (\[.*?\]);/s)[1]);
     // 여러 뜻·설명이 붙은(예전 자료 고유의 표현일 수 있는) 뜻이 빌드에 그대로 있으면 안 됨
     const odd=don.filter(([,ko])=>/[,/;(〔…]/.test(ko)), found=odd.filter(([w,ko])=>html.includes(ko));
-    ok(found.length===0,`예전 자료 단어장(private/old-vocab.js)의 설명형 뜻 ${odd.length}개가 빌드에 없음${found.length?' — '+found.map(x=>x[0]+' '+x[1]).join(', '):''}`);
+    ok(found.length===0,`예전 단어장(private/old-vocab.js)의 설명형 뜻 ${odd.length}개가 빌드에 없음${found.length?' — '+found.map(x=>x[0]+' '+x[1]).join(', '):''}`);
   }else console.log('     (private/old-vocab.js 없음 — 예전 뜻 비교는 건너뜀)');
 
   // 2. 기본 어휘 가중치(SETTINGS.coreWeight = 5)와 level
@@ -71,10 +73,10 @@ const {target,open}=require('./lib');
   await p.click('#bdBtn'); await p.waitForTimeout(200);
   const bs=await p.$$eval('.bdg.got',a=>a.map(e=>e.textContent).join(' | '));
   const all=await p.textContent('#app');
-  ok(bs.includes('기본 어휘 탐험가 10')&&bs.includes('기본 어휘 탐험가 30')&&!all.includes('기본 어휘'),'배지 화면: 기본 어휘 탐험가 10·30 획득, "기본 어휘" 없음');
+  ok(bs.includes('기본 어휘 탐험가 10')&&bs.includes('기본 어휘 탐험가 30')&&!all.includes(TB),'배지 화면: 기본 어휘 탐험가 10·30 획득, 예전 이름 없음');
   await p.click('#back').catch(()=>{}); await p.waitForTimeout(200); await p.click('#nbBtn'); await p.waitForTimeout(200);
   const nt=await p.textContent('#app');
-  ok(nt.includes('처음 맞힌 기본 어휘')&&!nt.includes('기본 어휘'),'수첩 화면: 사유 "처음 맞힌 기본 어휘", "기본 어휘" 없음');
+  ok(nt.includes('처음 맞힌 기본 어휘')&&!nt.includes(TB),'수첩 화면: 사유 "처음 맞힌 기본 어휘", 예전 이름 없음');
 
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);

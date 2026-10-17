@@ -89,11 +89,13 @@ R = ['## 단어장 반영 (tools/make-core-vocab.py)', '',
      f'- 기본 어휘지만 출제에서 뺀 단어(학생 답으로는 인정): {", ".join(sorted(set(nocpu)))}',
      f'- 영어 단어 목록(wordlist.js)에 없는 기본 어휘 {len(notwl)}개 (단어장·인정 목록에 있어 정답으로 인정됨): {", ".join(notwl)}']
 if unused: R.append(f'- 검토 파일에 있지만 쓰지 않은 뜻: {", ".join(unused)}')
+# 예전 단어장 보관본(private/, 저장소에 안 올림)과 비교한 결과는 private/에만 씀
 if os.path.exists('private/old-vocab.js'):
-    don = json.loads(re.search(r'const VOCAB_OLD = (\[.*?\]);', open('private/old-vocab.js', encoding='utf-8').read(), re.S).group(1))
+    don = json.loads(re.search(r'const \w+ = (\[.*?\]);', open('private/old-vocab.js', encoding='utf-8').read(), re.S).group(1))
     only = [w for w, *_ in don if w not in old and w not in core and w not in acc]
-    R += [f'- 예전 전용 단어(기존 단어장·기본 어휘에 없음, 컴퓨터가 더 이상 내지 않음) {len(only)}개: {", ".join(only)}',
-          f'  - 그중 영어 단어 목록에도 없어 정답으로 인정되지 않는 단어: {", ".join(w for w in only if w not in wl and not BL.blocked(w, block)) or "없음"}']
+    P = [f'- 예전 단어장에만 있던 단어(기존 단어장·기본 어휘에 없음, 컴퓨터가 더 이상 내지 않음) {len(only)}개: {", ".join(only)}',
+         f'  - 그중 영어 단어 목록에도 없어 정답으로 인정되지 않는 단어: {", ".join(w for w in only if w not in wl and not BL.blocked(w, block)) or "없음"}']
+    open('private/old-vocab-report.md', 'w', encoding='utf-8', newline='\n').write('\n'.join(P) + '\n'); print('\n'.join(P))
 rep = open('data/extract-report.md', encoding='utf-8').read().split('## 단어장 반영')[0].rstrip('\n')
 open('data/extract-report.md', 'w', encoding='utf-8', newline='\n').write(rep + '\n\n' + '\n'.join(R) + '\n')
 print('\n'.join(R))
