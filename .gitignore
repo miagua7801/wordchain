@@ -3,3 +3,4 @@ node_modules/
 wordchain.html
 private/
 dist/version.json
+!icons/*.png

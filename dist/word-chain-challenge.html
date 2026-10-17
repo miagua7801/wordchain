@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>영어 끝말잇기 챌린지</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f6e7a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="끝말잇기">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Lexend:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <style>
@@ -122,6 +129,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
 
 .typing{display:flex;gap:8px}
+/* 영문 고정 입력칸의 커서(readOnly 칸은 커서가 안 보여서 대신 그림) */
+.fcaret{position:absolute;width:2px;background:var(--ink);border-radius:1px;pointer-events:none;animation:fblink 1s steps(1) infinite}@keyframes fblink{50%{opacity:0}}
 .myword{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-soft)}
 .myword small{font-size:13px;color:var(--muted);white-space:nowrap}.myword .word{font-size:24px;font-weight:700;color:var(--ink)}
 .typing input{flex:1;min-width:0;font-family:var(--f-word);font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -188,10 +197,12 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .btn.buy small{font-weight:500;color:var(--muted)}
 .buywrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.qty{display:flex;align-items:center;gap:6px;font-size:13px}.qty .tbtn{padding:0 9px;min-height:28px}
 .lboxes.inline{display:inline-flex;margin:0 4px;vertical-align:middle}.lboxes.inline .lbox{width:14px;height:18px}
+.pen{gap:4px;margin:4px 0}.pen .lbox{flex:0 1 30px;min-width:0;height:36px;display:grid;place-items:center;font-family:var(--f-word);font-weight:700;font-size:20px;color:var(--ink);background:var(--surface-2);border-color:var(--line)}.pen .lbox.on{background:var(--surface);border-color:var(--accent)}.lhint .lbox.qbox{border:3px solid var(--bad);background:var(--surface);color:var(--bad)}.askcap{font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}.askcap .lbox.qbox.mini{width:18px;height:20px;display:inline-grid;place-items:center;font-size:12px;border-width:2px}
 .hintbox > div{margin-top:4px}.lhint{padding:6px 10px}.lhint > div:first-child{margin-top:0}.lhint .speak{margin:0;padding:2px 10px}.lhint .pat{font-size:22px}.lack{font-size:12px;color:var(--bad)}.hcount{font-size:12px;color:var(--muted);white-space:nowrap}
 .buyrow{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:-6px 0 12px;padding:6px 10px;border:2px dashed var(--link);border-radius:12px;background:var(--surface)}
 #buyTime{display:block;margin:-6px 0 10px auto}
 .cpu .btn.buy{margin:6px auto 0;display:block}
+.snote{margin:6px auto 2px;max-width:420px;padding:6px 12px;border-radius:10px;background:var(--good-soft);color:var(--ink);font-size:15px;font-weight:600}.snote.miss{background:var(--link-soft);border:2px solid var(--link)}.card p.snote{color:var(--ink);margin:10px auto}
 .hintbox .pat{font-family:var(--f-word);font-weight:700;font-size:24px;letter-spacing:.18em}
 
 /* ===== Overlay ===== */
@@ -214,7 +225,19 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 @keyframes sparkle{0%,100%{transform:scale(1);box-shadow:0 0 0 0 var(--link)}50%{transform:scale(1.08);box-shadow:0 0 18px 4px var(--link)}}
 .gift{font-size:72px;line-height:1.1;margin:6px 0}.gift.opening{animation:giftshake .7s ease}.gift.open{animation:pop .35s ease}
 @keyframes giftshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg) scale(1.05)}40%{transform:rotate(12deg) scale(1.1)}60%{transform:rotate(-8deg) scale(1.15)}80%{transform:scale(1.3);opacity:.6}}
-.rest .cpu.review{box-shadow:none;margin-bottom:6px}
+.hlbox{display:flex;flex-direction:column-reverse;max-height:min(42vh,300px);overflow-y:auto;overscroll-behavior:contain;margin:6px 0;padding:10px 8px;background:var(--surface-2);border-radius:14px}
+.hl{list-style:none;margin:0;padding:0 18%;display:flex;flex-direction:column;gap:12px;text-align:left}
+/* 카톡처럼: 컴퓨터는 왼쪽, 나는 오른쪽 정렬, 한 줄에 말풍선 하나(겹치지 않음). 양 끝은 .hl 좌우 padding(18%, 휴대폰은 8%)만큼 안쪽으로 */
+@media (max-width:480px){.hl{padding:0 8%}}
+.hl li{display:flex;pointer-events:none}.hl li .hb{pointer-events:auto}.hl li.hme{justify-content:flex-end}.hl li.wait{display:none}.hl li.up{overflow:hidden;animation:hlup var(--dur,600ms) cubic-bezier(.4,0,.2,1) both}.hl li.hcpu{transform-origin:left bottom}.hl li.hme{transform-origin:right bottom}
+/* 새 말풍선: 높이가 0 → 제 높이로 부드럽게 늘며 앞 말풍선을 밀어 올림(gap만큼 margin으로 상쇄해서 처음엔 자리를 차지하지 않음) */
+@keyframes hlup{from{max-height:0;margin-top:-12px;opacity:0;transform:translateY(16px) scale(.94)}to{max-height:var(--h,90px);margin-top:0;opacity:1;transform:none}}
+.hb{font-family:var(--f-word);font-size:20px;font-weight:700;padding:7px 14px;border-radius:18px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.hl li.hcpu .hb{border-bottom-left-radius:4px}.hl li.hme .hb{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.hlnote{font-size:13px;color:var(--muted);margin:4px 0}
+.hl li.hdiv{justify-content:center;align-items:center;gap:8px;font-size:12px;color:var(--muted)}.hl li.hdiv::before,.hl li.hdiv::after{content:'';flex:1;border-top:1px dashed var(--line)}
+.giftbtn{display:inline-flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 4px;padding:6px 26px 10px;border:3px solid var(--link);background:var(--link-soft);border-radius:18px;color:var(--ink);font-weight:700;font-size:16px;cursor:pointer}
+.giftbtn .gift{font-size:60px;margin:0}
 .bot{display:flex;align-items:flex-start;gap:10px;justify-content:center;margin:6px 0 12px;text-align:left}
 .botface{font-size:44px;line-height:1}
 .bubble{position:relative;background:var(--link-soft);border:2px solid var(--link);border-radius:16px;padding:10px 14px;margin:4px 0 0;font-size:17px;max-width:420px}
@@ -584,8 +607,8 @@ const SETTINGS={
   // 건너뛰기 도전: 기초 1단계를 처음 할 때 힌트·실수 없이 이만큼 연속 성공하면 '3단계로 바로 가기'(단계 목표보다 크면 목표 수로)
   skipStreak:5,
   // 듣고 쓰기: 다시 듣기 횟수(보통 2~4단계 토글 / 도전 5단계 듣기 챌린지)
-  // revealHold: 듣고 쓰기에서 답을 낸 뒤 공개한 컴퓨터 단어를 보여 주는 여유(ms), slowRate: 힌트로 천천히 들려줄 때 속도
-  listen:{normalReplays:2, hardReplays:1, revealHold:3000, slowRate:0.45},
+  // revealHold: 듣고 쓰기(보통 토글)에서 답을 낸 뒤 공개한 컴퓨터 단어를 보여 주는 여유(ms), challengeRevealHold: 도전 듣기 챌린지에서의 여유(ms), slowRate: 힌트로 천천히 들려줄 때 속도
+  listen:{normalReplays:2, hardReplays:1, revealHold:3000, challengeRevealHold:2500, slowRate:0.45},
   // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
   basicSpeech:{rate:0.6, targetGap:1500},
   // 기본 어휘 우선 출제: 컴퓨터 출제·객관식 정답·기초 다음 단어·힌트·예시·철자 도움에서 교육부 기본 어휘 level 1·2 단어를 이 배수만큼 더 자주
@@ -600,11 +623,12 @@ const SETTINGS={
   shop:{pointsPerStar:10, hintPrice:5, maxStored:5, maxUsePerRun:2, replayPrice:3, timePrice:3, timeAdd:10},
   // 하트(보통·도전 수준): 틀리면 하트 1개를 잃고 성공 수는 그대로, 하트를 다 잃으면 성공 수 0부터 다시. 0이면 예전 방식(틀리면 연속 기록 0). 기초는 항상 예전 방식
   lives:3,
-  // 정답 뒤 컴퓨터가 다음 단어를 내기까지: after = 학생 단어를 다 읽고 쉬는 시간(ms), gap = 답한 뒤 최소 시간(ms). 듣고 쓰기 공개 여유(listen.revealHold)는 따로 더함
+  // 정답 뒤 컴퓨터가 다음 단어를 내기까지: after = 학생 단어를 다 읽고 쉬는 시간(ms), gap = 답한 뒤 최소 시간(ms). 듣고 쓰기 공개 여유(listen.revealHold, 듣기 챌린지는 listen.challengeRevealHold)는 따로 더함
   pace:{basic:{after:1000,gap:2000}, normal:{after:1000,gap:2000}, hard:{after:1000,gap:2000}},
-  // 쉬어 가기(단계 통과 뒤): words = 미니 복습 단어 수(최대), 상자 보상 확률 p(%, 합 100)
-  // 보관 힌트가 가득 찼거나 보관 기능이 없으면 fullHintStars개 별로 바꿔 줌, 미니 복습을 모두 맞히면 perfectBonus개 별을 더 줌
-  restBox:{words:2, rewards:[{p:50,stars:1},{p:30,stars:2},{p:10,stars:3},{p:10,hint:1}], fullHintStars:3, perfectBonus:1},
+  // 단계 통과 뒤 ② 끝말잇기 하이라이트 · ③ 선물 상자: gap = 말풍선이 하나씩 나오는 간격(ms), rise = 말풍선 하나가 부드럽게 올라오는 시간(ms)
+  // 상자 등급(이번 단계 결과): gold = 하트를 하나도 안 잃음(기초는 한 번도 안 틀림) 또는 힌트 없이 통과, silver = 하트 1개 잃음(기초는 1번 틀림), bronze = 그 외
+  // stars: 등급별 별, gold.hintChance: 금상자에서 보관 힌트 hint개를 더 줄 확률(%), 보관 힌트가 가득 찼거나 보관 기능이 없으면 fullHintStars개 별로 바꿔 줌
+  restBox:{gap:700, rise:600, gold:{stars:3, hintChance:20, hint:1}, silver:{stars:2}, bronze:{stars:1}, fullHintStars:1},
   // 지금 연습하기: 한 번에 낼 수첩 단어 수
   practiceMax:10,
   // 콤보: show 콤보부터 표시, celebrate 콤보에서 짧은 축하 효과
@@ -613,7 +637,7 @@ const SETTINGS={
   badge:{fire:[5,10], longWord:7, core:[10,30], outside:5, comeback:5, review:10, ears:5},
 };
 
-// 쉬어 가기 ③ 🤖 컴퓨터의 한마디: '수준-다음 단계 번호'마다 2~3개, 그중 하나를 무작위로 보여 줌(선생님이 고쳐 써도 됨)
+// 단계 통과 뒤 ④ 🤖 컴퓨터의 한마디: '수준-다음 단계 번호'마다 2~3개, 그중 하나를 무작위로 보여 줌(선생님이 고쳐 써도 됨)
 // 해당 칸이 없으면 시간 제한 단계는 time, 듣기 챌린지는 listen, 나머지는 other에서 고름
 const REST_LINES={
   'basic-2':['다음은 글자 블록이야! 내가 낸 단어의 끝 글자부터 찾아봐.','이번엔 글자 블록을 순서대로 눌러서 단어를 만들어. 첫 글자는 내가 놓아 둘게!','글자 블록 단계야. 헷갈리는 글자가 섞여 있을 수도 있어. 잘 봐!'],
@@ -715,7 +739,7 @@ function suggest(w){
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,words:REST.words.map(x=>x.w+':'+x.kind),right:REST.right,reward:REST.reward}:null,setBoxRoll:v=>{ boxRoll=v; },pickReward:v=>pickReward(v),restWords:ch=>restWords(ch.map(w=>({w,me:true}))).map(x=>x.w+':'+x.kind),restLines:k=>REST_LINES[k],blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); setCpu(DICT.get(w)); render(); return true; },blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -959,7 +983,7 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-17 14:16'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-17 21:44'; // build.py가 빌드 시각으로 바꿈
 
 // 새 버전 알림: 배포된 version.json의 빌드 시각이 지금 페이지와 다르면 안내 띠를 띄우고, 누르면 새 주소(?v=)로 이동해 캐시된 예전 페이지를 건너뜀
 // (file://·아티팩트처럼 version.json이 없는 곳에서는 조용히 넘어감)
@@ -1003,6 +1027,63 @@ function enInput(inp,form,onSubmit,onInput){
   inp.addEventListener('compositionend',()=>{ composing=false; setTimeout(()=>{ if(!composing&&latinize(inp)) koNote(); onInput&&onInput(koToEn(inp.value)); },0); });
   inp.addEventListener('input',e=>{ if(KO_RE.test(inp.value)){ if(e.isComposing||composing) koNote(); else if(latinize(inp)) koNote(); } onInput&&onInput(koToEn(inp.value)); });
   form.onsubmit=e=>{e.preventDefault(); onSubmit(koToEn(inp.value));};
+  engKeys(inp);
+}
+// 영문 고정: 실제 키보드에서 한글 입력기가 켜져 있으면(누른 키가 입력기로 넘어가면) 입력칸을 영문 고정으로 바꾸고,
+// 누른 키 자리(e.code)의 영어 글자를 바로 넣음 — 한글 자판이어도 영어로 써짐(웹 페이지는 운영체제의 한/영 상태를 바꿀 수 없음).
+// 입력기는 고칠 수 있는 칸에서만 글자를 조합하므로 칸을 readOnly로 두고 글자는 스크립트가 씀(보이지 않는 커서는 .fcaret로 대신 그림).
+// 한 번 알아채면 이 페이지의 다른 입력칸도 영문 고정. 휴대폰 화면 키보드(e.code 없음)는 그대로 두고 입력이 끝난 뒤 영어로 바꿈(latinize).
+// 손가락으로 입력칸을 누르면(화면 키보드가 떠야 하므로) 영문 고정을 끔
+let engMode=false;
+const imeKey=e=>/^Key[A-Z]$/.test(e.code)&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Process'||e.keyCode===229||e.isComposing||KO_RE.test(e.key||''));
+function engKeys(el,single){
+  let cr=null;
+  const caret=()=>{
+    if(!el.readOnly||document.activeElement!==el||!el.isConnected){ if(cr){ cr.remove(); cr=null; } return; }
+    const p=el.parentNode; if(getComputedStyle(p).position==='static') p.style.position='relative';
+    if(!cr){ cr=document.createElement('span'); cr.className='fcaret'; cr.setAttribute('aria-hidden','true'); p.appendChild(cr); }
+    const cs=getComputedStyle(el), c=engKeys.ctx||(engKeys.ctx=document.createElement('canvas').getContext('2d'));
+    c.font=cs.font; if('letterSpacing' in c) c.letterSpacing=cs.letterSpacing;
+    const v=el.value, pos=el.selectionStart??v.length, fs=parseFloat(cs.fontSize), h=fs*1.25;
+    const x=cs.textAlign==='center'?el.offsetLeft+el.offsetWidth/2+c.measureText(v).width/2+1
+      :el.offsetLeft+parseFloat(cs.borderLeftWidth)+parseFloat(cs.paddingLeft)+c.measureText(v.slice(0,pos)).width-el.scrollLeft;
+    cr.style.cssText=`left:${Math.round(x)}px;top:${Math.round(el.offsetTop+(el.offsetHeight-h)/2)}px;height:${Math.round(h)}px`;
+  };
+  const changed=()=>{ el.dispatchEvent(new Event('input',{bubbles:true})); caret(); };
+  const put=s=>{
+    if(single){ el.value=s; changed(); return; }
+    const a=el.selectionStart??el.value.length, b=el.selectionEnd??a;
+    el.value=el.value.slice(0,a)+s+el.value.slice(b); el.setSelectionRange(a+s.length,a+s.length); changed();
+  };
+  const on=()=>{ el.readOnly=true; el.setAttribute('aria-readonly','false'); el.classList.add('engmode'); caret(); };
+  if(engMode) on();
+  el.addEventListener('keydown',e=>{
+    if(!el.readOnly){
+      if(!imeKey(e)) return;
+      // 한글 입력기를 처음 알아챈 순간: 지금까지 쓴 값을 기억했다가 영문 고정으로 바꾸고 이번 글자를 넣음(입력기가 만든 글자는 덮어씀)
+      e.preventDefault(); const v0=koToEn(el.value), s0=Math.min(el.selectionStart??v0.length,v0.length), ch=e.code.slice(3).toLowerCase();
+      engMode=true; on();
+      setTimeout(()=>{ el.value=v0; if(!single) el.setSelectionRange(s0,s0); put(ch); },0);
+      return;
+    }
+    if(e.ctrlKey||e.metaKey||e.altKey) return;
+    const m=/^Key([A-Z])$/.exec(e.code);
+    if(m){ e.preventDefault(); put(m[1].toLowerCase()); return; }
+    if(e.key==='Backspace'||e.key==='Delete'){
+      if(single){ if(el.value){ e.preventDefault(); el.value=''; changed(); } return; }
+      e.preventDefault(); let a=el.selectionStart??el.value.length, b=el.selectionEnd??a;
+      if(a===b){ if(e.key==='Backspace'){ if(!a) return; a--; } else { if(b>=el.value.length) return; b++; } }
+      el.value=el.value.slice(0,a)+el.value.slice(b); el.setSelectionRange(a,a); changed(); return;
+    }
+    if(e.key==='Enter'){ e.preventDefault(); const f=el.form; if(f){ if(f.requestSubmit) f.requestSubmit(); else f.querySelector('[type=submit]')?.click(); } return; }
+    // 읽기 전용 칸은 ←·→·Home·End로 커서가 움직이지 않으므로 직접 옮김
+    if(!single&&['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){ e.preventDefault(); const n=el.value.length, a=el.selectionStart??n;
+      const to=e.key==='Home'?0:e.key==='End'?n:Math.max(0,Math.min(n,a+(e.key==='ArrowLeft'?-1:1))); el.setSelectionRange(to,to); caret(); return; }
+  });
+  el.addEventListener('paste',e=>{ if(!el.readOnly) return; e.preventDefault();
+    const t=koToEn(e.clipboardData?.getData('text')||'').toLowerCase().replace(/[^a-z]/g,''); if(t) put(single?t.slice(-1):t); });
+  el.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'&&el.readOnly){ engMode=false; el.readOnly=false; el.removeAttribute('aria-readonly'); el.classList.remove('engmode'); caret(); } });
+  ['focus','blur','click','select'].forEach(t=>el.addEventListener(t,()=>setTimeout(caret,0)));
 }
 let soundOn=true;
 // 소리 버튼: 휴대폰에서는 글자를 숨기고 아이콘만
@@ -1055,14 +1136,40 @@ function bindListenBar(){
     if(store.listen){ bindListenBar(); msg('다음 단어부터 소리로만 들려줘요. 🎧','info'); }
     else { G.listen=false; G.revealed=true; render(); msg('듣고 쓰기를 껐어요.','info'); } };
 }
-// 들은 단어의 끝 글자를 놓친 이유가 '소리 나지 않는 끝 글자'이면 짧게 설명
+// 듣고 쓰기·듣기 챌린지에서 답을 낸 뒤 컴퓨터 단어를 공개하며 보여 줄 끝 글자 설명(힌트 화면에는 넣지 않음)
+// 위에서부터 차례로 보고 처음 맞는 것 하나만 보여 줌(구체적인 규칙을 위에). {w}는 컴퓨터 단어, {f}는 학생이 쓴 첫 글자(맞혔으면 s), {fp}는 그 뒤 조사(가/이)
+// 끝 글자를 맞혔으면 앞에 SILENT_OK를 붙여 칭찬과 함께, 끝 글자를 잘못 알아들어 틀렸으면 그대로
+const SILENT_OK='잘 들었어요! ';
+// -gh가 f 소리인 단어(여기 없는 -gh 단어는 묵음으로 봄)
+const GH_F=['laugh','enough','cough','tough','rough','trough'];
+const SILENT_NOTES=[
+  {id:'mb', when:w=>w.endsWith('mb'), text:'{w}의 b는 소리가 나지 않아요.'},
+  {id:'mn', when:w=>w.endsWith('mn'), text:'{w}의 n은 소리가 나지 않아요.'},
+  {id:'gn', when:w=>w.endsWith('gn'), text:'{w}의 g는 소리가 나지 않아요.'},
+  {id:'ck', when:w=>w.endsWith('ck'), text:'{w}은 k 소리지만 ck로 끝나요.'},
+  {id:'ic', when:w=>w.endsWith('ic'), text:'{w}은 k 소리지만 c로 끝나요.'},
+  {id:'ph', when:w=>w.endsWith('ph'), text:'{w}는 f 소리지만 ph로 끝나요.'},
+  {id:'th', when:w=>w.endsWith('th'), text:'{w}는 {f}{fp} 아니라 th로 끝나요.'},
+  {id:'gh-f', when:w=>GH_F.includes(w), text:'{w}는 f 소리지만 gh로 끝나요.'},
+  {id:'gh', when:w=>w.endsWith('gh'), text:'{w}의 gh는 소리가 나지 않아요.'},   // 묵음 -gh(high, weigh, through, though …)
+  {id:'ed', when:w=>isPastEd(w), text:'{w}처럼 과거형 -ed는 끝소리가 약하게 들려요.'},
+  {id:'le', when:w=>w.endsWith('le')&&isCons(w[w.length-3]), text:'{w}는 e로 끝나요. -le는 [을]처럼 소리 나지만 끝 글자는 e예요.'},
+  {id:'stop-e', when:w=>/[tdkpb]e$/.test(w), text:'{w}의 끝 e는 소리가 나지 않아요.'},   // 자음+묵음 e 중 -te·-de·-ke·-pe·-be
+  {id:'e', when:w=>w.endsWith('e')&&isCons(w[w.length-2]), text:'{w}는 e로 끝나요. 끝의 e는 소리가 나지 않아요.'},
+  {id:'y', when:w=>w.endsWith('y')&&isCons(w[w.length-2]), text:'{w}는 y로 끝나요. 끝의 -y는 [이]로 소리 나요.'},
+];
+const isCons=x=>!!x&&!'aeiou'.includes(x);
+// 과거형 -ed인지: 원형이 단어 목록에 있으면(played→play, liked→like, stopped→stop, cried→cry). see→seed처럼 모음+e 원형은 제외
+function isPastEd(w){
+  if(!w.endsWith('ed')||w.length<4) return false;
+  const has=x=>x.length>=2&&(DICT.has(x)||WORDS.has(x)), s=w.slice(0,-2);
+  return has(s)||(has(w.slice(0,-1))&&isCons(w[w.length-3]))||(s.length>2&&s[s.length-1]===s[s.length-2]&&has(s.slice(0,-1)))||(w.endsWith('ied')&&has(w.slice(0,-3)+'y'));
+}
+// f: 학생 답의 첫 글자. 컴퓨터 단어의 끝 글자와 같으면(맞힘) 칭찬을 붙임
 function silentNote(cw,f){
-  const C=x=>x&&!'aeiou'.includes(x), p=cw[cw.length-2];
-  if(cw.endsWith('le')&&C(cw[cw.length-3])&&f!=='e') return `${cw}는 e로 끝나요. -le는 [을]처럼 소리 나지만 끝 글자는 e예요.`;
-  if(cw.endsWith('e')&&C(p)&&f!=='e') return `${cw}는 e로 끝나요. 끝의 e는 소리가 나지 않아요.`;
-  if(cw.endsWith('y')&&C(p)&&f!=='y') return `${cw}는 y로 끝나요. 끝의 -y는 [이]로 소리 나요.`;
-  if(cw.endsWith('gh')&&f!=='h') return `${cw}는 h로 끝나요. -gh는 소리가 나지 않거나 [f]로 소리 나요.`;
-  return '';
+  const n=SILENT_NOTES.find(x=>x.when(cw)); if(!n) return '';
+  const ok=f===cw[cw.length-1], g=ok?'s':f;
+  return (ok?SILENT_OK:'')+n.text.replace(/\{w\}/g,cw).replace(/\{f\}/g,g).replace(/\{fp\}/g,'lmnr'.includes(g)?'이':'가');
 }
 function tileHTML(w,me){ if(w.length===1) return `<span class="tile${me?' me':''}"><span class="last">${esc(w)}</span></span>`;
   return `<span class="tile${me?' me':''}"><span class="first">${esc(w[0])}</span>${esc(w.slice(1,-1))}<span class="last">${esc(last(w))}</span></span>`;}
@@ -1136,7 +1243,7 @@ function start(id){
   const L=LEVELS[id-1];
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp);
   // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
-  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],usedStored:0,buyQty:1,lives:SETTINGS.lives,t0:Date.now(),turns:0,rights:0,combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0};
+  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],lines:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],usedStored:0,buyQty:1,lives:SETTINGS.lives,t0:Date.now(),turns:0,rights:0,combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0};
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
@@ -1161,7 +1268,7 @@ const livesOn=(t=track)=>t!=='basic'&&SETTINGS.lives>0;
 const heartsHTML=()=>`<span class="hearts" aria-label="하트 ${G.lives}개 남음">${'❤️'.repeat(Math.max(0,G.lives))}${'🤍'.repeat(Math.max(0,SETTINGS.lives-G.lives))}</span>`;
 // 오답 한 번: 하트 방식이면 하트 1개(다 잃으면 성공 수 0), 아니면 연속 기록 0. 오답 화면에 붙일 문구와 버튼을 돌려줌
 function loseTurn(){
-  const had=G.streak, lv=livesOn(); if(lv) G.lives--; const out=!lv||G.lives<=0; if(out) G.streak=0;
+  const had=G.streak, lv=livesOn(); if(lv){ G.lives--; G.livesLost=(G.livesLost||0)+1; } const out=!lv||G.lives<=0; if(out) G.streak=0;
   G.combo=0; G.listenRun=0;
   const gotStars=out?bankStars():0;
   const text=!lv?`<p>연속 기록 ${had} → 0. 다시 도전해요!</p>`
@@ -1169,10 +1276,12 @@ function loseTurn(){
     :`<p>${heartsHTML()}</p><p>하트를 1개 잃었어요. 성공 ${had} / ${G.L.goal}번은 그대로예요.</p>`;
   return {lv,text:text+(gotStars?`<p class="sum">이번 판에서 ⭐ +${gotStars}</p>`:''),label:out?'다시 시작':'계속',next:()=>{ if(out) G.lives=SETTINGS.lives; newChain(); }};
 }
-function newChain(){ G.blockedN=0; G.boughtTime=false; G.boughtReplay=false; G.used.clear(); G.chain=[]; const c=pickCpu(null); setCpu(c); }
+function newChain(){ G.blockedN=0; G.boughtTime=false; G.boughtReplay=false; G.used.clear(); archiveChain(); const c=pickCpu(null); setCpu(c); }
+// 끝말잇기 줄이 끝날 때(틀림·컴퓨터가 짐) 이어 간 단어만 G.lines에 모아 둠(통과 뒤 하이라이트용). 대답하지 못한 마지막 컴퓨터 단어는 뺌
+function archiveChain(){ const seg=G.chain.slice(); if(seg.length&&!seg[seg.length-1].me) seg.pop(); if(seg.some(x=>x.me)) G.lines.push(seg); G.chain=[]; }
 function setCpu(c){
   G.listen=listenOn(G.L); G.revealed=false; G.replays=G.L.listen==='force'?SETTINGS.listen.hardReplays:SETTINGS.listen.normalReplays;
-  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent=''; G.turnHint=false; G.myWord='';
+  G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent=''; G.okNote=''; G.turnHint=false; G.myWord='';
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   if(GUIDED(G.L.mode)){ G.target=chooseTarget(last(c.w)); prepGuided(); }
   // 이번 단어의 제한 시간(lim), 지난 시간(elapsed), 힌트로 받은 시간(bonus)
@@ -1293,6 +1402,7 @@ function renderGuided(){
     ins.forEach(el=>{ el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
       el.addEventListener('focus',()=>el.select());
       el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus({preventScroll:true}); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
+    ins.forEach(el=>engKeys(el,true));
     (ins.find(el=>!el.value)||ins[0])?.focus({preventScroll:true});
     ans.querySelector('#f').onsubmit=e=>{ e.preventDefault(); if(G.locked) return;
       if(ins.some(el=>!el.value)){ msg('빈칸을 모두 채워 주세요.','info'); (ins.find(el=>!el.value)).focus({preventScroll:true}); return; }
@@ -1460,6 +1570,7 @@ function render(){
     ${c.emoji&&L.mode==='type'?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
     <div class="big">${esc(disp(c).slice(0,-1))}<span class="last">${esc(ch)}</span></div>
     <div class="ko">${esc(c.ko)}</div>
+    ${G.okNote?`<div class="snote" id="okNote" role="note">💡 ${esc(G.okNote)}</div>`:''}
     <button class="speak" id="say">🔊 듣기</button>
   </div>
   <div class="ask"><b>${ch}</b>로 시작하는 단어${GUIDED(L.mode)?'를 완성해요':'는?'}</div>`}
@@ -1553,15 +1664,16 @@ function success(o){
   if(SETTINGS.combo.celebrate.includes(G.combo)) celebrate(G.combo);
   if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbAdd(o.w,'textbook'); } G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
-  if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
+  if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); G.okNote=silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
   msg((o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`)+(inNb?' 📒 수첩 단어!':'')+` (+${pts}점)`,'good');
-  if(G.streak>=G.L.goal){ const g0=G; setTimeout(()=>{ if(G===g0) passLevel(); },600); return; }
-  const g=G;
+  const g=G, P=SETTINGS.pace[track]||SETTINGS.pace.basic;
+  const hold=wasHidden?(G.L.listen==='force'?SETTINGS.listen.challengeRevealHold:SETTINGS.listen.revealHold):0;   // 듣고 쓰기로 공개한 컴퓨터 단어를 보여 주는 여유
+  // 마지막 정답: 통과는 바로 기록하고, 통과 화면은 잠시 뒤에. 듣고 쓰기면 다른 문제처럼 학생 단어를 다 읽고 쉰 뒤 공개 여유까지 보여 줌(그사이 다른 화면으로 가면 통과 화면은 띄우지 않음)
+  if(G.streak>=G.L.goal){ recordPass(); (wasHidden?spoken.then(()=>wait((soundOn?P.after:0)+hold)):wait(600)).then(()=>{ if(G===g&&$app.querySelector('#hintArea')) startRest(); }); return; }
   // 학생 단어를 다 읽고 쉰 뒤에 컴퓨터 단어로(SETTINGS.pace: 모든 수준 1초·최소 2초)
-  const P=SETTINGS.pace[track]||SETTINGS.pace.basic;
-  Promise.all([spoken.then(()=>wait((soundOn?P.after:0)+(wasHidden?SETTINGS.listen.revealHold:0))),wait(P.gap)]).then(()=>{ if(G!==g) return;
+  Promise.all([spoken.then(()=>wait((soundOn?P.after:0)+hold)),wait(P.gap)]).then(()=>{ if(G!==g) return;
     const next=pickCpu(last(o.w));
-    if(!next){ toast('🤖','컴퓨터가 졌어요!',`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();G.chain=[];setCpu(pickCpu(null));}); return; }
+    if(!next){ toast('🤖','컴퓨터가 졌어요!',`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();archiveChain();setCpu(pickCpu(null));}); return; }
     setCpu(next);
   });
 }
@@ -1570,51 +1682,47 @@ function fail(why,ex){
   if(ex) nbAdd(ex.w,'wrong');
   adapt(false); G.clean=false; G.cleanRun=0; G.failedBefore=true; const r=loseTurn();
   let revealHTML='';
-  if(G.listen&&!G.revealed){ G.revealed=true; render(); revealHTML=`<p>🎧 컴퓨터 단어는 <span class="ex">${esc(disp(G.cur))}</span> (${esc(plainKo(G.cur.ko))})였어요.</p>${G.silent?`<p>💡 ${esc(G.silent)}</p>`:''}`; }
+  if(G.listen&&!G.revealed){ G.revealed=true; render(); revealHTML=`<p>🎧 컴퓨터 단어는 <span class="ex">${esc(disp(G.cur))}</span> (${esc(plainKo(G.cur.ko))})였어요.</p>${G.silent?`<p class="snote miss" id="missNote">💡 ${esc(G.silent)}</p>`:''}`; }
   const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(disp(ex))}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
   const gf=G; setTimeout(()=>G===gf&&toast('😵','아쉬워요!',`<p>${why}</p>${revealHTML}${exHTML}${r.text}`,r.label,r.next),450);
 }
-function passLevel(){
+// 단계 통과 기록(진도·배지·별). 통과 화면(startRest)은 success()에서 잠시 뒤에 띄움
+function recordPass(){
   const L=G.L; save.cleared[L.id]=true; if(save.unlocked<L.id+1) save.unlocked=Math.min(LEVELS.length,L.id+1); persist();
   if(!G.hintUsed) award('nohint');
   if(LEVELS.every(x=>save.cleared[x.id])) award('master-'+track);
-  bankStars(); startRest();
+  bankStars();
 }
 
-// ---------- 쉬어 가기: ① 통과 요약 → ② 미니 복습·🎁 상자 → ③ 컴퓨터의 한마디·다음 단계 (마지막 단계면 ③ 대신 수준 정복) ----------
-let REST=null, boxRoll=null;   // boxRoll: 테스트용으로 다음 상자 결과를 정함(0~1)
+// ---------- 단계 통과 뒤 화면(코드 이름 REST): ① 통과 요약 → ② 끝말잇기 하이라이트 → ③ 🎁 등급 상자 → ④ 컴퓨터의 한마디·다음 단계 (마지막 단계면 ④ 대신 수준 정복) ----------
+let REST=null, boxRoll=null;   // boxRoll: 테스트용으로 다음 금상자의 보관 힌트 뽑기 결과를 정함(0~1)
 const fmtTime=ms=>{ const t=Math.max(0,Math.round(ms/1000)), m=Math.floor(t/60), x=t%60; return m?`${m}분 ${x}초`:`${x}초`; };
 const reduceMotion=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
-// 미니 복습 단어: 복습 날짜가 된 단어(정식 복습) → 날짜가 안 된 수첩 단어(연습) → 수첩이 비었으면 이번 끝말잇기 줄의 내 단어(연습). 금지어 제외
-function restWords(chain){
-  const n=SETTINGS.restBox.words, okW=w=>DICT.has(w)&&!isBlocked(w);
-  const due=shuffle(nbDue()).map(x=>({w:x.w,kind:'due'}));
-  const rest=shuffle(nbPracticeList().filter(x=>x.due>today())).map(x=>({w:x.w,kind:'practice'}));
-  let list=[...due,...rest].filter(x=>okW(x.w));
-  if(!Object.keys(nb.items).length) list=shuffle([...new Set(chain.filter(x=>x.me).map(x=>x.w))]).filter(okW).map(w=>({w,kind:'chain'}));
-  return list.slice(0,n);
-}
+// 상자 등급: 하트를 하나도 잃지 않았거나(기초는 한 번도 안 틀림) 힌트 없이 통과 → 금, 하트 1개 잃음 → 은, 그 외 → 동
+const GRADES={gold:{icon:'🥇',name:'금상자'},silver:{icon:'🥈',name:'은상자'},bronze:{icon:'🥉',name:'동상자'}};
+const boxGrade=(lost,noHint)=>lost===0||noHint?'gold':lost===1?'silver':'bronze';
 function startRest(){
   stopTimer(); if(keyHandler){ document.removeEventListener('keydown',keyHandler); keyHandler=null; }
-  const L=G.L, nextL=LEVELS[L.id];
+  const L=G.L, nextL=LEVELS[L.id], lost=livesOn()?(G.livesLost||0):G.turns-G.rights;
   REST={L,nextL,step:1,stars:G.starsGot||0,turns:G.turns,rights:G.rights,ms:Date.now()-G.t0,score:G.score,bestCombo:G.bestCombo,
     noHint:!G.hintUsed,badges:G.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean),
     skip3:track==='basic'&&L.id===1&&G.firstTime&&G.clean&&G.cleanRun>=Math.min(SETTINGS.skipStreak,L.goal)&&LEVELS.length>=3,
-    words:restWords(G.chain),i:0,right:0,answered:false,opened:false,reward:null,line:''};
+    // 하이라이트: 이번 단계에서 이어 간 단어 모두(틀려서 새로 시작한 줄은 '새로 시작' 표시로 나눔). 틀린 시도와 대답하지 못한 컴퓨터 단어는 없음
+    lost,grade:boxGrade(lost,!G.hintUsed),hl:[...G.lines,G.chain].flatMap((seg,k)=>[...(k?[{div:true}]:[]),...seg.map(x=>({w:x.w,d:x.d||x.w,me:!!x.me}))]),shown:0,opened:false,reward:null,line:''};
   renderRest();
 }
 function renderRest(){
   const S=REST, L=S.L, last=!S.nextL;
-  const steps=['통과','복습·상자',last?'정복':'다음 단계'];
+  const steps=['통과','끝말잇기','선물 상자',last?'정복':'다음 단계'];
   $app.innerHTML=`
-  <div class="topbar"><button class="back" id="back">← <span class="t">단계 </span>목록</button><h2>☕ 쉬어 가기</h2><button class="back" id="snd" aria-pressed="${soundOn}" aria-label="소리">${sndHTML()}</button></div>
-  <ol class="rsteps" aria-label="쉬어 가기 단계">${steps.map((t,i)=>`<li class="${i+1===S.step?'on':i+1<S.step?'done':''}" ${i+1===S.step?'aria-current="step"':''}>${'①②③'[i]} ${t}</li>`).join('')}</ol>
+  <div class="topbar"><button class="back" id="back">← <span class="t">단계 </span>목록</button><h2>🎉 ${last?`${TRACKS[track].name} 수준 정복!`:`${L.id}단계 통과!`}</h2><button class="back" id="snd" aria-pressed="${soundOn}" aria-label="소리">${sndHTML()}</button></div>
+  <ol class="rsteps" aria-label="통과 뒤 순서">${steps.map((t,i)=>`<li class="${i+1===S.step?'on':i+1<S.step?'done':''}" ${i+1===S.step?'aria-current="step"':''}>${'①②③④'[i]} ${t}</li>`).join('')}</ol>
   <section class="rest pop" id="rest"></section>
   <div class="msg" id="msg" role="status" aria-live="polite"></div>`;
   $app.querySelector('#back').onclick=home;
   $app.querySelector('#snd').onclick=()=>{soundOn=!soundOn;audioKeepAlive(soundOn);const b=$app.querySelector('#snd');b.innerHTML=sndHTML();b.setAttribute('aria-pressed',soundOn);};
   const box=$app.querySelector('#rest');
-  if(S.step===1) restSummary(box); else if(S.step===2) restReview(box); else last?restDone(box):restNext(box);
+  [restSummary,restShow,restBox,last?restDone:restNext][S.step-1](box);
 }
 const restGo=step=>{ REST.step=step; renderRest(); };
 // ① 통과 요약: 받은 별·정답률·걸린 시간, 이번에 얻은 배지, 힌트 없이 통과 축하
@@ -1637,76 +1745,66 @@ function restSummary(box){
   box.querySelector('#skip3')?.addEventListener('click',()=>{ save.cleared[1]=save.cleared[2]=true; save.unlocked=Math.max(save.unlocked,3); persist(); start(3); });
   const go=box.querySelector('#go'); go.onclick=()=>restGo(2); go.focus();
 }
-// ② 미니 복습(오늘의 복습과 같은 방식) → 🎁 상자 열기. 건너뛰기는 언제나(상자 없이 ③으로)
-function restReview(box){
-  const S=REST;
-  if(S.i>=S.words.length||S.opened){ restBox(box); return; }
-  const it=S.words[S.i], d=DICT.get(it.w), word=disp(d), blanks=track==='basic';
-  const pat=blanks?word.split('').map((c,i)=>i%2===0?c:'_').join(' '):'';
-  box.innerHTML=`<h3>📒 미니 복습 <span class="word">${S.i+1} / ${S.words.length}</span></h3>
-    <div class="cpu review">
-      <div class="who">이 뜻의 영어 단어를 써 보세요${it.kind==='due'?' · 도장 복습':' · 연습'}</div>
-      ${d.emoji?`<div class="emoji" aria-hidden="true">${d.emoji}</div>`:''}
-      <div class="rko">${esc(plainKo(d.ko))}</div>
-      ${pat?`<div class="pat word" aria-label="빈칸 힌트">${esc(pat)}</div>`:''}
-      <button class="speak" id="say">🔊 듣기</button>
-    </div>
-    <div class="ask">${blanks?'빈칸을 채워 <b class="plain">단어 전체</b>를 써요':'들은 단어의 철자를 써요'}</div>
-    <div id="answer">${enFormHTML('영어 단어','미니 복습 영어 단어','확인')}</div>
-    <div class="row" id="nextRow"></div>
-    <div class="row"><button class="linkbtn" id="skipRest">건너뛰기</button></div>`;
-  box.querySelector('#say').onclick=()=>{audioKeepAlive(true);const o=soundOn;soundOn=true;speak(d.w);soundOn=o;};
-  box.querySelector('#skipRest').onclick=()=>restGo(3);
-  setTimeout(()=>{ if(REST===S&&S.step===2&&S.words[S.i]===it&&!S.answered) speak(d.w,true); },SAY_DELAY);
-  const inp=box.querySelector('#inp');
-  enInput(inp,box.querySelector('#f'),v=>{
-    if(S.answered) return; const a=v.trim().toLowerCase(); if(!a){ msg('단어를 써 주세요.','info'); return; }
-    if(!DICT.has(a)&&isBlocked(a)){ inp.value=''; inp.focus({preventScroll:true}); msg(BLOCK_MSG,'info'); return; }
-    S.answered=true; const ok=a===d.w; if(ok) S.right++;
-    // 날짜가 된 단어만 정식 복습(도장·날짜 바뀜), 나머지는 연습(그대로)
-    const r=it.kind==='due'?nbResult(d.w,ok):'';
-    if(it.kind==='due'&&Object.keys(nb.learned).length>=B.review) award('review');
-    msg(ok?(r==='learned'?`✔ 맞았어요! ${word} — 도장을 다 모아 '외운 단어'가 됐어요 🎉`:`✔ 맞았어요! ${word} = ${plainKo(d.ko)}${it.kind==='due'?' · 도장 +1':''}`):`✗ 정답은 ${word}예요.${it.kind==='due'?' 내일 다시 복습해요.':''}`,ok?'good':'bad');
-    speak(d.w); inp.disabled=true;
-    const more=S.i+1<S.words.length, nr=box.querySelector('#nextRow');
-    nr.innerHTML=`<button class="btn" id="next">${more?'다음 단어 →':'🎁 상자 열기'}</button>`;
-    const nx=nr.querySelector('#next'); nx.focus();
-    nx.onclick=()=>{ S.i++; S.answered=false; if(more) renderRest(); else { renderRest(); openBox(); } };
-  });
+// ② 끝말잇기 하이라이트(채팅): 컴퓨터 단어는 왼쪽, 내 단어는 오른쪽 말풍선. 새 말풍선이 아래에서 나오며 앞 말풍선을 위로 밀어 올림(SETTINGS.restBox.gap 간격)
+// 화면을 누르거나 Enter면 전부 바로, 동작 줄이기면 처음부터 전부. 말풍선을 누르면 그 단어를 읽어 줌
+function restShow(box){
+  const S=REST, n=S.hl.length; if(reduceMotion()) S.shown=n;
+  box.innerHTML=`<h3>💬 이번 끝말잇기</h3>
+    <div class="hlbox" id="hlBox"><ol class="hl" id="hl" aria-label="방금 통과한 단계의 끝말잇기">${S.hl.map((x,i)=>x.div?`<li class="hdiv${i>=S.shown?' wait':''}"><span>새로 시작</span></li>`:`<li class="${x.me?'hme':'hcpu'}${i>=S.shown?' wait':''}"><button class="hb" data-i="${i}" aria-label="${x.me?'내 단어':'컴퓨터 단어'} ${esc(x.d)}. 누르면 읽어 줘요">${esc(x.d)}</button></li>`).join('')}</ol></div>
+    <p class="hlnote" id="hlTip">말풍선을 누르면 단어를 읽어 줘요.${S.shown<n?' 화면을 누르거나 Enter를 누르면 전부 보여요.':''}</p>
+    <div class="row"><button class="btn" id="go">다음 →</button></div>`;
+  const hl=box.querySelector('#hl');
+  fitBox(box.querySelector('#hlBox'),hl);
+  hl.querySelectorAll('.hb').forEach(b=>b.onclick=()=>{ if(S.shown<n) return; audioKeepAlive(true); const o=soundOn; soundOn=true; speak(S.hl[+b.dataset.i].w); soundOn=o; });
+  const go=box.querySelector('#go'); go.onclick=()=>restGo(3); go.focus();
+  if(S.shown>=n) return;
+  const alive=()=>REST===S&&S.step===2&&document.getElementById('hl')===hl;
+  const done=()=>{ clearTimeout(S.tm); document.removeEventListener('keydown',onKey,true); document.removeEventListener('click',onClick,true);
+    if(!alive()) return; S.shown=n; hl.querySelectorAll('li.wait,li.up').forEach(li=>li.classList.remove('wait','up'));   // 올라오던 말풍선도 바로 제자리에
+    const tip=box.querySelector('#hlTip'); if(tip) tip.textContent='말풍선을 누르면 단어를 읽어 줘요.'; };
+  const onKey=e=>{ if(!alive()) return done(); if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); done(); } };
+  const onClick=e=>{ if(!alive()) return done(); if(e.target.closest('.topbar')) return; e.preventDefault(); e.stopPropagation(); done(); };
+  document.addEventListener('keydown',onKey,true); document.addEventListener('click',onClick,true);
+  const step=()=>{ if(!alive()) return done(); const li=hl.children[S.shown]; li.classList.remove('wait'); li.style.setProperty('--h',li.offsetHeight+'px'); li.style.setProperty('--dur',SETTINGS.restBox.rise+'ms'); li.classList.add('up'); li.addEventListener('animationend',()=>li.classList.remove('up'),{once:true});
+    S.shown++; if(S.shown>=n) done(); else S.tm=setTimeout(step,SETTINGS.restBox.gap); };
+  step();
 }
-// 상자 보상 고르기: v(0~1)를 확률표에 대응
-function pickReward(v){ const R0=SETTINGS.restBox.rewards; let acc=0; for(const o of R0){ acc+=o.p; if(v*100<acc) return o; } return R0[R0.length-1]; }
+// 하이라이트 상자 높이: 말풍선을 다 보였을 때 높이에 맞춤(적으면 빈 공간 없이, 많으면 CSS max-height까지 + 상자 안 스크롤). 올라오는 동안 화면이 밀리지 않게 미리 정함
+function fitBox(bx,hl){
+  const hidden=[...hl.children].filter(li=>li.classList.contains('wait')); hidden.forEach(li=>li.classList.remove('wait'));
+  const cs=getComputedStyle(bx), need=hl.scrollHeight+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom), max=parseFloat(cs.maxHeight)||need;
+  hidden.forEach(li=>li.classList.add('wait')); bx.style.height=Math.ceil(Math.min(need,max))+'px';
+}
+// ③ 🎁 선물 상자(따로 한 화면): 등급을 보여 주고 눌러서(Enter) 열기 → 보상, 그다음 "다음 →"
 function restBox(box){
-  const S=REST;
+  const S=REST, g=GRADES[S.grade];
   if(!S.opened){
-    box.innerHTML=`<div class="gift" aria-hidden="true">🎁</div><h3>${S.words.length?`미니 복습 끝! ${S.words.length}개 중 ${S.right}개를 맞혔어요.`:'복습할 단어가 없어요.'}</h3>
-      <div class="row"><button class="linkbtn" id="skipRest">건너뛰기</button><button class="btn" id="openBox">🎁 상자 열기</button></div>`;
-    box.querySelector('#skipRest').onclick=()=>restGo(3);
+    box.innerHTML=`<h3 id="grade">${g.icon} ${g.name}</h3>
+      <button class="giftbtn" id="openBox" aria-label="${g.name} 열기"><span class="gift" aria-hidden="true">🎁</span><span>눌러서 열기</span></button>`;
     const ob=box.querySelector('#openBox'); ob.onclick=openBox; ob.focus(); return;
   }
   const r=S.reward;
-  box.innerHTML=`<div class="gift open" aria-hidden="true">${r.hint?'💡':'⭐'}</div><h3 id="reward">${esc(r.text)}</h3>
-    ${r.bonus?`<p class="sum" id="bonus">🎯 미니 복습을 모두 맞혀서 ⭐ +${r.bonus} 더!</p>`:''}
-    ${S.words.length?`<p class="sum">미니 복습 ${S.words.length}개 중 ${S.right}개 맞힘</p>`:''}<p class="sum">모은 별 ⭐ <b class="stars-n">${stars}</b></p>
+  box.innerHTML=`<div class="gift open" aria-hidden="true">${r.extra==='hint'?'💡':'⭐'}</div>
+    <h3 id="reward">${g.icon} ${g.name}에서 ⭐ ${r.stars}개를 받았어요!</h3>
+    ${r.extra?`<p class="sum" id="bonus">${r.extra==='hint'?`💡 보관 힌트 ${r.hint}개도 들어 있었어요! (${TRACKS[track].name} 수준에서 써요)`:`💡 보관 힌트가 가득 차서 ⭐ ${r.hintStars}개로 바꿔 줬어요!`}</p>`:''}
+    <p class="sum">모은 별 ⭐ <b class="stars-n">${stars}</b></p>
     <div class="row"><button class="btn" id="go">${S.nextL?'다음 →':'🎉 확인'}</button></div>`;
-  const go=box.querySelector('#go'); go.onclick=()=>restGo(3); go.focus();
+  const go=box.querySelector('#go'); go.onclick=()=>restGo(4); go.focus();
 }
-// 🎁 상자 열기: 보상 하나 + (미니 복습을 모두 맞혔으면) 별 추가. 짧은 열림 효과(동작 줄이기 설정이면 생략)
+// 상자 열기: 등급별 별 + 금상자는 hintChance% 확률로 보관 힌트(가득 찼거나 보관 기능이 없으면 별 fullHintStars개). 짧은 열림 효과(동작 줄이기면 생략)
 function openBox(){
-  const S=REST; if(!S||S.opened) return; const RB=SETTINGS.restBox;
-  const o=pickReward(boxRoll!=null?boxRoll:Math.random()); boxRoll=null;
-  let text;
-  if(o.hint){
-    if(SETTINGS.shop.maxStored>0&&storeRoom()>0){ setStored(storedHints()+o.hint); text=`💡 보관 힌트 ${o.hint}개를 받았어요! (${TRACKS[track].name} 수준에서 써요)`; }
-    else { setStars(stars+RB.fullHintStars); text=`보관 힌트가 가득 차서 ⭐ ${RB.fullHintStars}개로 바꿔 줬어요!`; }
-  } else { setStars(stars+o.stars); text=`⭐ ${o.stars}개를 받았어요!`; }
-  const bonus=S.words.length&&S.right===S.words.length?RB.perfectBonus:0; if(bonus) setStars(stars+bonus);
-  S.opened=true; S.reward={hint:!!(o.hint&&text.startsWith('💡')),text,bonus,kind:o.hint?(text.startsWith('💡')?'hint':'hintStars'):'stars',stars:o.stars||0};
-  const box=$app.querySelector('#rest'), g=box&&box.querySelector('.gift');
-  if(g&&!reduceMotion()){ g.classList.add('opening'); box.querySelectorAll('button').forEach(b=>b.disabled=true); setTimeout(()=>{ if(REST===S&&S.step===2) renderRest(); },700); }
+  const S=REST; if(!S||S.opened) return; const RB=SETTINGS.restBox, o=RB[S.grade];
+  setStars(stars+o.stars); let extra='';
+  if(o.hintChance&&(boxRoll!=null?boxRoll:Math.random())*100<o.hintChance){
+    if(SETTINGS.shop.maxStored>0&&storeRoom()>0){ setStored(storedHints()+(o.hint||1)); extra='hint'; }
+    else { setStars(stars+RB.fullHintStars); extra='hintStars'; } }
+  boxRoll=null;
+  S.opened=true; S.reward={grade:S.grade,stars:o.stars,extra,hint:o.hint||1,hintStars:RB.fullHintStars};
+  const btn=$app.querySelector('#openBox'), g=btn&&btn.querySelector('.gift');
+  if(g&&!reduceMotion()){ g.classList.add('opening'); btn.disabled=true; setTimeout(()=>{ if(REST===S&&S.step===3) renderRest(); },700); }
   else renderRest();
 }
-// ③ 🤖 컴퓨터의 한마디 + 다음 단계 시작
+// ④ 🤖 컴퓨터의 한마디 + 다음 단계 시작
 function restNext(box){
   const S=REST, N=S.nextL;
   if(!S.line){ const k=`${track}-${N.id}`; S.line=rnd(REST_LINES[k]||(N.listen==='force'?REST_LINES.listen:N.time?REST_LINES.time:REST_LINES.other)); }
@@ -1716,7 +1814,7 @@ function restNext(box){
   box.querySelector('#toList').onclick=home;
   const b=box.querySelector('#startNext'); b.onclick=()=>{ const id=N.id; REST=null; start(id); }; b.focus();
 }
-// 마지막 단계: ③ 대신 수준 정복
+// 마지막 단계: ④ 대신 수준 정복
 function restDone(box){
   box.innerHTML=`<div class="big-e">🎉</div><h3 id="conquer">${TRACKS[track].name} 수준 정복!</h3>
     <p>${TRACKS[track].name} 수준의 모든 단계를 통과했어요! ${track!=='hard'?'다음 수준에도 도전해 보세요.':'최고예요.'}</p>
@@ -1750,15 +1848,14 @@ function useHint(){
     const keepPlaced=G.placed; render(); G.placed=keepPlaced; if(G.blockDraw&&m==='blocks') G.blockDraw();
     msg('💡 한 글자를 더 보여 줬어요.','info'); return;
   }
-  G.hintUsed=true; G.clean=false; G.turnHint=true;
-  // 듣고 쓰기(단어가 아직 안 보일 때): 시작 글자를 알려 주는 대신 끝소리를 구별할 단서를 줌
+  // 듣고 쓰기·듣기 챌린지(단어가 아직 안 보일 때): 시작 글자 대신 끝 글자를 찾을 단서. ① 끝에서 두 번째 글자와 위치 ② 뜻
   if(G.listen&&!G.revealed){
-    if(G.hintStep>=3){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
-    consumeHint(); G.hintStep++;
+    if(G.hintStep>=LISTEN_HINTS){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
+    G.hintUsed=true; G.clean=false; G.turnHint=true; consumeHint(); G.hintStep++;
     const keep=$app.querySelector('#inp')?.value||''; render(); const inp=$app.querySelector('#inp'); if(inp) inp.value=keep;
-    if(G.hintStep===1){ audioKeepAlive(true); speak(G.cur.w,false,SETTINGS.listen.slowRate); }
     return;
   }
+  G.hintUsed=true; G.clean=false; G.turnHint=true;
   if(G.L.mode==='choice'){
     const wrongs=G.options.filter(o=>o.w[0]!==ch&&!G.removed.has(o.w));
     if(wrongs.length<=1&&G.hintStep>0){ msg('이미 힌트를 썼어요. 남은 2개 중에서 골라 보세요!','info'); return; }
@@ -1776,12 +1873,19 @@ function useHint(){
   render();
   const inp=$app.querySelector('#inp'); if(inp){inp.value=keep;}
 }
+// 듣기 힌트 ①: 끝에서 두 번째 글자만 위치와 함께(write → □ □ □ t □), 마지막 칸은 맞힐 칸
+const LISTEN_HINTS=2;
+const penPattern=w=>w.split('').map((c,i)=>i===w.length-2?c:'□').join(' ');
 function showHint(){
   const area=$app.querySelector('#hintArea'); const ch=last(G.cur.w);
   if(G.listen&&!G.revealed){
-    const c=G.cur, w=disp(c), n=G.hintStep;
-    area.innerHTML=`<div class="hintbox lhint"><div><button class="speak" id="slowSay">🐢 천천히 듣기</button> <span class="lboxes inline" aria-label="${c.w.length}글자">${'<span class="lbox"></span>'.repeat(c.w.length)}</span> ${c.w.length}글자${n>=2?` · 뜻: <b>${esc(plainKo(c.ko))}</b>`:''}</div>
-      ${n>=3?`<div class="pat word" aria-label="끝 글자만 가린 철자">${esc(w.slice(0,-1).split('').join(' '))} _</div>`:`<small>힌트를 한 번 더 쓰면 ${n===1?'뜻':'끝 글자만 가린 철자'}를 보여 줘요.</small>`}</div>`;
+    const c=G.cur, w=c.w, k=w.length, n=G.hintStep;
+    area.innerHTML=`<div class="hintbox lhint">
+      <div class="lboxes pen" id="penHint" role="img" data-pat="${esc(penPattern(w))}" aria-label="${k}글자 단어, 끝에서 두 번째 글자는 ${esc(w[k-2])}. 마지막 칸의 글자를 맞혀요">${w.split('').map((x,i)=>`<span class="lbox${i===k-2?' on':i===k-1?' qbox':''}" aria-hidden="true">${i===k-2?esc(x):i===k-1?'?':''}</span>`).join('')}</div>
+      <div class="askcap"><span class="lbox qbox mini" aria-hidden="true">?</span> 이 글자를 맞혀요</div>
+      <div id="penMsg">끝에서 두 번째 글자예요. 마지막 글자는 무엇일까요?</div>
+      ${n>=2?`<div id="hintKo">뜻: <b>${esc(plainKo(c.ko))}</b></div>`:'<small>힌트를 한 번 더 쓰면 뜻을 보여 줘요.</small>'}
+      <div><button class="speak" id="slowSay">🐢 천천히 듣기</button></div></div>`;
     area.querySelector('#slowSay').onclick=()=>{ audioKeepAlive(true); speak(c.w,false,SETTINGS.listen.slowRate); $app.querySelector('#inp')?.focus({preventScroll:true}); };
     return;
   }
