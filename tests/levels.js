@@ -10,6 +10,7 @@ const {target,open,startLevel}=require('./lib');
     await startLevel(p,url,t,lv); await p.waitForTimeout(300);
     let turns=0, passed=false;
     for(let i=0;i<30&&!passed;i++){
+      if(await p.$('#rest')){ passed=true; break; }
       const ov=await p.$('.overlay'); if(ov){ const tx=await ov.textContent(); if(tx.includes('통과')){ passed=true; break; } await p.click('#ov1'); await p.waitForTimeout(300); continue; }
       const tg=await H(()=>window.__wordchain.target()), cw=await H(()=>window.__wordchain.cpu()), ch=cw.slice(-1);
       if(await p.$('.spell')) await p.click(`.spell .choice[data-v="${tg}"]`);
@@ -18,7 +19,7 @@ const {target,open,startLevel}=require('./lib');
       else if(await p.$('.choices')){ const bs=await p.$$('.choice'); for(const x of bs){ if((await x.$eval('.w',e=>e.textContent))[0].toLowerCase()===ch){ await x.click(); break; } } }
       else { const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent.toLowerCase())); const w=W.find(x=>x[0]===ch&&!used.includes(x)&&x!==cw); await p.fill('#inp',w); await p.press('#inp','Enter'); }
       turns++;
-      for(let k=0;k<30;k++){ await p.waitForTimeout(150); if(await p.$('.overlay')) break; const c2=await H(()=>window.__wordchain.cpu()); if(c2!==cw) break; }
+      for(let k=0;k<30;k++){ await p.waitForTimeout(150); if(await p.$('.overlay')||await p.$('#rest')) break; const c2=await H(()=>window.__wordchain.cpu()); if(c2!==cw) break; }
     }
     ok(passed,`${t} ${lv}단계: ${turns}턴 만에 통과`);
   }

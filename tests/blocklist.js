@@ -51,7 +51,8 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   ok(!stored.includes(e0)&&!stored.includes(s0),'localStorage 어디에도 금지어 입력이 저장되지 않음');
   await p.fill('#inp',s0); await p.press('#inp','Enter'); await p.waitForTimeout(800);
   const ovt=await p.textContent('.overlay');
-  ok(ovt.includes('아쉬워요!')&&ovt.includes('새 판으로 다시 도전해요')&&!/사용할 수 없|금지/.test(ovt)&&(await H(()=>window.__wordchain.state())).streak===0,'3번째 금지어: 평범한 오답 화면(이유 설명 없음), 연속 기록 0');
+  const st3=await H(()=>window.__wordchain.state());
+  ok(ovt.includes('아쉬워요!')&&ovt.includes('하트를 1개 잃었어요')&&!/사용할 수 없|금지/.test(ovt)&&st3.lives===2&&st3.streak===before.streak,'3번째 금지어: 평범한 오답 화면(이유 설명 없음, 다른 오답처럼 하트 1개)');
   await p.click('#ov1'); await p.waitForTimeout(400);
   ok(!(await p.$('.chain'))&&!(await p.$('.overlay')),'새 판 시작');
 

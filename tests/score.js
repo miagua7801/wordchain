@@ -44,10 +44,10 @@ const {target,open,startLevel}=require('./lib');
   // 단계 통과 화면: 이번 판 점수·최고 콤보·얻은 배지, '힌트 없이' 배지
   await startLevel(p,url,'basic',1); await p.waitForTimeout(300);
   for(let i=0;i<4;i++){ const t=await H(()=>window.__wordchain.target()); await p.click(`.spell .choice[data-v="${t}"]`);
-    for(let k=0;k<40;k++){ await p.waitForTimeout(150); if(await p.$('.overlay')||await H(()=>window.__wordchain.target())!==t) break; } }
-  const card=await p.textContent('.overlay');
-  ok(card.includes('이번 판')&&card.includes('최고 콤보')&&card.includes('힌트 없이'),'통과 화면: 점수·최고 콤보·이번에 얻은 배지(힌트 없이)');
-  await p.click('#ov2'); await p.click('#back'); await p.waitForTimeout(200);
+    for(let k=0;k<40;k++){ await p.waitForTimeout(150); if(await p.$('#rest')||await H(()=>window.__wordchain.target())!==t) break; } }
+  const card=await p.textContent('#rest');
+  ok(card.includes('이번 판')&&card.includes('최고 콤보')&&card.includes('힌트 없이'),'통과 화면(쉬어 가기 ①): 점수·최고 콤보·이번에 얻은 배지(힌트 없이)');
+  await p.click('#back'); await p.waitForTimeout(200);
   ok((await p.textContent('.lv[data-lv="1"]')).includes('최고')&&(await p.textContent('.lv[data-lv="1"]')).includes('점'),'단계 목록: 이 단계 최고 점수');
   await p.click('#bdBtn'); await p.waitForTimeout(200);
   const nb=(await p.$$('.bdg')).length, ng=(await p.$$('.bdg.got')).length;

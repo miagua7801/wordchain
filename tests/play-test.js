@@ -12,6 +12,7 @@ const fs=require('fs');
  const mine=new Set(); let falseUsed=0, turns=0, cmpSeen=0;
  for(let i=0;i<40;i++){
    await p.waitForTimeout(100);
+   if(await p.$('#rest')){ console.log('passed after',turns); await p.click('#again'); continue; }
    if(await p.$('.overlay')){ await p.click('#ov1'); continue; }
    const cw=await p.$eval('.cpu .big',e=>e.textContent); if(/(er|est)$/.test(cw)) cmpSeen++;
    const chain=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent));

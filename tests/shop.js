@@ -36,10 +36,14 @@ const day=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return `${d.getFull
   ok(m.includes('📒 수첩 단어!')&&m.includes(`+${exp}점`),`수첩 단어로 정답: ${m}`);
   const nbAfter=await NB(); ok(nbAfter.items[ans].stamps===1&&nbAfter.items[ans].due===day(3),'게임 정답은 수첩 도장·날짜를 바꾸지 않음');
 
-  // 3. 별 모으기: 판이 끝날 때 점수 10점 = ⭐1(버림), 오답에서는 차감 없음
+  // 3. 별 모으기: 판이 끝날 때(하트를 다 잃거나 통과) 점수 10점 = ⭐1(버림), 오답에서는 차감 없음
   await p.waitForTimeout(2500);
   const sc=(await H(()=>window.__wordchain.state())).score;
-  cw=await H(()=>window.__wordchain.cpu()); await p.fill('#inp',W.find(w=>w[0]!==cw.slice(-1))); await p.press('#inp','Enter'); await p.waitForTimeout(700);
+  // 보통 수준은 하트 3개: 하트가 남아 있으면 판이 이어지므로 별은 하트를 다 잃을 때 쌓임
+  const miss=async()=>{ const c=await H(()=>window.__wordchain.cpu()); await p.fill('#inp',W.find(w=>w[0]!==c.slice(-1))); await p.press('#inp','Enter'); await p.waitForTimeout(700); };
+  await miss(); const st0=await H(()=>window.__wordchain.stars()); await p.click('#ov1'); await p.waitForTimeout(700);
+  ok(st0===0,'하트가 남아 있으면 판이 이어져 별을 아직 안 쌓음');
+  await miss(); await p.click('#ov1'); await p.waitForTimeout(700); await miss();
   const st1=await H(()=>window.__wordchain.stars());
   ok(st1===Math.floor(sc/10)&&(await p.textContent('.overlay')).includes(`⭐ +${st1}`),`판이 끝나면 ${sc}점 → ⭐ ${st1} (오답 화면에 "⭐ +${st1}")`);
   ok(+(await H(()=>localStorage.getItem('wordchain-stars-v1')))===st1,'wordchain-stars-v1에 숫자 하나만 저장');

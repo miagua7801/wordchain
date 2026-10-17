@@ -9,6 +9,7 @@ const {target,open,startLevel,cpuWord}=require('./lib');
     await startLevel(p,url,t,lv);
     const asked=[], mine=new Set(); let rep=0;
     for(let i=0;i<turns;i++){
+      if(await p.$('#rest')){ await p.click('#again'); await p.waitForTimeout(100); continue; }
       if(await p.$('.overlay')){ await p.click('#ov2').catch(()=>p.click('#ov1')); await p.waitForTimeout(100); continue; }
       const cw=await cpuWord(p), ch=cw.slice(-1);
       if(asked.slice(-2).includes(ch)) rep++; asked.push(ch);
