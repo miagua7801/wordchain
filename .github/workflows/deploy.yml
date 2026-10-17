@@ -30,6 +30,7 @@ jobs:
           python build.py
           mkdir -p _site
           cp dist/word-chain-challenge.html _site/index.html
+          cp dist/version.json _site/version.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
