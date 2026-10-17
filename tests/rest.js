@@ -10,8 +10,8 @@ const {target,open}=require('./lib');
   const prog=(t,extra)=>({track:t,prog:{[t]:Object.assign({unlocked:5,best:{},cleared:{}},extra||{})},time:{},basicVer:2});
   const startLv=async(t,n)=>{ await p.click(`[data-t="${t}"]`); await p.click(`[data-lv="${n}"]`); await p.waitForTimeout(900); };
   await p.goto(url);
-  const W=await H(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)&&!/(er|est)$/.test(w)&&!window.__wordchain.tb(w)));
-  // 주관식 단계: 목표 바로 앞까지 성공 수를 올린 뒤 기본 어휘 단어가 아닌 단어로 정답 → 통과
+  const W=await H(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)&&!/(er|est)$/.test(w)&&!window.__wordchain.core(w)));
+  // 주관식 단계: 목표 바로 앞까지 성공 수를 올린 뒤 기본 어휘가 아닌 단어로 정답(수첩에 안 모이게) → 통과
   const passTyped=async()=>{ const goal=await H(()=>document.querySelectorAll('.status .dot').length);
     await H(g=>window.__wordchain.tweak({streak:g-1}),goal);
     const cw=await H(()=>window.__wordchain.cpu()); await p.fill('#inp',W.find(w=>w[0]===cw.slice(-1)&&w!==cw)); await p.press('#inp','Enter');

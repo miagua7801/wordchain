@@ -12,11 +12,13 @@ const split=s=>s.split(/[|\n]/).map(x=>x.trim()).filter(Boolean);
 
 function load(){
   const src=fs.readFileSync(FILE,'utf8');
-  const m=new Function(src+';return {VOCAB_E,VOCAB_M,VOCAB_TB,VOCAB_OLD,VOCAB_NUM,VOCAB_WF_E,VOCAB_WF_M}')();
+  const m=new Function(src+';return {VOCAB_E,VOCAB_M,VOCAB_TB,VOCAB_CORE,VOCAB_CORE_ACCEPT,VOCAB_NUM,VOCAB_WF_E,VOCAB_WF_M}')();
   const where=new Map(); // 단어 → [목록, 뜻]
   for(const k of ['VOCAB_NUM','VOCAB_E','VOCAB_M','VOCAB_TB','VOCAB_WF_E','VOCAB_WF_M'])
     for(const e of split(m[k])){ const i=e.indexOf(' '); const w=e.slice(0,i).toLowerCase(); if(!where.has(w)) where.set(w,[k,e.slice(i+1)]); }
-  for(const [w,ko] of m.VOCAB_OLD) where.set(w,['VOCAB_OLD',ko]);
+  // 교육부 기본 어휘: 새로 뜻을 쓴 단어(level 1·2)와 학생 답으로만 인정하는 단어(뜻 없음). 고칠 때는 data/new-meanings-review.tsv + tools/make-core-vocab.py
+  for(const lv of [1,2]) for(const e of split(m.VOCAB_CORE[lv])){ const i=e.indexOf(' '); if(i>0&&!where.has(e.slice(0,i))) where.set(e.slice(0,i),['VOCAB_CORE '+lv,e.slice(i+1)]); }
+  for(const w of split(m.VOCAB_CORE_ACCEPT)) if(!where.has(w)) where.set(w,['VOCAB_CORE_ACCEPT','(학생 답으로만 인정)']);
   return {src,where};
 }
 

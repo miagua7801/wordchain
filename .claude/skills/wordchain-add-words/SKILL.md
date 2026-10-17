@@ -17,6 +17,8 @@ description: 영어 끝말잇기 앱의 단어장(vocab.js)에 단어를 추가�
 | `[WF_E]`/`[WF_M]` | 접미사로 만든 단어 | 같음 |
 | `[NUM]` VOCAB_NUM | 기수(one~thousand) | **학생 답으로만**, 컴퓨터는 안 냄(NUMW) |
 
+`VOCAB_CORE`(교육부 기본 어휘 level 1·2)·`VOCAB_CORE_ACCEPT`(학생 답으로만)는 `tools/make-core-vocab.py`가 만든다 — 직접 고치지 않는다. 기본 어휘의 새 뜻은 `data/new-meanings-review.tsv`를 고치고 스크립트를 다시 실행한다. `check`는 이 목록도 보여 준다.
+
 뜻 표기 규칙 ("단어 뜻 (설명)"):
 - 접미사: `singer 가수 (sing+er)`, `happiness 행복 (happy+ness, y→i)`, `argument 논쟁 (argue+ment, e 탈락)`
 - 동사의 명사형: `decision 결정 (decide→decision)`

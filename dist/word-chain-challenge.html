@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>영어 끝말잇기 챌린지</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Lexend:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
@@ -266,6 +266,36 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 @media (min-width:600px) and (max-height:760px){
   .choice{min-height:78px;padding:8px}
 }
+/* 휴대폰 화면 키보드가 올라와 있을 때(html.kb, 아래 스크립트가 붙임): 위쪽부터 입력칸까지 키보드 위 한 화면에 들어가도록 줄임.
+   끝말잇기 줄·그림·설명 글·시간 조절은 잠시 숨기고, 컴퓨터 단어 카드는 한 줄로. 아래 여백(키보드 높이)은 입력칸을 키보드 위로 올릴 수 있게 */
+html.kb .wrap{padding-block:6px calc(var(--kbh,45vh) + 16px)}
+html.kb .topbar{margin-bottom:6px}
+html.kb .topbar .back{padding:2px 10px}
+html.kb .topbar h2{font-size:16px}
+html.kb .status{padding:6px 10px;margin-bottom:6px}
+html.kb .status .btn.hint{min-height:36px;padding:4px 12px}
+html.kb .dot{width:14px;height:14px}
+html.kb .chainbox,html.kb .timectl,html.kb .hcount,html.kb .listenbar,html.kb .cpu .who,html.kb .cpu .emoji,html.kb .cpu .ear,html.kb .target .who,html.kb #answer .note{display:none}
+html.kb .timer{margin:0 0 6px}
+html.kb .cpu{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 10px;padding:6px 10px}
+html.kb .cpu .big{font-size:30px;margin:0}
+html.kb .cpu .ko{font-size:15px}
+html.kb .cpu .speak,html.kb .cpu .btn.buy{margin:0}
+html.kb .ask{margin:6px 0 4px;font-size:16px}
+html.kb .ask b{font-size:22px}
+html.kb .target{padding:2px 10px;margin-bottom:6px}
+html.kb .speak{padding:2px 10px}
+html.kb .slot{height:44px}
+html.kb #answer .row .btn{padding:6px 18px}
+html.kb .slots{margin:2px 0 6px}
+html.kb #answer .row{margin-top:4px}
+html.kb .msg{margin-top:2px}
+html.kb .badge-note{bottom:auto;top:calc(var(--vvt,0px) + 8px)}
+/* 휴대폰(좁은 화면)의 끝 글자 → 첫 글자: 선 대신 끝 글자가 첫 글자 칸으로 한 번 건너가고(.hand), 닿은 칸이 반짝임(.land) */
+.hand{position:fixed;z-index:3;pointer-events:none;display:grid;place-items:center;font-family:var(--f-word);font-weight:700;color:#2a1a00;background:var(--link);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.hand.dot{background:none;border:3px solid var(--link);border-radius:50%;box-shadow:0 0 10px var(--link)}
+.land{animation:land .6s ease}
+@keyframes land{0%{box-shadow:0 0 0 0 var(--link)}40%{transform:scale(1.15);box-shadow:0 0 14px 4px var(--link)}100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
 </style>
 </head>
 <body>
@@ -375,9 +405,97 @@ yogurt 요구르트|youtuber 유튜버|
 zero 0|zookeeper 사육사
 `;
 
-// (예전 단어장 — 삭제됨)
-const VOCAB_OLD = [];
 
+// 교육부 영어과 교육과정 [별표] 기본 어휘(저작권 보호 대상 아님) — data/curriculum-vocab.json에서 tools/make-core-vocab.py로 만듦
+// VOCAB_CORE: 1 = level 1(* 초등 권장, 초등 수준), 2 = level 2(** 중학교, 중학 수준). 괄호 안 파생어는 앞 단어 level
+//   "단어 뜻" = 새로 뜻을 쓴 단어(data/new-meanings-review.tsv), "단어"만 = 위 단어장에 뜻이 있는 단어(뜻은 한 곳에만)
+const VOCAB_CORE = {
+1: `
+a 하나의|about|above|across|act|actual 실제의|add|address|adult|afraid|after|afternoon|again|against|age|ago|agree|ahead|air|airplane|album 앨범|all|almost|alone|along|already|alright 괜찮은|also|always|an 하나의|and|animal|another|answer|any|apartment|apple|area|arm|around
+arrive|art|as|ask|at|aunt|autumn|away|baby|back|bad|badminton|bag|bake|ball|banana|bank|base|baseball|basket|basketball|bat|bath|be ~이다|beach|bear|beauty|because|become|bed|bee|beef|before|begin|behind|believe|bell|below|belt|beside
+between|big|bike|bill|bird|birth|biscuit 비스킷|black|blood|blue|board|boat|body|bone|book|borrow|both|bottle|bottom|box|boy|brave|bread|break|breakfast|bridge|bright|bring|brother|brown|brush|build|burn|bus|business|busy|but|butter|button|buy
+by|bye 잘 가|cake|call|camera|camp|campaign|can|candy|cap|car|card|care|carrot|carry|case|cash|casual 격식 없는|cat|catch|center|certain|chair|chance|change|cheap|check|cheese|chicken|child|chocolate|choose|church|circle|city|clarify 분명히 하다|class|classic 고전적인|classify 분류하다|clean
+clear|clever|climb|clock|close|clothes|cloud|club|coat|coffee 커피|cold|collect|college 대학|color|come|comic|company|compute 계산하다|computer|condition|congratulate|control|cook|cookie|cool|corner|cost|could ~할 수 있었다|country|couple|course|court 법원|cousin|cover|cow|crayon|cream|cross|cry|culture
+cup|curtain|customer|cut|dad|daddy 아빠|dance|danger|dark|date|daughter|day|dead|death|decide|decision|deep|delicious|design|desk|dialogue|die|difficult|dinner|disagree|disclose 드러내다|discover|discuss|displace 옮겨 놓다|do 하다|doctor|dog|doll|door|double|doughnut|down|draw|drawer|dream
+dress|drink|drive|drop|drum|dry|duck|during|ear|early|earth|east|eat|egg|eight|elephant|eleven|embody 구체화하다|enclose 둘러싸다|end|energy|enough|ensure 확실하게 하다|enter|evening|every|example|exercise|eye|face|fact|factual 사실에 근거한|fail|fall|family|fan|far|farm|fast|fat
+father|favorite|feel|festival|field|fight|file|fill|film|find|fine|finger|finish|fire|first|fish|five|fix|floor|flower|fly|focus|food|fool|foot|football|for|forest|forget|fork|form|formal|formation 형성|four|fox|free|fresh|friend|friendship|from
+front|fruit|full|fun|future|game|garden|gas|gentleman|get|girl|give|glad|glass|go 가다|goal|god 신|gold|good|goodbye 안녕(헤어질 때)|goods|grandfather|grape|grass|gray|great|green|ground|group|grow|guess|guitar|gum 껌|guy 녀석|habit|hair|hamburger|hand|hang|happy
+hard|hardly|hat|hate|have|he|head|heart|heat|heavy|hello|helmet|help|here|hero|high|hike|hill|history|hit|hobby|hold|holiday|home|homework|honest|hope|horse|hospital|hot|hour|house|how|however|human|hundred|hunt|hurry|husband|i 나
+ice|idea|if|image|in|informal 비공식의|inside|interact 상호 작용하다|international|internet|into|introduce|invite|issue 문제|it|jacket|jam|job|join|juice|jump|just|keep|key|kick|kid|kind|king|kiss|kitchen|knife|know|lady|lake|land|large|laser 레이저|last|late|lazy
+learn|left|leg|lesson|letter|library|lie|life|light|like|likely ~할 것 같은|line|lion|lip|listen|literal 글자 그대로의|little|live|long|look|love|low|luck|lunch|mad|mail|make|man|many|map|marathon|market|marry|mathematics 수학|may ~해도 된다|meat|medal|meet|member|membership 회원 자격
+memory|middle|might ~일지도 모른다|milk|mind|miss|mistake|model|mom|mommy 엄마|money|monkey|month|moon|morning|mother|mountain|mouse|mouth|move|movie|much|music|must ~해야 한다|name|nation|nature|near|neck|need|never|new|news|newspaper 신문|next|nice|night|nine|no|north
+nose|not|note|notebook 공책|nothing|notion 개념|now 지금|number|nurse|of|off|office|official|often|oil|okay 좋아|old|on|one|only|open|or|orange|out|over|page 쪽|paint|pants|paper|parent|park|part|partner 짝|party|pass|pay|pen|pencil|people|piano 피아노
+pick|picture|pig|pilot|pink|pizza|place|plan|plastic|play|pleasant 즐거운|please|pleasure|point|police|poor|potato|power|present|pretty|prince|print|problem|program|programmatic 계획적인|project|puppy|push|put|queen|question|quick|quiet|quiz|rabbit|race|racial 인종의|radio 라디오|rain|read
+ready|recreation 여가 활동|red|remember|restaurant|restroom|return|ribbon 리본|rich|right|ring|river|road|robot|rock|room|rose|run|sad|safe|salad|sale|salt|same|sand|sandwich 샌드위치|save|say|school|science|scissors|score|sea|season|second|secondary 이차적인|see|sell|send|service
+set 놓다|seven|she|ship|shirt|shoe|shop|short|should ~해야 한다|show 보여 주다|shy|sick|side|sing|sister|sit|six|size|skate 스케이트를 타다|ski|skin|skirt|sky|sleep|slow|small|smell|smile|snow|so|soccer|sock|soft|software 소프트웨어|some|son|song|sorry|sound|soup
+south|space|spaghetti 스파게티|speak|speed|spoon|sport|spring|staff|stand|star|start|stay|steak 스테이크|stone|stop|store|story|street|strong|student|study|style|subway|sugar|summer|sun|sure|swim|table|tail|take|talk|tall|tape|taste|taxi|teach|team|telephone
+television 텔레비전|tell|ten|tennis|tent|test|textbook|than|thank|that|the 그|there|they|thing|think|third|thirst 갈증|thirteen|thirty|this|three|ticket|tiger|time|tire 타이어|tired|to|today|together|tomato|tomorrow|tonight|too|tooth|top|touch|town|toy|track 트랙|train
+travel|tree|trial|trip|truck 트럭|true|try|turn|twelve|twenty|twice|two|type 유형|ugly|umbrella|uncle|under|understand|up|use|usual|vegetable|very|video|violin|visit|voice|wait|wake|walk|wall|want|war|warm|wash|watch|water|watermelon 수박|way|we
+wear|weather|website|wedding|week|weekend|weight|welcome|well 잘|west|wet|what|when|where|white|who|why|wife|will ~할 것이다|win|wind|window|winter|wish|with|woman|wood|word|work|world|worry|write|wrong|year|yellow|yes|yesterday|you|young|zoo
+`,
+2: `
+able ~할 수 있는|absolute 완전한|accent 억양|accept|access 접근|accident|account 계좌|accuse 고발하다|achieve|adapt|admire|admission 입장|admit 인정하다|adopt 입양하다|advance 나아가다|advantage 이점|adventure|advertise|advice|advise|affair 일|affect|affection 애정|afford|agent 대리인|aid 도움|aim|airline 항공사|airport|alarm|alive|allow|aloud|alter 바꾸다|although|altogether 완전히|amaze 놀라게 하다|ambulance 구급차|among|amount
+amuse 즐겁게 하다|analysis 분석|angel 천사|anger|announce|annoy|annual 해마다의|ant|anxious|apart|appeal 호소하다|appear|applicant 지원자|apply|appoint 임명하다|appreciate|approach 다가가다|appropriate 적절한|argue|army|arrange|arrest 체포하다|article|aside 옆으로|asleep|assess 평가하다|assign|assignment 과제|assist 돕다|assistant 조수|associate 연관 짓다|assume 가정하다|atmosphere 분위기|attach|attack|attempt 시도하다|attend|attention|attitude 태도|attract
+audience|automatic 자동의|average 평균|avoid|awake|award|aware|awkward 어색한|background|bacon 베이컨|balance|balloon|band|bang 쾅 하는 소리|bar|bare 드러난|bark|basis 기초|battery|battle|bay 만(바다)|bean|beat|beg 간청하다|belief|belong|bench 벤치|bend|beneath ~의 아래에|benefit|bet 내기하다|beyond|billion 10억|bin|bind 묶다|bit 조금|bite|bitter|blame 탓하다|blank
+blanket|bless 축복하다|blind|block|blonde|bloom|blow|boil|bomb|bond 유대|boom 호황|boot|bore 지루하게 하다|boss|bother|bounce|bow 절하다|bowl|brain|brake 브레이크|branch|brand|breath|breathe 숨 쉬다|brick|brief|brilliant 훌륭한|broad|bubble|budget|bug|bump 부딪치다|bunch 다발|burst 터지다|bury|bush 덤불|cable 케이블|cage|calculate|calculator 계산기
+calendar|calm|capable 유능한|cape 망토|capital|captain|career|carpet|cart 수레|cast 던지다|castle|catalog 목록|category 범주|causal 인과의|cause|ceiling|cell 세포|century|chain|chairman 의장|challenge|champion|channel 채널|character|characteristic 특징|charge|charm|chart 도표|chase|chat|cheek|cheer|chest|chew|chief 우두머리|chip|choice|chop 썰다|cinema 영화관|circumstance 상황
+citizen|civil 시민의|claim 주장하다|clerk|click 딸깍 소리|client 고객|cliff 절벽|climate|clip 클립|clue|coach|coal 석탄|coast|code 암호|coin|combine 결합하다|comedy|comfort|comfortable|command 명령|comment|commerce 상업|committee 위원회|common|communicate|communication|community|compare|complain|complete|complex 복잡한|complexity 복잡성|complicate 복잡하게 하다|concentrate 집중하다|concept 개념|concern 걱정|concert|confirm 확인하다|conflict 갈등|confuse 혼란시키다
+connect|conscious 의식하는|consider|constant 끊임없는|consume 소비하다|consumer 소비자|consumption 소비|contact|contain 담다|content 내용|contest|context 맥락|continue|contract 계약|contribute|conversation|converse 대화하다|convince 확신시키다|cop 경찰관|cope 대처하다|copy|correct|cottage 작은 시골집|cotton|cough|council 의회|count|counter|countryside 시골|county 군(행정 구역)|crack 금이 가다|crash 충돌|crawl 기어가다|create|creature|credit 신용|crime|criminal 범죄자|crisis 위기|crisp
+crowd|crown|cruel 잔인한|cure 치료하다|curiosity 호기심|curious|curl 돌돌 말다|current 현재의|cute|cycle|cyclist 자전거 타는 사람|damage|dare 감히 ~하다|darling 사랑하는 사람|dawn 새벽|deal|debate 토론|debt|deck 갑판|decorate|defense 방어|define 정의하다|definite 확실한|degree|delay|delight 기쁨|deliver|demand 요구하다|demonstrate 보여 주다|dentist|deny 부인하다|depend|dependence|depress 우울하게 하다|describe|description|desert|deserve ~을 받을 만하다|desire 욕구|desperate 절박한
+despite|destroy|detail|detect 발견하다|determine 결정하다|develop|diary|dictionary|diet|dig|direct 직접적인|dirt|dirty|disabled|disadvantage 불리한 점|disappear|disappoint 실망시키다|disc 원반|discharge 내보내다|discipline 규율|discount 할인|disease|disgust 혐오감|dish|disk 디스크|disorder 무질서|display|distance|district 지역|disturb|dive|divide|divorce 이혼|document 문서|dolphin|domestic 국내의|donate|doubt|dozen 12개|drag 끌다
+drama|drug 약|due|dump 버리다|dust|duty|each|earn|ease 편함|easy|economy 경제|edge 가장자리|edit|educate 교육하다|effect|effective|effort|either 둘 중 하나|elect 선출하다|electric|element 요소|elementary 초등의|else|embarrass 당황하게 하다|emotion|emphasize 강조하다|empire 제국|employ 고용하다|empty|enemy|enforce 시행하다|engage 참여하다|engine|engineer|enjoy|enormous 거대한|enroll 등록하다|entertain 즐겁게 하다|entire 전체의|entitle 자격을 주다
+envelope 봉투|equal|escape|especial 특별한|especially 특히|essay 수필|establish 세우다|estimate 추정하다|even ~조차|event|eventually|ever|evidence 증거|evil 악한|exact 정확한|examination 시험|examine 조사하다|except ~을 제외하고|exchange|excite 흥분시키다|excuse|exhaust 지치게 하다|exist|exit|expand 넓히다|expect|expense 비용|expensive|experience|experiment 실험|expert|explain|expose 드러내다|express|extend 늘이다|extra 추가의|extreme 극도의|factor 요인|factory|faint 희미한
+fair|faith 믿음|familiar 익숙한|fancy 화려한|fantastic|fascinate 매혹하다|fashion|fault|favor 호의|fear|feature 특징|fee 요금|feed|fellow 동료|female|fence|fever|few 많지 않은|figure|final|finance 재정|firm 회사|fit|flag|flame 불꽃|flash|flat|flight|float|flood|flow 흐르다|fog|fold|folk|follow|force 힘|foreign|forever|forgive 용서하다|forth 앞으로
+fortunate 운 좋은|fortune|forward 앞으로|found 설립하다|foundation 기초|frame 틀|frankly 솔직히|freeze|fright|frog|frustrate 좌절시키다|fry|function 기능|fund 기금|fur 털|furniture|gain 얻다|garage|gate|gather|gear 장비|general|gentle|gesture|ghost|giant|gift|giraffe|glance 흘끗 봄|glory 영광|glove|glue|golf 골프|gorgeous 아주 멋진|govern 다스리다|government|grab|grace 우아함|grade|gradual 점진적인
+grand 웅장한|grant 허락하다|graph|graphic 그림의|greet|grocery|guarantee 보장하다|guard|guest|guide|guilt 죄책감|guilty 유죄의|half|hall|handle|handsome 잘생긴|happen|harm 해|health|healthy|hear|heaven 천국|height 높이|helicopter 헬리콥터|hesitate|hide|highway 고속도로|hint 암시|hire|hole|honey|honor|hotel 호텔|hug|huge|humor|hunger|hungry|hurt|identify
+identity 정체성|ignore|ill|illustrate 예를 들어 설명하다|imagine|immediate 즉각적인|impress 감명을 주다|improve|include|income 수입|increase|indeed|independent|indicate 나타내다|individual 개인의|industry|influence 영향|inform|injure 다치게 하다|innocent 무죄의|insist|inspect 점검하다|instance|instant 순간의|instead|instruct 가르치다|instrument|insurance 보험|insure 보험에 들다|intend 의도하다|intense 강렬한|intent 의도|intention 의도|interest|internal 내부의|interrupt 방해하다|interview|invent|inventor 발명가|invest 투자하다
+investigate 조사하다|involve 관련시키다|iron|island|item|jaw 턱|jeans 청바지|joke|journey|joy|judge|junior 후배|justice|knee|knock|knowledge|label|labor 노동|laboratory 실험실|lack 부족|lamb|lamp|lane 좁은 길|language|laugh|law|lawn 잔디밭|lawyer|lay|layer 층|lead|leaf|league 리그|lean 기대다|leap 뛰어오르다|leave|legal 법률의|lemon 레몬|lend|let ~하게 하다
+level|license 면허|lid 뚜껑|lift|limit|link|list|load 짐|loan 대출|local|locate ~의 위치를 찾다|lock|log 통나무|loose|lose|loss|lot|loud|machine|magazine|magic|main|maintain 유지하다|major|majority|male|manage|manner|manufacture 제조하다|mark 표시|marvel 놀라다|mask 가면|mass 덩어리|master|match|mate 친구|material|matter|maximum 최대|maybe
+meal|mean|measure|medical 의학의|medicine|melon 멜론|melt|mental 정신의|mention|menu|mess|message|metal|method|microwave|military 군대의|mill 방앗간|minor|minute|mirror|mission|mix|modern|moment|monitor 화면|mood|moral 도덕적인|moreover|motion 움직임|motor 모터|mount 오르다|mud|muscle|museum|mushroom|mystery|nail|narrow|native|navy
+neat|necessary|neighbor|neither|nerve 신경|nervous|nest|net|noise|none 아무도 ~않다|noon|nor|notice 알아차리다|nowadays 요즘|nowhere 아무 데도|nut|oak 참나무|object|objective 목표|observe 관찰하다|obvious|occasion 경우|occur 일어나다|occurrence 발생|ocean|odd|offer|officer|once 한 번|opera 오페라|operate 작동하다|opinion|oppose 반대하다|order|ordinary|other 다른|otherwise|ought ~해야 한다|oven|overall
+own|pack|pain|pair|palace|pan|panic|parade|paragraph 단락|pardon 용서|particular|particularly 특히|past 과거|path 길|patient|pattern|pause|peace|peaceful|pear|pepper|per ~마다|perfect|perform|perhaps 아마|period|person|personality|pet|photograph|physical|picnic|pie|piece|pile|pin|pine 소나무|pipe 관|pitch 던지다|pity 동정
+plain 평범한|plane 비행기|planet|plant|plate|plenty|plus 더하기|pocket|poem|poet|poison|polar 극지의|pole 막대기|policy 정책|polite|politics 정치|pollute 오염시키다|pool 수영장|pop|popular|pork|port 항구|possess 소유하다|possible 가능한|post|poster|pot|potential 잠재적인|pour|powder 가루|practical 실용적인|practice|pray 기도하다|prefer 더 좋아하다|prepare|presence 존재|press 누르다|pretend ~인 척하다|prevent|previous 이전의
+price|pride|primary 첫째의|prime 주요한|principle 원칙|prison 감옥|privacy 사생활|private|prize|probable 있을 법한|probably 아마|procedure 절차|proceed 나아가다|process|produce|profession|profit 이익|progress 진전|promise|promote 촉진하다|pronounce 발음하다|pronunciation 발음|proper 적절한|property 재산|propose 제안하다|protect|protest 항의하다|proud|prove|provide|public|pull|pump 펌프|punch|punish 벌하다|purchase|pure 순수한|purple 보라색|purpose|puzzle
+qualify 자격을 얻다|quality|quarter|quit 그만두다|quite 꽤|quote 인용하다|rail 철도|rainbow|raise|range 범위|rapid 빠른|rare|rat 쥐|rate 비율|rather 오히려|reach|react 반응하다|real|realize|reason|reasonable 합리적인|receive|recent|reception|recipe|recognize 알아보다|recommend|record 기록하다|recover 회복하다|recycle|reduce|refer 언급하다|reflect 반사하다|refuse 거절하다|regard 여기다|region 지역|register|regular|relate 관련시키다|relation 관계
+relationship|relative 친척|relax|release 풀어 주다|relief 안도|rely 의지하다|remain 남다|remark 발언|remind|remove|rent|repair|repeat|replace 대신하다|reply|report|represent 대표하다|request 요청|require 필요로 하다|research|reserve 예약하다|resist 저항하다|resource 자원|respect|respective 각각의|respond|responsible 책임 있는|rest|result|retire|review|rice 쌀|ride|rise|risk 위험|rob|rocket|role|roll|roof
+root 뿌리|rope|rough|round|route 경로|row 줄|royal|rub|rubber|rude 무례한|ruin 망치다|rule|rush 서두르다|sail|salary|sample|satisfy|sauce 소스|scale 규모|scare 겁주다|scarf 목도리|scene|schedule|scratch|scream|screen|seal|search|seat|secret|secretary|section 부분|secure 안전한|seed|seek 찾다|seem ~처럼 보이다|select|self 자기 자신|senior 선배|sensation 느낌
+sense|sentence 문장|separate 분리하다|series 연속|serious|serve|session (활동) 시간|settle 정착하다|several|sew 바느질하다|shade 그늘|shadow|shake|shall ~할 것이다|shame 부끄러움|shape|share|sharp 날카로운|shave 면도하다|sheep|sheet 한 장|shelf|shell|shelter|shift 옮기다|shine|shock 충격|shoot 쏘다|shore 해안|shoulder|shout|shower|shut 닫다|sight|sign|significant 중요한|silly|silver|similar 비슷한|simple
+since ~이후로|single|sink|site|situate 위치시키다|situation 상황|skill|slave|slide|slight 약간의|slip 미끄러지다|smart|smash|smoke 연기|smooth|snack|snake|snap 딱 부러지다|social 사회의|society|soil 흙|soldier|solid|solve|somewhat 다소|soon 곧|sore|sort 종류|soul 영혼|sour|source|spare 여분의|special|species|specific 구체적인|speech 연설|spell 철자를 쓰다|spend|spin|spirit
+spoil 망치다|sponsor 후원자|spot|spray 뿌리다|spread 펼치다|spy 스파이|square|stable|stage|stairs 계단|stamp 우표|standard 기준|stare 응시하다|state|station|steady 꾸준한|steal 훔치다|steam 증기|steel 강철|step|stick|still 아직|stir 젓다|stock 재고|stomach|storm|straight 곧은|strange 이상한|strategy 전략|strawberry|stream 개울|stress|stretch|strike 치다|string|structure 구조|struggle 애쓰다|studio 스튜디오|stuff 물건|subject
+subjective 주관적인|succeed|success|such|sudden|suffer 고통받다|suggest|suit|sum 합계|summary 요약|super 최고의|supper|supply|support|suppose 생각하다|surface|surprise|surround 둘러싸다|survey|survive|suspect 의심하다|swallow|sweater 스웨터|sweep 쓸다|sweet 달콤한|swing|switch 스위치|system|tale 이야기|tank 탱크|tap|target|tax 세금|tea|tear|technique 기술|technology|teenage 십대의|temperature|tend ~하는 경향이 있다
+tense 긴장한|term 용어|terrible|text 글|theater|then 그때|theory 이론|therefore|thick 두꺼운|thief|thin|though|thousand|threat 위협|throat|through|throw|thus|tide 밀물과 썰물|tidy 깔끔한|tie|tight|till ~까지|tin 주석|tiny|tip|title 제목|toast 토스트|toe|toilet 화장실|tone 어조|tongue 혀|tool|topic|total 전체의|tough|tour|toward ~쪽으로|towel|tower
+trace|trade 무역|tradition|traffic|transfer 옮기다|transport 수송하다|transportation 교통|trap 덫|tray 쟁반|treat|triangle|trick 속임수|trouble|trunk 나무 줄기|trust|truth|tune|twin 쌍둥이|twist 비틀다|unaware 알지 못하는|uniform|union 연합|unit|unite 연합하다|university 대학교|unless|until|upon|upper 위쪽의|upset|valley 계곡|value|van|various|vary|vehicle 차량|version 버전|victim 희생자|view 경치|villa 별장
+village|violent 폭력적인|vision 시력|volume 음량|volunteer|vote|wage|warn|waste|wave|weak|weapon|weigh|whale|wheel|whether|which 어느|while|whisper 속삭이다|whistle|whole 전체의|wide 넓은|wild|wing|wipe|wire 철사|wise|within|without|wonder|wool 양모|worth|would|wound|wrap|yell|yet|zebra|zero
+`};
+// VOCAB_CORE_ACCEPT: 학생 답으로만 인정(뜻 없음 → 단어장 밖 단어처럼). level 3(표시 없음, 고등학교 수준)·다른 철자(colour 등)·출제 제외 단어
+//   컴퓨터 출제·힌트·예시·객관식 보기·기초 문제·단어 수첩 복습, 기본 어휘 가중치·보너스에는 쓰지 않음
+const VOCAB_CORE_ACCEPT = `
+abandon|aboard|abort|abortion|abound|abstract|absurd|abundant|abuse|academy|accelerate|accommodate|accompany|accomplish|accord|accumulate|accurate|ache|acid|acknowledge|acquire|acquisition|addict|adequate|adjust|administer|administration|adolescent|adverse|advertize|advocate|aeroplane|aesthetic|agenda|aggress|aggressive|agriculture|alcohol|alert|alike
+allocate|ally|alongside|alternate|alternative|ambassador|ambition|ambitious|analyse|anchor|angle|anniversary|anticipate|anxiety|apparent|approve|approximate|architecture|arise|artifice|artificial|aspect|aspire|assault|assemble|assert|asset|assure|astonish|atom|attribute|auction|authentic|avail|await|awe|ban|bankrupt|bargain|barrier
+beam|beard|beast|beer|behalf|behaviour|betray|bias|biography|biology|blast|blossom|boost|border|boundary|breast|breed|breeze|broadcast|brutal|brute|bulk|bull|bundle|burden|butcher|buzz|candidate|carve|catalogue|cater|cattle|caution|cave|cease|censor|certificate|chamber|chaos|cheque
+chill|chin|choir|chorus|chronic|cigarette|circulate|cite|clash|clause|cling|clinic|cluster|coincide|collaborate|collapse|collar|colony|colour|combat|commission|commit|commodity|communist|companion|compatible|compel|compensate|compete|competent|compile|complement|component|compose|compound|comprehend|comprehensive|comprise|compromise|conceal
+conceive|conclude|concrete|condemn|conduct|confer|confess|confide|confident|confine|conform|confront|congress|conscience|consent|conserve|consist|consistent|constitute|constitution|constrain|construct|construction|consult|contemporary|contend|continent|contradict|contrary|controversy|convene|convention|convert|convey|convict|cooky|coordinate|copyright|cord|core
+corporate|corporation|correspond|corridor|corrupt|counsel|counterpart|coupon|craft|craze|credible|creep|criterion|critic|criticise|criticism|criticize|crucial|cruise|crush|crystal|cultivate|currency|curriculum|curry|curse|curve|custody|cynical|dairy|damp|dash|datum|decade|decay|decent|declare|declension|decline|decrease
+dedicate|defeat|defence|defend|defendant|deficiency|deficit|delegate|delete|deliberate|democracy|democrat|demon|dense|depart|department|departure|depict|deposit|deprive|derive|descend|designate|despair|destination|destine|destiny|destruct|detach|devil|devise|devote|diabetes|dialog|dictate|dignity|dimension|diminish|dine|disaster
+discourage|discourse|discriminate|dismiss|dispose|dispute|disrupt|distinct|distinguish|distort|distract|distribute|diverse|divine|domain|dominant|dominate|dose|draft|drain|dread|drill|drown|dual|dull|dwell|dynamic|efficient|elaborate|electronic|elegant|elevate|eliminate|elite|embassy|embrace|emerge|emergence|emission|emit
+emphasis|encounter|endure|enhance|enquire|enrol|enterprise|enthusiastic|entry|environ|envy|equip|era|erase|erect|err|essence|essential|estate|ethic|ethical|ethnic|evacuate|evaluate|evitable|evolution|evolve|exaggerate|exceed|excel|excess|exclude|exclusive|executive|exotic|expertise|explicit|explode|export|extent
+external|extinct|extract|extraordinary|eyebrow|facilitate|facility|faculty|fade|fame|fare|fatal|fate|favour|favourite|federal|ferry|fertile|fiber|fibre|fierce|filter|finite|flavor|flavour|flaw|flee|flesh|flexible|flip|flock|flourish|flush|fond|forbid|forecast|forehead|format|former|formula
+foster|fountain|fraction|framework|frequent|frost|frown|fulfil|fundamental|funeral|furious|furnish|fury|fuse|gamble|gang|gap|gasoline|gaze|gender|gene|generate|generation|genetic|genuine|geography|geology|glare|globe|glow|grain|grasp|grave|greed|grey|grief|grip|gross|guardian|guideline
+gulf|gun|gymnasium|habitat|halt|handicap|harbor|harbour|harmonious|harsh|haunt|hazard|headquarters|heal|heel|heir|hell|hence|hey|hi|hierarchy|highlight|holy|honour|hook|horizon|hostile|household|humour|hut|hypothesis|identical|ideology|illude|illusion|immense|immigrate|immune|impact|imperial
+implement|imply|import|importance|impose|incentive|incident|incline|incorporate|incredible|index|induce|inevitable|infant|infect|infer|inference|inflate|inhabit|inherent|inhibit|initial|inject|inn|innovate|input|inquire|insert|insight|instinct|institute|institution|insult|integrate|intellect|intellectual|interfere|interior|intermediate|interpret
+interval|intervene|intimate|intrigue|invade|irony|irritate|isolate|jail|joint|journal|jury|keen|kill|lab|labour|landscape|lap|latter|launch|leak|lease|legend|legislate|legitimate|leisure|liberal|liberty|licence|likewise|linguistic|livingroom|lone|loyal|lump|luxury|magnet|magnificent|manifest|manipulate
+margin|marine|maths|mature|mechanism|media|mediate|medieval|medium|mere|merge|merit|metropolitan|microphone|migrant|migrate|million|miner|mineral|minimal|minimum|ministry|miracle|missile|mock|mode|moderate|modest|modify|moist|moisture|molecule|monument|mortal|motive|multiple|murder|mutual|naive|naked
+narrate|nasty|nay|needle|negate|negative|neglect|negotiate|neighbour|nephew|neutral|nightmare|noble|nominate|nonetheless|nope|norm|nuclear|numerous|obey|oblige|obsess|obtain|occupy|offend|ok|okey|opportune|opportunity|opt|optimist|option|oral|orbit|organ|organic|organise|orient|orientation|outcome
+output|outrage|outstanding|overcome|overhead|overlap|overlook|overnight|oversea|overseas|overwhelm|owe|pace|panel|parallel|parliament|participate|particle|passage|passion|pat|patch|patent|pave|peak|peasant|peer|penalty|perceive|perception|permanent|permit|persist|perspective|persuade|petrol|phase|phenomenon|philosophy|phone
+phrase|physics|pill|pinch|pioneer|plot|polish|poll|populate|portion|pose|posit|position|practise|preach|precede|precise|predator|pregnant|prejudice|premium|prescribe|preserve|preside|president|presume|prevail|prey|priest|primitive|prior|privilege|profile|profound|programme|prohibit|prominent|prompt|proof|proportion
+prospect|prosper|protein|province|provoke|psychology|pub|publisher|pupil|questionnaire|rage|rally|random|rank|rational|raw|realise|rear|rebel|receipt|recruit|refine|reform|refrigerate|regulate|reinforce|reject|relevant|relieve|religion|reluctant|remedy|remote|republic|reputation|resemble|reside|resident|resign|resolve
+resort|restore|restrain|restrict|resume|retail|retain|retreat|reveal|revenge|reverse|revise|revive|revolution|rhythm|rid|ridicule|ridiculous|riot|rival|roar|roast|rod|rot|routine|rumor|rumour|rural|sack|sacred|sacrifice|satellite|scandal|scarce|scatter|scheme|scholar|scope|scramble|screw
+sculpt|sector|seize|sensible|sentiment|sequence|severe|sex|shallow|sigh|simulate|simultaneous|sin|slope|sneak|soak|sociology|sole|sophisticate|span|spark|spectacle|spectrum|sphere|spit|splash|split|spouse|squeeze|stack|stain|starve|statistic|status|stem|stiff|stimulate|stitch|stove|strain
+strict|strip|stroke|submission|submit|subscribe|substance|substantial|substitute|subtle|suck|suffice|sufficient|suicide|suite|summit|superior|supervise|supplement|surgery|surrender|suspend|sustain|swear|swell|swift|sympathy|symphony|tackle|tag|task|tease|technic|telegraph|temporary|tempt|tenant|tender|terminal|terminate
+terrace|terrific|territory|terror|terrorist|theatre|theme|therapy|thorough|thread|thrill|tick|timber|tissue|torture|toss|toxic|tragic|trail|transact|transform|transition|transmit|treaty|tremendous|trend|trigger|trim|triumph|troop|tunnel|turnover|ultimate|undergo|underlie|undermine|undertake|unify|unprecedented|update
+upward|upwards|urban|urge|urgent|utilise|utilize|utter|vacate|vaccine|vacuum|vague|valid|vanish|vast|venture|verbal|verse|versus|vertical|vessel|via|vice|vigor|vigorous|virgin|virtual|virtue|virus|visible|visual|vital|vivid|vocabulary|vocation|wander|warehouse|warrant|weave|weed
+weird|welfare|whereas|whip|wicked|wine|wit|withdraw|witness|worship|yeah|yep|yield
+`;
 // 수 (학생 답으로만 인정, 컴퓨터는 내지 않음)
 const VOCAB_NUM = `
 one 1, 하나|two 2, 둘|three 3, 셋|four 4, 넷|five 5, 다섯|six 6, 여섯|seven 7, 일곱|eight 8, 여덟|nine 9, 아홉|ten 10, 열|
@@ -471,9 +589,11 @@ const SETTINGS={
   listen:{normalReplays:2, hardReplays:1, revealHold:3000, slowRate:0.45},
   // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
   basicSpeech:{rate:0.6, targetGap:1500},
-  // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘(중2·중1) + 단어장 밖 단어
+  // 기본 어휘 우선 출제: 컴퓨터 출제·객관식 정답·기초 다음 단어·힌트·예시·철자 도움에서 교육부 기본 어휘 level 1·2 단어를 이 배수만큼 더 자주
+  coreWeight:5,
+  // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘 보너스(level 2 core2 · level 1 core1) + 단어장 밖 단어
   // combo: [콤보 수 이상, 배율] (큰 것부터), listen: 듣고 쓰기 배율. 힌트를 쓴 턴은 길이·기본 어휘 보너스만 없어짐
-  score:{base:10, lenFrom:5, lenPer:2, tb2:5, tb1:3, outside:3, notebookBonus:5, combo:[[10,2],[5,1.5],[3,1.2]], listen:1.5},
+  score:{base:10, lenFrom:5, lenPer:2, core2:5, core1:3, outside:3, notebookBonus:5, combo:[[10,2],[5,1.5],[3,1.2]], listen:1.5},
   // 별: 한 판이 끝날 때 얻은 점수를 별로(pointsPerStar점 = ⭐1, 소수점 버림). 무료 힌트를 다 쓰면 별로 보관 힌트를 삼
   // 듣고 쓰기 '다시 듣기 +1'(replayPrice), 시간 제한 단계 '시간 +timeAdd초'(timePrice)는 각각 한 판에 1번
   // 별로 산 힌트는 '보관 힌트'로 수준(기초·보통·도전)별로 따로 저장: 단계·판이 바뀌어도 남고 다른 수준으로는 옮겨지지 않음
@@ -490,8 +610,8 @@ const SETTINGS={
   practiceMax:10,
   // 콤보: show 콤보부터 표시, celebrate 콤보에서 짧은 축하 효과
   combo:{show:3, celebrate:[5,10]},
-  // 배지 조건 숫자
-  badge:{fire:[5,10], longWord:7, textbook:[10,30], outside:5, comeback:5, review:10, ears:5},
+  // 배지 조건 숫자 (core: 기본 어휘 탐험가 — 서로 다른 기본 어휘 level 1·2 단어 수)
+  badge:{fire:[5,10], longWord:7, core:[10,30], outside:5, comeback:5, review:10, ears:5},
 };
 
 // 쉬어 가기 ③ 🤖 컴퓨터의 한마디: '수준-다음 단계 번호'마다 2~3개, 그중 하나를 무작위로 보여 줌(선생님이 고쳐 써도 됨)
@@ -523,12 +643,13 @@ function load(str, tier){
 load(VOCAB_NUM,1); load(VOCAB_E,1); load(VOCAB_M,2); load(VOCAB_TB,2); load(VOCAB_WF_E,1); load(VOCAB_WF_M,2);
 // 수 단어(one~thousand)는 학생 답으로만 인정하고 컴퓨터는 내지 않음
 const NUMW=new Set(VOCAB_NUM.split(/[|\n]/).map(s=>s.trim().split(' ')[0]).filter(Boolean));
-// 예전 단어장(삭제됨)
-VOCAB_OLD.forEach(([w,ko,book,page])=>{ const d=DICT.get(w);
-  if(d){ d.ko=ko; d.tb=book; d.page=page; } else DICT.set(w,{w,ko,emoji:'',tier:book,tb:book,page}); });
-// 기본 어휘 단어를 더 자주: 중2 ×8, 중1 ×5
-const TBW=x=>x.tb===2?8:x.tb===1?5:1;
-function pickTB(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,x)=>a+TBW(x),0); let r=Math.random()*tot; for(const x of arr){ r-=TBW(x); if(r<=0) return x; } return arr[arr.length-1]; }
+// 교육부 기본 어휘 level 1(초등 권장)·2(중학교): core = level. 위 단어장에 있으면 그 뜻을 쓰고(더 쉬운 level이면 수준을 낮춤), 없으면 새 뜻으로 추가
+[1,2].forEach(lv=>VOCAB_CORE[lv].split(/[|\n]/).map(s=>s.trim()).filter(Boolean).forEach(e=>{
+  const sp=e.indexOf(' '), w=(sp<0?e:e.slice(0,sp)).toLowerCase(), d=DICT.get(w);
+  if(d){ d.core=lv; d.tier=Math.min(d.tier,lv); } else if(sp>0) DICT.set(w,{w,ko:e.slice(sp+1).trim(),emoji:'',tier:lv,core:lv}); }));
+// 기본 어휘를 더 자주(SETTINGS.coreWeight배)
+const CW=x=>x.core?SETTINGS.coreWeight:1;
+function pickCore(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,x)=>a+CW(x),0); let r=Math.random()*tot; for(const x of arr){ r-=CW(x); if(r<=0) return x; } return arr[arr.length-1]; }
 // 규칙 변화 비교급·최상급 표시 (불규칙: better, best 등은 제외)
 const IRREG=new Set(['better','best','worse','worst','more','most','less','least','farther','farthest']);
 DICT.forEach(d=>{ if(/(비교급|최상급)\)$/.test(d.ko)&&!IRREG.has(d.w)) d.cmp=true; });
@@ -552,8 +673,8 @@ const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w))
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 단어 판정: 단어장 단어 / 단어장 밖 올바른 단어 / 틀린 단어 ----------
-// 영어 단어 목록(wordlist.js, SCOWL size 60). 없으면 단어장 단어의 규칙 변화형만 올바른 단어로 인정
-const WORDS=new Set((typeof WORDLIST==='string'?WORDLIST.split('|'):[]).filter(w=>!isBlocked(w)));
+// 영어 단어 목록(wordlist.js, SCOWL size 60) + 학생 답으로만 인정하는 기본 어휘(VOCAB_CORE_ACCEPT: level 3·다른 철자 등). 없으면 단어장 단어의 규칙 변화형만 올바른 단어로 인정
+const WORDS=new Set([...(typeof WORDLIST==='string'?WORDLIST.split('|'):[]),...VOCAB_CORE_ACCEPT.split(/[|\n]/).map(s=>s.trim()).filter(Boolean)].filter(w=>!isBlocked(w)));
 function isInflection(w){
   const b=[], n=w.length, dbl=s=>s.length>2&&s[s.length-1]===s[s.length-2]?s.slice(0,-1):null;
   if(w.endsWith('ies')) b.push(w.slice(0,-3)+'y');
@@ -568,7 +689,7 @@ const isEnglish=w=>WORDS.has(w)||isInflection(w);
 // 금지어가 입력되면: 읽지 않고, 다시 보여 주지 않고, 입력 칸을 비우고, 아무것도 기록·저장하지 않음. 한 판에서 3번째면 오답 처리 후 새 판
 const BLOCK_MSG='다른 단어를 써 보세요.';   // 평범한 안내와 구별되지 않게(어떤 단어가 막히는지 시험하지 못하게)
 function blockedInput(inp){
-  if(inp){ inp.value=''; inp.focus(); }
+  if(inp){ inp.value=''; inp.focus({preventScroll:true}); }
   G.blockedN=(G.blockedN||0)+1;
   if(G.blockedN<3){ msg(BLOCK_MSG,'info'); return; }
   G.locked=true; stopTimer(); const r=loseTurn();
@@ -590,12 +711,12 @@ function editDist(a,b,max){
 // 틀린 단어와 비슷한(같은 첫 글자, 글자 차이 1~2) 단어장 단어
 function suggest(w){
   return ALL.filter(x=>x.w[0]===w[0]&&!x.cmp&&x.w!==w).map(x=>({x,d:editDist(w,x.w,SETTINGS.suggestDist)}))
-    .filter(o=>o.d<=SETTINGS.suggestDist).sort((a,b)=>a.d-b.d||TBW(b.x)-TBW(a.x)||Math.abs(a.x.w.length-w.length)-Math.abs(b.x.w.length-w.length))
+    .filter(o=>o.d<=SETTINGS.suggestDist).sort((a,b)=>a.d-b.d||CW(b.x)-CW(a.x)||Math.abs(a.x.w.length-w.length)-Math.abs(b.x.w.length-w.length))
     .slice(0,SETTINGS.suggestMax).map(o=>disp(o.x));
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},tb:w=>DICT.get(w)?.tb||0,state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,words:REST.words.map(x=>x.w+':'+x.kind),right:REST.right,reward:REST.reward}:null,setBoxRoll:v=>{ boxRoll=v; },pickReward:v=>pickReward(v),restWords:ch=>restWords(ch.map(w=>({w,me:true}))).map(x=>x.w+':'+x.kind),restLines:k=>REST_LINES[k],blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,words:REST.words.map(x=>x.w+':'+x.kind),right:REST.right,reward:REST.reward}:null,setBoxRoll:v=>{ boxRoll=v; },pickReward:v=>pickReward(v),restWords:ch=>restWords(ch.map(w=>({w,me:true}))).map(x=>x.w+':'+x.kind),restLines:k=>REST_LINES[k],blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -650,7 +771,7 @@ function bindTimeCtl(root,L,after){ root.querySelectorAll('.timectl .tbtn').forE
   after&&after(t,d); }); }
 
 // ---------- 나의 단어 수첩 (꺼내 쓰기·간격 복습) ----------
-// 이 기기의 localStorage에만 저장: { items:{단어:{w,reason,stamps,due}}, learned:{단어:{w,date}}, tbSeen:[처음 맞힌 기본 어휘 단어] } — 개인 정보 없음
+// 이 기기의 localStorage에만 저장: { items:{단어:{w,reason,stamps,due}}, learned:{단어:{w,date}}, tbSeen:[처음 맞힌 기본 어휘] } — 개인 정보 없음
 const NB_KEY='wordchain-notebook-v1';
 let nb={items:{},learned:{},tbSeen:[]};
 try{ const s=JSON.parse(localStorage.getItem(NB_KEY)); if(s&&s.items) nb=Object.assign(nb,s); }catch(e){}
@@ -658,8 +779,8 @@ function nbSave(){ try{ localStorage.setItem(NB_KEY,JSON.stringify(nb)); }catch(
 const dstr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>dstr(new Date());
 const addDays=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return dstr(d); };
-const NB_REASON={wrong:'틀렸을 때 예시',hint:'힌트로 본 단어',textbook:'처음 맞힌 기본 어휘 단어'};
-// 단어 모으기: 틀린 단어의 정답 예시 / 힌트로 본 단어 / 처음 맞힌 기본 어휘 단어
+const NB_REASON={wrong:'틀렸을 때 예시',hint:'힌트로 본 단어',textbook:'처음 맞힌 기본 어휘'};
+// 단어 모으기: 틀린 단어의 정답 예시 / 힌트로 본 단어 / 처음 맞힌 기본 어휘(사유 키는 예전 그대로 textbook)
 function nbAdd(w,reason){
   w=String(w).toLowerCase(); if(!DICT.has(w)||isBlocked(w)) return;
   const it=nb.items[w], first=addDays(SETTINGS.review.intervals[0]);
@@ -721,7 +842,7 @@ function renderReview(){
   const inp=$app.querySelector('#inp');
   enInput(inp,$app.querySelector('#f'),v=>{
     if(R.done) return; const a=v.trim().toLowerCase(); if(!a){ msg('단어를 써 주세요.','info'); return; }
-    if(!DICT.has(a)&&isBlocked(a)){ inp.value=''; inp.focus(); msg(BLOCK_MSG,'info'); return; }
+    if(!DICT.has(a)&&isBlocked(a)){ inp.value=''; inp.focus({preventScroll:true}); msg(BLOCK_MSG,'info'); return; }
     R.done=true; const ok=a===d.w, r=R.practice?'':nbResult(d.w,ok); if(ok) R.right++;
     if(!R.practice&&Object.keys(nb.learned).length>=B.review) award('review');
     if(R.practice){ msg(ok?`✔ 맞았어요! ${word} = ${plainKo(d.ko)}`:`✗ 정답은 ${word}예요.`,ok?'good':'bad'); }
@@ -735,14 +856,15 @@ function renderReview(){
 // 단어 수첩 화면: 모은 단어(뜻·도장·다음 복습), 외운 단어, 수첩 비우기
 function notebook(){
   stopTimer();
-  const items=Object.values(nb.items).sort((a,b)=>a.due.localeCompare(b.due)), learned=Object.values(nb.learned), due=nbDue().length;
+  // 단어장에서 빠진 단어(예전 단어장 전용 단어 등)는 저장은 그대로 두고 화면·개수에서만 뺌
+  const items=Object.values(nb.items).filter(x=>DICT.has(x.w)).sort((a,b)=>a.due.localeCompare(b.due)), learned=Object.values(nb.learned).filter(x=>DICT.has(x.w)), due=nbDue().length;
   const row=x=>{ const d=DICT.get(x.w); return d?`<li class="nbrow"><b class="word">${esc(disp(d))}</b><span class="nbko">${esc(plainKo(d.ko))}</span>${stampHTML(x.stamps)}<small>${NB_REASON[x.reason]||''} · 다음 복습 ${dueText(x.due)}</small></li>`:''; };
   $app.innerHTML=`
   <div class="topbar"><button class="back" id="back">← 돌아가기</button><h2>📒 나의 단어 수첩</h2></div>
   <p class="nbguide">모은 단어는 다음 날부터 '오늘의 복습'에 다시 나와요. 맞히면 도장을 받고, 도장 ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'가 돼요.</p>
   <div class="row" style="justify-content:flex-start;margin:0 0 6px">${due?`<button class="btn" id="rv">오늘의 복습 ${due}개 하기</button>`:''}${nbPracticeList().length?'<button class="btn soft" id="pr">✏️ 지금 연습하기</button>':''}</div>
   <section class="rules"><h2>모은 단어 ${items.length}개</h2>
-    <p class="note">틀렸을 때 나온 예시, 힌트로 본 단어, 처음 맞힌 기본 어휘 단어가 모여요. 복습해서 도장 ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'가 돼요.</p>
+    <p class="note">틀렸을 때 나온 예시, 힌트로 본 단어, 처음 맞힌 기본 어휘가 모여요. 복습해서 도장 ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'가 돼요.</p>
     ${items.length?`<ul class="nblist">${items.map(row).join('')}</ul>`:'<p class="note">아직 모은 단어가 없어요.</p>'}</section>
   <section class="rules"><h2>외운 단어 ${learned.length}개</h2>
     ${learned.length?`<div class="nblearned">${learned.map(x=>{const d=DICT.get(x.w);return d?`<span class="chip ok word">${esc(disp(d))}</span>`:'';}).join('')}</div>`:'<p class="note">도장을 다 모은 단어가 여기에 와요.</p>'}</section>
@@ -777,8 +899,8 @@ const BADGES=[
   {id:'fire5',icon:'🔥',name:'불꽃 '+B.fire[0],cond:B.fire[0]+'콤보 달성'},
   {id:'fire10',icon:'🔥',name:'불꽃 '+B.fire[1],cond:B.fire[1]+'콤보 달성'},
   {id:'long',icon:'📏',name:'긴 단어',cond:B.longWord+'글자 이상 단어로 정답'},
-  {id:'tb10',icon:'📘',name:'기본 어휘 탐험가 '+B.textbook[0],cond:`서로 다른 기본 어휘 단어 ${B.textbook[0]}개로 정답 (누적)`},
-  {id:'tb30',icon:'📚',name:'기본 어휘 탐험가 '+B.textbook[1],cond:`서로 다른 기본 어휘 단어 ${B.textbook[1]}개로 정답 (누적)`},
+  {id:'tb10',icon:'📘',name:'기본 어휘 탐험가 '+B.core[0],cond:`서로 다른 기본 어휘 ${B.core[0]}개로 정답 (누적)`},   // 배지 id(tb10·tb30)는 예전 그대로 — 이미 얻은 배지 유지
+  {id:'tb30',icon:'📚',name:'기본 어휘 탐험가 '+B.core[1],cond:`서로 다른 기본 어휘 ${B.core[1]}개로 정답 (누적)`},
   {id:'outside',icon:'📗',name:'사전 밖 모험가',cond:`단어장 밖 올바른 단어 ${B.outside}개 (누적)`},
   {id:'nohint',icon:'🧠',name:'힌트 없이',cond:'힌트를 한 번도 쓰지 않고 단계 통과'},
   {id:'comeback',icon:'💪',name:'다시 일어서기',cond:`틀린 직후 판에서 ${B.comeback}연속 성공`},
@@ -797,7 +919,7 @@ function award(id){
   const n=document.createElement('div'); n.className='badge-note'; n.setAttribute('role','status'); n.textContent=`🏅 새 배지: ${d.icon} ${d.name}`; n.style.bottom=(20+document.querySelectorAll('.badge-note').length*54)+'px';   // 여러 개면 위로 쌓음
   document.body.appendChild(n); setTimeout(()=>n.remove(),3000);
 }
-// 누적 기록(배지용): 서로 다른 기본 어휘 정답 단어, 단어장 밖 단어 수 — wordchain-v2 안 stats
+// 누적 기록(배지용): 서로 다른 기본 어휘 정답 단어(키는 예전 그대로 tb), 단어장 밖 단어 수 — wordchain-v2 안 stats
 function stat(){ store.stats=store.stats||{tb:[],outside:0}; return store.stats; }
 function badgeScreen(){
   stopTimer();
@@ -838,12 +960,12 @@ function chooseTrack(){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-17 09:31'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-17 11:55'; // build.py가 빌드 시각으로 바꿈
 const $app=document.getElementById('app');
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const last=w=>w[w.length-1];
-// 보기에서는 끝의 괄호 설명을 뺀 뜻만: "프린터 (print+er)" → "프린터" (아마(도), (농)작물처럼 붙은 괄호는 그대로)
+// 보기에서는 끝의 괄호 설명을 뺀 뜻만: "프린터 (print+er)" → "프린터" (만(바다), (활동) 시간처럼 붙은 괄호는 그대로)
 const plainKo=ko=>ko.replace(/\s+\([^()]*\)$/,'');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // 한글 자판(두벌식)으로 친 글자를 같은 자리의 영문 글자로 바꿈: 메ㅔㅣㄷ → apple
@@ -863,7 +985,7 @@ const enFormHTML=(ph,label,btn)=>`<form class="typing" id="f" autocomplete="off"
 // 한글 자판: 입력기가 글자를 조합하는 동안 값을 바꾸면 글자가 빠지므로(rose → roe) 조합이 끝난 뒤에만 영어로 바꿈.
 // 조합 중에는 바뀔 영어를 안내만 하고, 낼 때 한 번 더 바꿈. onInput(값): 글자가 바뀔 때마다(빈칸 채우기 미리 보기용)
 function enInput(inp,form,onSubmit,onInput){
-  inp.focus(); let composing=false;
+  inp.focus({preventScroll:true}); let composing=false;
   const koNote=()=>{ const e=koToEn(inp.value); msg(isBlocked(e,DICT.has(e.toLowerCase()))?'한글 자판이에요. 한/영 키를 눌러 영어로 바꿔 주세요.':`한글 자판이에요 → "${e}"(으)로 낼게요. 한/영 키를 눌러 영어로 바꾸면 편해요.`,'info'); };
   inp.addEventListener('compositionstart',()=>{composing=true;});
   inp.addEventListener('compositionend',()=>{ composing=false; setTimeout(()=>{ if(!composing&&latinize(inp)) koNote(); onInput&&onInput(koToEn(inp.value)); },0); });
@@ -1019,8 +1141,8 @@ function pickCpu(firstCh){
   const letters=[...groups.keys()];
   const lw=ch=>{let k=Math.min(startsWith(ch,G.pool).length,15)/15; if(ch==='y')k*=.25; return k;};
   const ws=letters.map(lw), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
-  for(let i=0;i<letters.length;i++){ r-=ws[i]; if(r<=0) return pickTB(groups.get(letters[i])); }
-  return pickTB(groups.get(letters[letters.length-1]));
+  for(let i=0;i<letters.length;i++){ r-=ws[i]; if(r<=0) return pickCore(groups.get(letters[i])); }
+  return pickCore(groups.get(letters[letters.length-1]));
 }
 // 하트 방식인지(보통·도전 수준, SETTINGS.lives>0)
 const livesOn=(t=track)=>t!=='basic'&&SETTINGS.lives>0;
@@ -1051,7 +1173,7 @@ function setCpu(c){
 function makeOptions(){
   const ch=last(G.cur.w);
   const good=startsWith(ch,G.pool).filter(x=>startsWith(last(x.w),G.cpuPool).length>0);
-  const right=pickTB(good.length?good:startsWith(ch,G.pool));
+  const right=pickCore(good.length?good:startsWith(ch,G.pool));
   const wrongAll=G.pool.filter(x=>x.w[0]!==ch&&x.w!==G.cur.w);
   const wrong=[];
   if(G.L.n>=4){ const trap=wrongAll.filter(x=>last(x.w)===ch); if(trap.length) wrong.push(rnd(trap)); }
@@ -1061,11 +1183,11 @@ function makeOptions(){
 
 // ---------- 기초 1~3단계: 다음 단어의 철자 완성 ----------
 const GUIDED=m=>m==='spell'||m==='blocks'||m==='blanks';
-// 다음에 올 단어: 컴퓨터 단어의 끝 글자로 시작, 글자 수 tMin~tMax, 컴퓨터가 이어 갈 수 있는 단어(기본 어휘 단어 우선)
+// 다음에 올 단어: 컴퓨터 단어의 끝 글자로 시작, 글자 수 tMin~tMax, 컴퓨터가 이어 갈 수 있는 단어(기본 어휘 우선)
 function chooseTarget(ch){
   const L=G.L, base=startsWith(ch,G.pool).filter(x=>/^[a-z]+$/.test(x.w)&&!NUMW.has(x.w));
   const fit=base.filter(x=>x.w.length>=L.tMin&&x.w.length<=L.tMax), goOn=fit.filter(x=>startsWith(last(x.w),G.cpuPool).length>0);
-  return pickTB(goOn.length?goOn:fit.length?fit:base);
+  return pickCore(goOn.length?goOn:fit.length?fit:base);
 }
 // 학생들이 자주 하는 철자 실수로 틀린 보기 만들기(첫 글자는 그대로): 모음 바꾸기, 끝 e 빼기·붙이기, 겹자음 빼기·넣기, 이웃 글자 순서 바꾸기
 function misspellings(w,k){
@@ -1155,13 +1277,13 @@ function renderGuided(){
       if(el.dataset.i==='0'){ const good=el.value===w[0]; el.classList.toggle('ok',good&&!!el.value);
         if(el.value&&!good){ msg(FIRST_MSG,'info'); el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400); el.select(); drawLink(); return; }
         if(good){ drawLink(true); msg('','info'); } else drawLink(); }
-      if(el.value){ const nx=ins[ins.indexOf(el)+1]; if(nx) nx.focus(); } };
+      if(el.value){ const nx=ins[ins.indexOf(el)+1]; if(nx) nx.focus({preventScroll:true}); } };
     ins.forEach(el=>{ el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
       el.addEventListener('focus',()=>el.select());
-      el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus(); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
-    (ins.find(el=>!el.value)||ins[0])?.focus();
+      el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus({preventScroll:true}); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
+    (ins.find(el=>!el.value)||ins[0])?.focus({preventScroll:true});
     ans.querySelector('#f').onsubmit=e=>{ e.preventDefault(); if(G.locked) return;
-      if(ins.some(el=>!el.value)){ msg('빈칸을 모두 채워 주세요.','info'); (ins.find(el=>!el.value)).focus(); return; }
+      if(ins.some(el=>!el.value)){ msg('빈칸을 모두 채워 주세요.','info'); (ins.find(el=>!el.value)).focus({preventScroll:true}); return; }
       const word=w.split('').map((c,i)=>G.blankIdx.includes(i)?ans.querySelector(`.bin[data-i="${i}"]`).value:c).join('');
       if(!DICT.has(word)&&isBlocked(word)){ ins.forEach(el=>{ el.value=''; G.blankVals[el.dataset.i]=''; }); blockedInput(ins[0]); return; }
       G.blankVals={}; guidedAnswer(word); };
@@ -1170,9 +1292,13 @@ function renderGuided(){
 
 // 컴퓨터 단어의 끝 글자 → 다음 단어의 첫 글자를 잇는 선(기초 1~3단계). 글자를 가리지 않게 오른쪽 여백과 카드 사이 빈 곳으로 꺾어 감
 // 빈칸 채우기는 첫 글자를 맞게 채우기 전까지 점선, 맞으면 실선(grow: 이어지는 짧은 효과, 동작 줄이기 설정이면 생략)
+// 휴대폰(좁은 화면)은 선이 화면 가장자리를 따라 길게 돌아 어지러우므로 선 대신 handoff(건네주기)·land(반짝임)
+const wideLink=()=>!window.matchMedia||matchMedia('(min-width:600px)').matches;
+const calm=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function drawLink(grow){
   $app.querySelector('svg.link')?.remove();
   if(!G||!G.L||!GUIDED(G.L.mode)) return;
+  if(!wideLink()){ if(grow) linkLand(); return; }
   const a=$app.querySelector('.cpu .big .last'), cpu=$app.querySelector('.cpu'), tg=$app.querySelector('.target'),
     b=$app.querySelector('#answer .slots .slot')||$app.querySelector('#answer .choice .f');
   if(!a||!cpu||!tg||!b) return;
@@ -1187,11 +1313,63 @@ function drawLink(grow){
   d+=` L${pts[pts.length-1]}`;
   const on=G.L.mode!=='blanks'||G.blankVals[0]===G.target.w[0];
   $app.insertAdjacentHTML('beforeend',`<svg class="link${on?' on':''}" aria-hidden="true" width="1" height="1"><path d="${d}"/><circle cx="${xs}" cy="${ys}" r="4"/><circle cx="${xe}" cy="${ye}" r="4"/></svg>`);
-  if(grow&&on&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){
+  if(grow&&on&&!calm()){
     const p=$app.querySelector('svg.link path'), len=p.getTotalLength(); p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
     p.getBoundingClientRect(); p.style.transition='stroke-dashoffset .5s ease'; p.style.strokeDashoffset=0; }
 }
 addEventListener('resize',()=>drawLink());
+// 첫 글자 자리: 철자 고르기는 보기마다의 첫 글자, 글자 블록·빈칸 채우기는 첫 칸
+const linkEnds=()=>G.L.mode==='spell'?[...$app.querySelectorAll('#answer .choice .f')]:[$app.querySelector('#answer .slots .slot')].filter(Boolean);
+const flash=el=>{ clearTimeout(el._land); el.classList.remove('land'); void el.offsetWidth; el.classList.add('land'); el._land=setTimeout(()=>el.classList.remove('land'),650); };
+// 휴대폰: 새 컴퓨터 단어마다 끝 글자가 첫 글자 자리로 한 번 건너감. 빈칸 채우기는 답을 대신 채우지 않도록 글자 없이 동그라미만
+function handoff(){
+  if(wideLink()||calm()||!G||!GUIDED(G.L.mode)) return;
+  const a=$app.querySelector('.cpu .big .last'); if(!a) return;
+  const ra=a.getBoundingClientRect(), blank=G.L.mode==='blanks';
+  linkEnds().forEach((b,i)=>{ const rb=b.getBoundingClientRect(), el=document.createElement('span');
+    el.className='hand'+(blank?' dot':''); el.setAttribute('aria-hidden','true'); if(!blank) el.textContent=a.textContent;
+    const sz=blank?Math.min(ra.width,ra.height,34):0;
+    el.style.cssText=blank?`left:${ra.left+ra.width/2-sz/2}px;top:${ra.top+ra.height/2-sz/2}px;width:${sz}px;height:${sz}px`
+      :`left:${ra.left}px;top:${ra.top}px;width:${ra.width}px;height:${ra.height}px;font-size:${getComputedStyle(a).fontSize}`;
+    document.body.appendChild(el);
+    const dx=rb.left+rb.width/2-(ra.left+ra.width/2), dy=rb.top+rb.height/2-(ra.top+ra.height/2), s=blank?1:Math.max(.4,Math.min(1,rb.height/ra.height));
+    const end=()=>{ el.remove(); if(b.isConnected) flash(b); };
+    if(!el.animate){ end(); return; }
+    el.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${dx*.45}px,${dy*.5-24}px) scale(1.05)`,offset:.45},{transform:`translate(${dx}px,${dy}px) scale(${s})`}],
+      {duration:750,delay:i*90,easing:'ease-in-out',fill:'forwards'}).finished.then(end,end);
+  });
+}
+// 빈칸 채우기에서 첫 글자를 맞게 채우면: 컴퓨터 끝 글자와 첫 칸이 함께 반짝임
+function linkLand(){ if(calm()) return; [$app.querySelector('.cpu .big .last'),...linkEnds()].forEach(e=>e&&flash(e)); }
+
+// ---------- 휴대폰 화면 키보드 ----------
+// 키보드가 올라오면(보이는 높이가 120px 넘게 줄면) html.kb로 화면을 줄이고, 브라우저가 입력칸을 보이려고 화면을 밀어 올린 것을 되돌림:
+// 맨 위가 보이게 두되, 입력칸(과 확인 버튼)이 키보드에 가려지면 가려지지 않을 만큼만 올림. 아이폰·안드로이드 공통(visualViewport)
+(()=>{ const vv=window.visualViewport; if(!vv) return;
+  const root=document.documentElement; let full=0, wid=0, touchUntil=0, timer=0;
+  const field=()=>{ const a=document.activeElement; return a&&a.tagName==='INPUT'&&/^(text|search|email)$/.test(a.type)&&$app.contains(a)?a:null; };
+  const pin=()=>{ const a=field(); if(!a||!root.classList.contains('kb')||Date.now()<touchUntil) return;
+    const y=e=>e.getBoundingClientRect().bottom+scrollY+8, form=a.closest('form')||a, cpu=$app.querySelector('.cpu');   // 문서 기준 아래끝
+    // 확인 버튼까지 보이게 하되, 그러려면 컴퓨터 단어 카드가 가려지는 아주 작은 화면에서는 입력칸까지만(확인은 키보드의 Enter)
+    let want=Math.max(0,y(form)-vv.height); const cap=cpu?cpu.getBoundingClientRect().top+scrollY-4:Infinity;
+    if(want>cap) want=Math.max(cap,y(a.closest('.slots')||a)-vv.height);
+    const now=scrollY+vv.offsetTop;
+    if(Math.abs(want-now)>2) scrollTo(0,want-vv.offsetTop); };
+  const update=()=>{
+    if(innerWidth!==wid){ wid=innerWidth; full=0; }                                  // 회전하면 기준 높이를 다시 잼
+    full=Math.max(full,vv.height);
+    // 터치 화면에서만(컴퓨터 창 크기 바꾸기 제외), 두 손가락으로 확대한 때는 제외
+    const on=!!field()&&full-vv.height>120&&Math.abs((vv.scale||1)-1)<.05&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
+    if(on!==root.classList.contains('kb')){ root.classList.toggle('kb',on); drawLink(); if(!on&&scrollY>0&&$app.querySelector('.status')) scrollTo(0,0); }   // 키보드가 내려가면 게임 화면은 맨 위로
+    root.style.setProperty('--vvt',vv.offsetTop+'px'); root.style.setProperty('--kbh',Math.round(full-vv.height)+'px');
+    clearTimeout(timer); pin(); timer=setTimeout(pin,250); };                        // 키보드가 다 올라온 뒤 한 번 더
+  vv.addEventListener('resize',update); vv.addEventListener('scroll',update);
+  addEventListener('focusin',()=>setTimeout(update,50)); addEventListener('focusout',()=>setTimeout(update,80));
+  // 학생이 직접 화면을 끌어 볼 때는 되돌리지 않음
+  addEventListener('touchmove',()=>{ touchUntil=Infinity; },{passive:true});
+  addEventListener('touchend',()=>{ if(touchUntil===Infinity) touchUntil=Date.now()+1200; },{passive:true});
+  update();
+})();
 
 // ---------- 별로 사기 버튼 ----------
 const buyBtnHTML=(id,price,label)=>`<button class="btn buy" id="${id}" ${stars<price?'disabled':''} title="${stars<price?`별이 부족해요 (⭐ ${stars}/${price})`:''}">${label} · ⭐${price}${stars<price?` <small>(⭐ ${stars}/${price})</small>`:''}</button>`;
@@ -1237,7 +1415,7 @@ function bindHintBtn(){
 function calcScore(o,combo,listen,hint,inNb){
   const S=SETTINGS.score, n=o.w.length; let bonus=0;
   if(n>=S.lenFrom) bonus+=(n-S.lenFrom+1)*S.lenPer;
-  if(o.tb===2) bonus+=S.tb2; else if(o.tb===1) bonus+=S.tb1;
+  if(o.core===2) bonus+=S.core2; else if(o.core===1) bonus+=S.core1;   // 기본 어휘 보너스
   if(inNb) bonus+=S.notebookBonus;                         // 수첩 단어(외운 단어 제외)를 정답으로 쓰면
   if(hint) bonus=0;                                          // 힌트를 쓴 턴은 길이·기본 어휘 보너스만 없어짐
   const mult=(S.combo.find(([c])=>combo>=c)||[0,1])[1]*(listen?S.listen:1);
@@ -1249,8 +1427,8 @@ function checkBadges(o){
   if(G.combo>=B.fire[0]) award('fire5'); if(G.combo>=B.fire[1]) award('fire10');
   if(o.w.length>=B.longWord) award('long');
   const st=stat();
-  if(o.tb&&!o.outside&&!st.tb.includes(o.w)){ st.tb.push(o.w); persist(); }
-  if(st.tb.length>=B.textbook[0]) award('tb10'); if(st.tb.length>=B.textbook[1]) award('tb30');
+  if(o.core&&!o.outside&&!st.tb.includes(o.w)){ st.tb.push(o.w); persist(); }
+  if(st.tb.length>=B.core[0]) award('tb10'); if(st.tb.length>=B.core[1]) award('tb30');
   if(o.outside){ st.outside++; persist(); if(st.outside>=B.outside) award('outside'); }
   if(G.failedBefore&&G.combo>=B.comeback) award('comeback');
   if(G.listen){ G.listenRun++; if(G.listenRun>=B.ears) award('ears'); } else G.listenRun=0;
@@ -1304,8 +1482,8 @@ function render(){
   $app.querySelector('#back').onclick=home;
   $app.querySelector('#say').onclick=()=>{ audioKeepAlive(true);
     if(hide){ if(G.replays<=0) return; G.replays--; speak(c.w);
-      if(G.replays<=0&&!G.boughtReplay){ const keep=$app.querySelector('#inp')?.value||''; render(); const ip=$app.querySelector('#inp'); if(ip){ ip.value=keep; ip.focus(); } return; }
-      const b=$app.querySelector('#say'); b.textContent=`🔊 다시 듣기 (${G.replays})`; b.disabled=G.replays<=0; $app.querySelector('#inp')?.focus(); return; }
+      if(G.replays<=0&&!G.boughtReplay){ const keep=$app.querySelector('#inp')?.value||''; render(); const ip=$app.querySelector('#inp'); if(ip){ ip.value=keep; ip.focus({preventScroll:true}); } return; }
+      const b=$app.querySelector('#say'); b.textContent=`🔊 다시 듣기 (${G.replays})`; b.disabled=G.replays<=0; $app.querySelector('#inp')?.focus({preventScroll:true}); return; }
     const o=soundOn;soundOn=true;speak(c.w);soundOn=o; };
   $app.querySelector('#snd').onclick=()=>{
     if(soundOn&&L.listen==='force'&&TTS_OK){ msg('듣기 챌린지에서는 소리를 끌 수 없어요.','info'); return; }
@@ -1313,18 +1491,19 @@ function render(){
     if(!soundOn&&G.listen){ G.listen=false; G.revealed=true; render(); msg('소리를 꺼서 듣고 쓰기를 껐어요.','info'); return; }
     const b=$app.querySelector('#snd');b.innerHTML=sndHTML();b.setAttribute('aria-pressed',soundOn); if(L.listenOpt) bindListenBar(); };
   bindHintBtn();
-  if(L.time) armBuy($app.querySelector('#buyTime'),SETTINGS.shop.timePrice,'',()=>{ G.boughtTime=true; G.lim+=SETTINGS.shop.timeAdd; G.timeLeft=G.lim+G.bonus-G.elapsed; $app.querySelector('#buyTime').remove(); msg(`⏱ 이번 단어 시간이 ${SETTINGS.shop.timeAdd}초 늘었어요.`,'info'); $app.querySelector('#inp')?.focus(); });
+  if(L.time) armBuy($app.querySelector('#buyTime'),SETTINGS.shop.timePrice,'',()=>{ G.boughtTime=true; G.lim+=SETTINGS.shop.timeAdd; G.timeLeft=G.lim+G.bonus-G.elapsed; $app.querySelector('#buyTime').remove(); msg(`⏱ 이번 단어 시간이 ${SETTINGS.shop.timeAdd}초 늘었어요.`,'info'); $app.querySelector('#inp')?.focus({preventScroll:true}); });
   if(hide) armBuy($app.querySelector('#buyReplay'),SETTINGS.shop.replayPrice,'',()=>{ G.boughtReplay=true; G.replays++; const b=$app.querySelector('#say'); b.disabled=false; b.textContent=`🔊 다시 듣기 (${G.replays})`; $app.querySelector('#buyReplay').remove(); });
   if(L.listenOpt) bindListenBar();
   // 시간 늘리기는 이번 단어에 바로 적용, 줄이기는 다음 단어부터
   if(L.time) bindTimeCtl($app,L,(t,d)=>{
     if(d>0&&!G.locked){ G.lim=Math.max(G.lim,t); G.timeLeft=G.lim+G.bonus-G.elapsed; msg(`제한 시간 ${t}초 — 이번 단어부터 적용돼요.`,'info'); }
     else msg(`제한 시간 ${t}초 — 다음 단어부터 적용돼요.`,'info');
-    $app.querySelector('#inp')?.focus(); });
+    $app.querySelector('#inp')?.focus({preventScroll:true}); });
   const ans=$app.querySelector('#answer');
   if(keyHandler){ document.removeEventListener('keydown',keyHandler); keyHandler=null; }
   if(GUIDED(L.mode)){ $app.querySelector('#sayT').onclick=()=>{audioKeepAlive(true);const o=soundOn;soundOn=true;speak(G.target.w);soundOn=o;}; renderGuided();
-    drawLink(); const gl=G, cl=c; setTimeout(()=>{ if(G===gl&&G.cur===cl) drawLink(); },400); }
+    drawLink(); const gl=G, cl=c; setTimeout(()=>{ if(G===gl&&G.cur===cl) drawLink(); },400);
+    if(G.handed!==c){ G.handed=c; setTimeout(()=>{ if(G===gl&&G.cur===cl&&!G.locked) handoff(); },450); } }
   else if(L.mode==='choice'){
     // 한 줄에 보기 하나: 단어(첫 글자 강조) · 뜻. 그림은 쓰지 않음
     ans.innerHTML=`<div class="choices n${G.options.length}">${G.options.map((o,i)=>`<button class="choice${G.removed.has(o.w)?' gone':''}" data-i="${i}" ${G.removed.has(o.w)?'tabindex="-1"':''}>
@@ -1370,7 +1549,7 @@ function submitTyped(raw){
     inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),400); inp.select(); return; }
   fail(`<b>${esc(w)}</b>는 영어 단어 목록에 없어요.${sug.length?` 혹시 <b>${sug.map(esc).join(' · ')}</b>?`:''}`, example(ch));
 }
-function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickTB(c):null; }
+function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickCore(c):null; }
 function success(o){
   G.locked=true; stopTimer(); G.turns++; G.rights++; const spoken=speak(o.w); G.used.add(o.w);
   const wasHidden=G.listen&&!G.revealed;   // 듣고 쓰기: 이번 답으로 컴퓨터 단어를 공개함
@@ -1382,7 +1561,7 @@ function success(o){
   const sc=$app.querySelector('#score'), cb2=$app.querySelector('#combo');
   if(sc) sc.textContent=`${G.score}점`; if(cb2) cb2.textContent=G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:'';
   if(SETTINGS.combo.celebrate.includes(G.combo)) celebrate(G.combo);
-  if(o.tb&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbAdd(o.w,'textbook'); } G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
+  if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbAdd(o.w,'textbook'); } G.chain.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
   if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
   msg((o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`)+(inNb?' 📒 수첩 단어!':'')+` (+${pts}점)`,'good');
@@ -1492,7 +1671,7 @@ function restReview(box){
   const inp=box.querySelector('#inp');
   enInput(inp,box.querySelector('#f'),v=>{
     if(S.answered) return; const a=v.trim().toLowerCase(); if(!a){ msg('단어를 써 주세요.','info'); return; }
-    if(!DICT.has(a)&&isBlocked(a)){ inp.value=''; inp.focus(); msg(BLOCK_MSG,'info'); return; }
+    if(!DICT.has(a)&&isBlocked(a)){ inp.value=''; inp.focus({preventScroll:true}); msg(BLOCK_MSG,'info'); return; }
     S.answered=true; const ok=a===d.w; if(ok) S.right++;
     // 날짜가 된 단어만 정식 복습(도장·날짜 바뀜), 나머지는 연습(그대로)
     const r=it.kind==='due'?nbResult(d.w,ok):'';
@@ -1598,7 +1777,7 @@ function useHint(){
   }else{
     const maxStep=3;
     if(G.hintStep>=maxStep){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
-    if(!G.hintWord||G.hintWord.w[0]!==ch||G.used.has(G.hintWord.w)) G.hintWord=pickTB(startsWith(ch,G.pool).filter(x=>x.w.length>=G.L.min));
+    if(!G.hintWord||G.hintWord.w[0]!==ch||G.used.has(G.hintWord.w)) G.hintWord=pickCore(startsWith(ch,G.pool).filter(x=>x.w.length>=G.L.min));
     if(G.hintWord) nbAdd(G.hintWord.w,'hint');
     if(G.L.time){ G.bonus=Math.min(G.bonus+5,G.elapsed); G.timeLeft=G.lim+G.bonus-G.elapsed; }
   }
@@ -1613,7 +1792,7 @@ function showHint(){
     const c=G.cur, w=disp(c), n=G.hintStep;
     area.innerHTML=`<div class="hintbox lhint"><div><button class="speak" id="slowSay">🐢 천천히 듣기</button> <span class="lboxes inline" aria-label="${c.w.length}글자">${'<span class="lbox"></span>'.repeat(c.w.length)}</span> ${c.w.length}글자${n>=2?` · 뜻: <b>${esc(plainKo(c.ko))}</b>`:''}</div>
       ${n>=3?`<div class="pat word" aria-label="끝 글자만 가린 철자">${esc(w.slice(0,-1).split('').join(' '))} _</div>`:`<small>힌트를 한 번 더 쓰면 ${n===1?'뜻':'끝 글자만 가린 철자'}를 보여 줘요.</small>`}</div>`;
-    area.querySelector('#slowSay').onclick=()=>{ audioKeepAlive(true); speak(c.w,false,SETTINGS.listen.slowRate); $app.querySelector('#inp')?.focus(); };
+    area.querySelector('#slowSay').onclick=()=>{ audioKeepAlive(true); speak(c.w,false,SETTINGS.listen.slowRate); $app.querySelector('#inp')?.focus({preventScroll:true}); };
     return;
   }
   if(G.L.mode==='choice'){ area.innerHTML=`<div class="hintbox">💡 틀린 보기를 지웠어요. <b>${ch}</b>로 시작하는 단어를 찾아보세요!</div>`; return; }

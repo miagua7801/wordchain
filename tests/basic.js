@@ -46,9 +46,9 @@ const {target,open,startLevel}=require('./lib');
   await p.keyboard.type(bins.slice(1).map(i=>t3[i]).join('')); await p.keyboard.press('Enter'); await p.waitForTimeout(200);
   ok((await p.textContent('#msg')).startsWith('좋아요'),`빈칸 칸에 ${bins.map(i=>t3[i]).join('')}을 써서 ${t3} 완성`);
   // 긴 단어도 글자 칸이 한 줄(휴대폰 너비)
-  await p.setViewportSize({width:360,height:640}); await p.evaluate(()=>window.__wordchain.forceTarget('upstairs')); await p.waitForTimeout(200);
+  await p.setViewportSize({width:360,height:640}); await p.evaluate(()=>window.__wordchain.forceTarget('umbrella')); await p.waitForTimeout(200);
   const tops=await p.$$eval('#bslots .slot',a=>[...new Set(a.map(s=>Math.round(s.getBoundingClientRect().top)))]);
-  ok(tops.length===1,'휴대폰에서 upstairs(8글자) 글자 칸이 한 줄');
+  ok(tops.length===1,'휴대폰에서 umbrella(8글자) 글자 칸이 한 줄');
   await p.setViewportSize({width:1280,height:720});
 
   // 2단계 글자 블록: 키보드로 조립, 되돌리기, 틀리면 오답

@@ -6,15 +6,18 @@ const {target,open,startLevel}=require('./lib');
   const H=(f,a)=>p.evaluate(f,a);
   await p.goto(url); await H(()=>localStorage.clear()); await p.goto(url);
 
-  // 점수 규칙: 기본 10, 5글자 이상 (n−4)×2, 기본 어휘 +5/+3, 단어장 밖 +3, 콤보 배율, 듣고 쓰기 ×1.5, 힌트는 보너스만 없앰
-  const r=await H(()=>{ const P=window.__wordchain.points, tb=window.__wordchain.tb;
-    return {cat:P('cat',1,false,false), tiger:P('tiger',1,false,false), tigerC3:P('tiger',3,false,false), tigerC5:P('tiger',5,false,false), tigerC10:P('tiger',10,false,false),
-      tigerL:P('tiger',1,true,false), tigerH:P('tiger',1,false,true), tigers:P('tigers',1,false,false), dino:P('dinosaur',1,false,false), dinoTb:tb('dinosaur')}; });
-  ok(r.cat===10,'cat(3글자) = 10'); ok(r.tiger===12,'tiger(5글자) = 10 + 2 = 12');
-  ok(r.tigerC3===14&&r.tigerC5===18&&r.tigerC10===24,`콤보 배율: 3콤보 ${r.tigerC3}, 5콤보 ${r.tigerC5}, 10콤보 ${r.tigerC10}`);
-  ok(r.tigerL===18,'듣고 쓰기 ×1.5 = 18'); ok(r.tigerH===10,'힌트 쓴 턴: 보너스 없이 10');
+  // 점수 규칙: 기본 10, 5글자 이상 (n−4)×2, 기본 어휘 보너스(level 2 +5 · level 1 +3), 단어장 밖 +3, 콤보 배율, 듣고 쓰기 ×1.5, 힌트는 보너스만 없앰
+  const r=await H(()=>{ const P=window.__wordchain.points, core=window.__wordchain.core;
+    return {catCore:core('cat'), tigerCore:core('tiger'), cat:P('cat',1,false,false), tiger:P('tiger',1,false,false), tigerC3:P('tiger',3,false,false), tigerC5:P('tiger',5,false,false), tigerC10:P('tiger',10,false,false),
+      tigerL:P('tiger',1,true,false), tigerH:P('tiger',1,false,true), tigers:P('tigers',1,false,false), dino:P('dinosaur',1,false,false), dinoCore:core('dinosaur'), access:P('access',1,false,false), accessCore:core('access'), actor:P('actor',1,false,false), actorCore:core('actor')}; });
+  // cat·tiger는 기본 어휘 level 1(+3)
+  ok(r.catCore===1&&r.cat===13,'cat(3글자, 기본 어휘 level 1) = 10 + 3 = 13'); ok(r.tigerCore===1&&r.tiger===15,'tiger(5글자, level 1) = 10 + 2 + 3 = 15');
+  ok(r.tigerC3===18&&r.tigerC5===22&&r.tigerC10===30,`콤보 배율(×1.2·×1.5·×2, 소수점 버림): 3콤보 ${r.tigerC3}, 5콤보 ${r.tigerC5}, 10콤보 ${r.tigerC10}`);
+  ok(r.tigerL===22,'듣고 쓰기 ×1.5 = 22'); ok(r.tigerH===10,'힌트 쓴 턴: 길이·기본 어휘 보너스 없이 10');
   ok(r.tigers===17,'단어장 밖 tigers(6글자) = 10 + 4 + 3 = 17');
-  ok(r.dino===10+8+(r.dinoTb===2?5:r.dinoTb===1?3:0),`기본 어휘 단어 dinosaur(중${r.dinoTb}) = ${r.dino}`);
+  ok(r.dino===10+8+(r.dinoCore===2?5:r.dinoCore===1?3:0),`dinosaur(기본 어휘 level ${r.dinoCore||'없음'}) = ${r.dino}`);
+  ok(r.accessCore===2&&r.access===10+4+5,`기본 어휘 보너스 level 2: access = 10 + 4 + 5 = ${r.access}`);
+  ok(r.actorCore===0&&r.actor===12,`기본 어휘가 아니면 보너스 없음: actor = ${r.actor}`);
 
   // 플레이: 콤보 표시, 다시 쓰기는 콤보 유지, 5콤보 축하, 틀리면 0
   await startLevel(p,url,'normal',2); await p.waitForTimeout(300);
