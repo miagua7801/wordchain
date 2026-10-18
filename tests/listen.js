@@ -6,7 +6,7 @@ const {target,open,startLevel}=require('./lib');
   const H=(f,a)=>p.evaluate(f,a);
   const words=async()=>H(()=>(VOCAB_E+'|'+VOCAB_M).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)&&!/(er|est)$/.test(w)));
   const W=await (async()=>{ await p.goto(url); return words(); })();
-  const answer=async ch=>{ const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent)); const w=W.find(x=>x[0]===ch&&!used.includes(x)); await p.fill('#inp',w); await p.press('#inp','Enter'); return w; };
+  const answer=async ch=>{ const used=await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent)); const w=W.find(x=>x[0]===ch&&!used.includes(x)); await p.fill('#inp',w); await p.press('#inp','Enter'); return w; };
 
   // 끝 글자 설명
   const SN=list=>H(l=>l.map(([a,b])=>window.__wordchain.silentNote(a,b)),list);
@@ -40,7 +40,7 @@ const {target,open,startLevel}=require('./lib');
   ok(ph.pat===expPat(cw)&&ph.n===cw.length&&ph.on===cw.length-2&&ph.onT===cw[cw.length-2]&&ph.ask&&ph.row&&ph.msg==='끝에서 두 번째 글자예요. 마지막 글자는 무엇일까요?'&&ph.cap==='? 이 글자를 맞혀요'&&!ph.ko,`보통 듣고 쓰기 힌트 1: ${ph.pat} (끝에서 두 번째 글자·위치, 칸들이 한 줄로 가지런함, 마지막 칸 강조 "이 글자를 맞혀요")`);
   await p.click('#hintBtn'); await p.waitForTimeout(150); ph=await pen(cw);
   ok(ph.ko&&ph.pat===expPat(cw)&&(await p.textContent('#hintKo')).startsWith('뜻: '),'보통 듣고 쓰기 힌트 2: '+(await p.textContent('#hintKo')));
-  ok(!(await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent))).includes(cw),'끝말잇기 줄에도 아직 안 보임');
+  ok(!(await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent))).includes(cw),'끝말잇기 줄에도 아직 안 보임');
   await p.click('#say'); await p.click('#say');
   ok(await p.$eval('#say',e=>e.disabled&&e.textContent.includes('(0)')),'다시 듣기 2번 뒤 비활성');
   const t1=Date.now(); await answer(cw.slice(-1)); await p.waitForTimeout(300);
@@ -63,7 +63,7 @@ const {target,open,startLevel}=require('./lib');
   await p.goto(url);
   await p.evaluate(()=>{ const s=JSON.parse(localStorage.getItem('wordchain-v2')); s.prog.hard={unlocked:4,best:{},cleared:{1:true,2:true,3:true,4:true}}; localStorage.setItem('wordchain-v2',JSON.stringify(s)); });
   await p.goto(url); await p.click('[data-t="hard"]'); await p.waitForTimeout(200);
-  ok((await p.$$('.levels .lv')).length===5&&!(await p.$eval('[data-lv="5"]',e=>e.disabled)),'도전 5단계: 4단계를 통과했으면 열림');
+  ok((await p.$$('.map .lv')).length===5&&!(await p.$eval('[data-lv="5"]',e=>e.classList.contains('locked'))),'도전 5단계: 4단계를 통과했으면 열림');
   await p.click('[data-lv="5"]'); await p.waitForTimeout(300);
   ok(!(await p.getAttribute('#inp','placeholder')).includes('...')&&!!(await p.$('.cpu.listen'))&&!(await p.$('.lbox'))&&(await p.textContent('#say')).includes('(1)')&&!(await p.$('#lsn')),'듣기 챌린지: 처음부터 소리로만, 다시 듣기 1번, 글자 수 없음');
   await p.click('#snd'); await p.waitForTimeout(100);

@@ -13,7 +13,7 @@ const {target,open,startLevel}=require('./lib');
       await p.evaluate(()=>scrollTo(0,180));                       // 브라우저가 입력칸을 보이려고 밀어 올린 상황
       await p.evaluate(k=>window.__kb(k),K); await p.waitForTimeout(400);
       const r=await p.evaluate(()=>{ const a=document.activeElement, box=a.closest('.slots')||a, q=s=>document.querySelector(s).getBoundingClientRect();
-        return {kb:document.documentElement.classList.contains('kb'),inp:box.getBoundingClientRect().bottom,cpu:q('.cpu').top,top:q('.topbar').top,chain:!!document.querySelector('.chainbox')&&getComputedStyle(document.querySelector('.chainbox')).display!=='none'}; });
+        return {kb:document.documentElement.classList.contains('kb'),inp:box.getBoundingClientRect().bottom,cpu:q('.cpu').top,top:q('.ghead').top,chain:!!document.querySelector('.feed')&&getComputedStyle(document.querySelector('.feed')).display!=='none'}; });
       ok(r.kb&&r.inp<=K&&r.cpu>=0&&!r.chain,`${W}×${H} 키보드 위 ${K}px · ${t} ${lv}단계: 줄인 화면, 입력칸(${Math.round(r.inp)})이 키보드 위, 컴퓨터 단어 카드 보임(${Math.round(r.cpu)})`);
       if(W===390) ok(r.top>=0,`  ${t} ${lv}단계: 맨 윗줄도 보임(${Math.round(r.top)})`);
       await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },H); await p.waitForTimeout(200);

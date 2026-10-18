@@ -52,14 +52,18 @@ const KO={a:'ㅁ',b:'ㅠ',c:'ㅊ',d:'ㅇ',e:'ㄷ',f:'ㄹ',g:'ㅎ',h:'ㅗ',i:'ㅑ
   await key('End','End',35); await key('Backspace','Backspace',8); await key('Backspace','Backspace',8); await key('l','KeyL',76); await koKey('e');
   ok((await p.inputValue('#inp'))==='aple','한/영을 바꿔 영어 자판으로 쳐도(key=l) 그대로 영어 "aple"');
   // Enter로 내기 → 다음 입력칸도 처음부터 영문 고정
-  const t0=(await H(()=>window.__wordchain.state())).turns;
+  const t0=(await H(()=>window.__wordchain.state())).turns, cw0=await H(()=>window.__wordchain.cpu());
   await key('Enter','Enter',13); await p.waitForTimeout(300);
   ok((await H(()=>window.__wordchain.state())).turns===t0+1||!!(await p.$('.overlay'))||(await p.textContent('#msg')).length>0,'Enter로 냄');
   if(await p.$('#ov1')) await p.click('#ov1');
+  // 정답·오답이면 다음 문제(새 입력칸)까지, 단어 목록에 없어 다시 쓰라는 안내면 그 칸 그대로
+  // 오답 창은 0.45초 뒤에 뜨므로 기다리는 동안 뜨면 닫음
+  for(let i=0;i<100&&(await H(()=>window.__wordchain.cpu()))===cw0&&!/없어요/.test(await p.textContent('#msg').catch(()=>''));i++){ if(await p.$('#ov1')) await p.click('#ov1'); await p.waitForTimeout(50); }
   for(let i=0;i<80&&!(await p.$('#inp'));i++) await p.waitForTimeout(50);
   for(let i=0;i<80&&(await H(()=>{ const e=document.getElementById('inp'); return !e||e.disabled||!!document.querySelector('.myword'); }));i++) await p.waitForTimeout(50);
   ok(await p.$eval('#inp',e=>e.readOnly),'다음 입력칸도 처음부터 영문 고정');
   // 손가락으로 누르면(화면 키보드가 떠야 하므로) 영문 고정을 끔
+  await p.waitForFunction(()=>{ const q=document.getElementById('qm'); return q&&!q.classList.contains('away')&&!q.getAnimations().length; });   // 문제 창이 다 뜬 뒤(나타나는 효과가 끝남)
   const bx=await p.$eval('#inp',e=>{ const r=e.getBoundingClientRect(); return {x:r.left+20,y:r.top+r.height/2}; });
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:bx.x,y:bx.y}]}); await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]}); await p.waitForTimeout(100);
   ok(!(await p.$eval('#inp',e=>e.readOnly)),'손가락으로 입력칸을 누르면 영문 고정 끔(화면 키보드용)');

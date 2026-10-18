@@ -6,18 +6,22 @@ const {target,open,startLevel}=require('./lib');
   const H=f=>p.evaluate(f), ST=()=>H(()=>window.__wordchain.state());
   await p.goto(url);
   const W=await H(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)&&!/(er|est)$/.test(w)));
-  const answer=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent.toLowerCase()));
+  const answer=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent.toLowerCase()));
     const w=W.find(x=>x[0]===cw.slice(-1)&&x!==cw&&!used.includes(x)); await p.fill('#inp',w); await p.press('#inp','Enter'); return cw; };
   const nextCpu=async prev=>{ const t0=Date.now(); for(let i=0;i<60;i++){ await p.waitForTimeout(50); if(await p.$('.overlay')||await p.$('#rest')) break; if((await H(()=>window.__wordchain.cpu()))!==prev) break; } return Date.now()-t0; };
   const wrong=async()=>{ await p.fill('#inp','zzzz'); await p.press('#inp','Enter'); await p.press('#inp','Enter').catch(()=>{}); await p.waitForTimeout(600); };
 
   // 1. 수준 목록·단계 목록: 목표 수와 하트 문구
   await p.evaluate(()=>localStorage.clear()); await p.goto(url);
-  const tracks=await p.$$eval('.track',a=>a.map(e=>e.textContent.replace(/\s+/g,' ')));
-  ok(tracks.some(t=>t.includes('5 → 6 → 7 → 8번 성공 · ❤️ 3'))&&tracks.some(t=>t.includes('6 → 7 → 8 → 8 → 6번 성공 · ❤️ 3'))&&tracks.some(t=>t.includes('연속 4 → 5 → 5 → 6번')),'수준 목록: 보통 5·6·7·8, 도전 6·7·8·8·6(❤️ 3), 기초는 그대로(연속)');
-  await p.click('[data-t="normal"]');
-  const rules=await p.textContent('.rules:last-of-type');
-  ok((await p.textContent('.levels')).includes('7번 성공 · ❤️ 3')&&rules.includes('하트를 다 잃기 전에')&&!rules.includes('틀리지 않고'),'보통 단계 목록: "N번 성공 · ❤️ 3", 규칙 "하트를 다 잃기 전에"');
+  // 수준 규칙 창 둘째 쪽(통과 규칙)을 읽음
+  const introRules=async t=>{ await p.evaluate(()=>{ window.__wordchainNoIntro=false; }); await p.click(`[data-t="${t}"]`);
+    await p.click('#rpgNext'); await p.click('#rpgNext').catch(()=>{}); await p.waitForFunction(()=>document.querySelectorAll('.rpg-dots i')[1]?.classList.contains('on'));
+    const txt=await p.textContent('.rpg-body'); await p.click('#rpgSkip'); await p.evaluate(()=>{ window.__wordchainNoIntro=true; }); return txt.replace(/\s+/g,' '); };
+  const rn=await introRules('normal');
+  await p.hover('[data-lv="3"]'); await p.waitForTimeout(150); const tip3=await p.textContent('#tip');
+  ok(rn.includes('5 → 6 → 7 → 8번')&&rn.includes('하트를 다 잃기 전에')&&!rn.includes('틀리지 않고')&&tip3.includes('7번 성공 · ❤️ 3'),'보통 규칙 창: 5·6·7·8번 "하트를 다 잃기 전에", 단계 맵 말풍선 "7번 성공 · ❤️ 3"');
+  await p.click('#chg'); const rh=await introRules('hard'); await p.click('#chg'); const rb=await introRules('basic');
+  ok(rh.includes('6 → 7 → 8 → 8 → 6번')&&rh.includes('하트')&&rb.includes('4 → 5 → 5 → 6번')&&rb.includes('틀리지 않고 연속으로')&&!rb.includes('하트'),'도전 6·7·8·8·6(하트), 기초는 그대로(연속)');
 
   // 2. 틀리면 하트 1개, 성공 수 그대로
   await startLevel(p,url,'normal',2); await p.waitForTimeout(900);
@@ -49,7 +53,7 @@ const {target,open,startLevel}=require('./lib');
   // 5. 기존 진도 유지(목표가 줄어도 통과 표시 그대로)
   await p.evaluate(()=>{ localStorage.clear(); localStorage.setItem('wordchain-v2',JSON.stringify({track:'hard',prog:{hard:{unlocked:5,best:{4:12},cleared:{1:true,2:true,3:true,4:true}}},time:{},basicVer:2})); });
   await p.goto(url); await p.click('[data-t="hard"]');
-  ok((await p.$$('.levels .lv.cleared')).length===4&&!(await p.$eval('[data-lv="5"]',e=>e.disabled)),'예전 진도(도전 1~4 통과, 5단계 열림) 그대로');
+  ok((await p.$$('.map .lv.cleared')).length===4&&!(await p.$eval('[data-lv="5"]',e=>e.classList.contains('locked'))),'예전 진도(도전 1~4 통과, 5단계 열림) 그대로');
 
   // 6. 기초는 예전 방식: 틀리면 연속 기록 0, 하트 없음
   await startLevel(p,url,'basic',4); await p.waitForTimeout(900);

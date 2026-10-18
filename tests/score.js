@@ -22,7 +22,7 @@ const {target,open,startLevel}=require('./lib');
   // 플레이: 콤보 표시, 다시 쓰기는 콤보 유지, 5콤보 축하, 틀리면 0
   await startLevel(p,url,'normal',2); await p.waitForTimeout(300);
   const W=await H(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{3,}$/.test(w)&&!/(er|est)$/.test(w)));
-  const answer=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent));
+  const answer=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent));
     const w=W.find(x=>x[0]===cw.slice(-1)&&!used.includes(x)&&x!==cw); await p.fill('#inp',w); await p.press('#inp','Enter'); await p.waitForTimeout(250); return w; };
   let burst=false; p.on('console',()=>{});
   for(let i=1;i<=5;i++){ await answer();
@@ -51,7 +51,8 @@ const {target,open,startLevel}=require('./lib');
   const card=await p.textContent('#rest');
   ok(card.includes('이번 판')&&card.includes('최고 콤보')&&card.includes('힌트 없이'),'통과 화면(쉬어 가기 ①): 점수·최고 콤보·이번에 얻은 배지(힌트 없이)');
   await p.click('#back'); await p.waitForTimeout(200);
-  ok((await p.textContent('.lv[data-lv="1"]')).includes('최고')&&(await p.textContent('.lv[data-lv="1"]')).includes('점'),'단계 목록: 이 단계 최고 점수');
+  await p.hover('.lv[data-lv="1"]'); await p.waitForTimeout(150);
+  ok((await p.textContent('#tip')).includes('최고')&&(await p.textContent('#tip')).includes('점'),'단계 맵 말풍선: 이 단계 최고 점수');
   await p.click('#bdBtn'); await p.waitForTimeout(200);
   const nb=(await p.$$('.bdg')).length, ng=(await p.$$('.bdg.got')).length;
   ok(nb===14&&ng>=2,`배지 화면(저장소를 비운 뒤 얻은 첫걸음·힌트 없이): ${nb}개 중 ${ng}개 획득(진하게), 나머지는 조건과 함께 흐리게`);

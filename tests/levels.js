@@ -17,7 +17,7 @@ const {target,open,startLevel}=require('./lib');
       else if(await p.$('.blocks')) await p.keyboard.type(tg.slice(1));
       else if(await p.$('#bslots')){ const bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i)); await p.focus('#bslots .bin'); await p.keyboard.type(bins.map(i=>tg[i]).join('')); await p.keyboard.press('Enter'); }
       else if(await p.$('.choices')){ const bs=await p.$$('.choice'); for(const x of bs){ if((await x.$eval('.w',e=>e.textContent))[0].toLowerCase()===ch){ await x.click(); break; } } }
-      else { const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent.toLowerCase())); const w=W.find(x=>x[0]===ch&&!used.includes(x)&&x!==cw); await p.fill('#inp',w); await p.press('#inp','Enter'); }
+      else { const used=await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent.toLowerCase())); const w=W.find(x=>x[0]===ch&&!used.includes(x)&&x!==cw); await p.fill('#inp',w); await p.press('#inp','Enter'); }
       turns++;
       for(let k=0;k<30;k++){ await p.waitForTimeout(150); if(await p.$('.overlay')||await p.$('#rest')) break; const c2=await H(()=>window.__wordchain.cpu()); if(c2!==cw) break; }
     }
