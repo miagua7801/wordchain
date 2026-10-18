@@ -42,6 +42,7 @@
   - `levels.js` 수준별 1·2단계를 정답으로 자동 플레이해 통과·오류 확인
   - `notebook.js` 단어 수첩: 날짜·횟수 제한 없이 맞힐 때마다 도장(3개면 외운 단어), 첫 화면 복습하기, 목록에서 단어를 눌러 학습, 두 번 틀리면 정답 → 연습하기(보고 따라 쓰기) → 다시 도전(한 번), 외운 단어는 도장 없이 연습, 수첩 비우기, 단어 모으기 확인
   - 앞에 주소를 주면 그 주소(예: GitHub Pages)를, 없으면 로컬 빌드를 테스트
+- `icons/icon.svg` — 앱 아이콘 원본(연한 보라파랑 바탕에 남색 말풍선 "…e" → 흰 말풍선 "e…", 점은 흐리게·이어지는 글자 e는 진하게 해서 작은 화면에서도 또렷함). `node tools/make-icon.js`로 `icons/icon-180·192·512.png`와 안드로이드 마스크용 `icon-maskable-512.png`(80% 크기)를 만듦(글꼴 Lexend)
 - `tools/blocklist.py` — 금지어 목록 보기·추가·삭제·확인
 - `tools/add-words.js` — 단어 확인(`check 단어…`)·추가(`add 파일.txt`, 이미 있는 단어는 건너뜀)
 - `tools/extract-curriculum.py` — 기본 어휘 PDF(`data/basic-vocab.pdf`) → `data/curriculum-vocab.json`(`{word, forms, level, raw}`)과 `data/extract-report.md`(개수·검증). `pdftotext -raw` 사용, 글자가 없는 쪽이 있으면 멈춤(OCR 안 함)
