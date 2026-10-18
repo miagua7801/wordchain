@@ -1,5 +1,7 @@
 # 영어 끝말잇기 챌린지 (Word Chain Challenge)
 
+<img src="icons/icon-512.png" alt="앱 아이콘: 남색 말풍선 …e 다음에 흰 말풍선 e…" width="120" style="border-radius:26px">
+
 **[▶ 앱 바로 시작](https://miagua7801.github.io/wordchain/)** · **[📖 앱 소개](https://miagua7801.github.io/wordchain/intro.html)**
 
 중학교 2학년 EFL 학생용 영어 끝말잇기 웹앱. 학생 vs 컴퓨터.
