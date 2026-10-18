@@ -20,3 +20,10 @@ with open(out, 'w', encoding='utf-8', newline='\n') as f:
     f.write(notice + '\n')
     f.write('const WORDLIST = "' + '|'.join(words) + '";\n')
 print(len(words), 'words ->', os.path.getsize(out), 'bytes')
+# 고지 문구(Copyright 연도 등)의 기준은 여기서 쓴 wordlist.js 머리 주석. 앱 출처 창은 build.py가 자동으로 따라가고,
+# NOTICE.md·README.md·intro.html에 옮겨 적은 고지가 달라졌으면 tests/license.js가 FAIL로 알려 줌
+m = re.search(r'Copyright \d{4}-\d{4} by Kevin Atkinson', header)
+if m:
+    stale = [f for f in ('NOTICE.md', 'README.md', 'intro.html')
+             if m.group(0) not in open(os.path.join(os.path.dirname(__file__), '..', f), encoding='utf-8').read()]
+    if stale: print('고지 문구가 바뀜 → 이 파일들도 고칠 것:', ', '.join(stale), '(확인: node tests/license.js)')

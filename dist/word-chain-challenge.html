@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- © 2026 miagua7801 — CC BY-NC-ND 4.0 (https://creativecommons.org/licenses/by-nc-nd/4.0/) · 출처·고지: NOTICE.md -->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -120,7 +121,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .rules h2{font-size:20px;margin-bottom:6px}
 .rules ul{margin:0;padding-left:20px;display:grid;gap:4px}
 .foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:var(--muted)}
-.ver{font-size:12px;opacity:.8}
+.ver{font-size:12px;opacity:.8;white-space:nowrap}
 .linkbtn{background:none;border:none;padding:4px 2px;text-decoration:underline;color:var(--muted)}
 
 
@@ -296,6 +297,13 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .card h3{font-size:26px;margin:6px 0}
 .card p{margin:6px 0;color:var(--muted)}
 .card .ex{font-family:var(--f-word);font-weight:700;color:var(--ink)}
+/* 출처·저작권 창: 긴 영어 고지문은 창 안에서 스크롤 */
+.credits{text-align:left;word-break:keep-all;max-height:min(56vh,460px);overflow:auto;font-size:13px;line-height:1.55;margin-top:6px;padding-right:4px}
+.credits h4{margin:12px 0 2px;font-size:14px;color:var(--ink)}
+.credits a{color:var(--accent, #0f6e7a)}
+.card .credits p{margin:4px 0}
+.credits blockquote{margin:6px 0;padding:8px 10px;border-left:3px solid var(--line, #c9d6dd);background:var(--surface-2, #eef3f6);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
+.linkbtn.credit{margin-left:12px;font-size:12px}
 #app{position:relative}
 .rcard h3{margin:6px 0 8px}.rcard .big-e{font-size:52px;line-height:1.1}
 .rstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
@@ -1117,7 +1125,11 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-18 15:41'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-18 15:43'; // build.py가 빌드 시각으로 바꿈
+// 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
+const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
+// 이 앱의 라이선스(저작자 miagua7801, 학생 화면에는 실명을 넣지 않음). 법적 전문은 저장소의 LICENSE
+const LICENSE_URL='https://creativecommons.org/licenses/by-nc-nd/4.0/deed.ko';
 
 // 새 버전 알림: 배포된 version.json의 빌드 시각이 지금 페이지와 다르면 안내 띠를 띄우고, 누르면 새 주소(?v=)로 이동해 캐시된 예전 페이지를 건너뜀
 // (file://·아티팩트처럼 version.json이 없는 곳에서는 조용히 넘어감)
@@ -1361,7 +1373,7 @@ function home(){
     <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">🏆</span>
   </div>
   <div class="foot">
-    <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span></span>
+    <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span><button class="linkbtn credit" id="credits">출처·저작권</button></span>
     <span><button class="linkbtn" id="reset">이 수준 기록 지우기</button>${teacherOn()?' · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button> · <button class="linkbtn" id="teacherOff">선생님 모드 끄기</button>':''}</span>
   </div>`;
   const map=$app.querySelector('#map'); let on=null, ptype='mouse', wasOn=false;
@@ -1403,6 +1415,24 @@ function home(){
     $app.querySelector('#teacherOff').onclick=()=>{ setTeacher(false); home(); }; }
   // 선생님 모드 켜기: 아래 '버전' 글자를 3초 안에 5번 누름(학생 화면에는 선생님 버튼이 안 보임)
   let taps=[]; $app.querySelector('#ver').onclick=()=>{ const n=Date.now(); taps=taps.filter(t=>n-t<3000).concat(n); if(taps.length>=5&&!teacherOn()){ setTeacher(true); home(); } };
+  const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
+}
+// 출처·저작권 창: 한국어 안내 + 영어 고지 원문. back = 닫은 뒤 초점을 돌려줄 버튼
+function showCredits(back){
+  const [copy,...perm]=SCOWL_NOTICE.split('\n');
+  toast('📜','출처·저작권',`<div class="credits">
+    <h4>이 앱</h4>
+    <p>© 2026 miagua7801 · <a href="${LICENSE_URL}" target="_blank" rel="noopener" lang="en">CC BY-NC-ND 4.0</a> (저작자표시-비영리-변경금지)</p>
+    <p>할 수 있는 것: 출처를 밝히고 비영리로 사용하기, 원본 그대로 공유하기</p>
+    <p>할 수 없는 것: 판매 등 상업적 이용, 고쳐서 배포하기</p>
+    <p>이 라이선스는 앱 코드·화면·게임 규칙·한국어 뜻풀이·문구에 적용돼요. 아래 단어 목록과 글꼴은 각자의 조건을 따라요.</p>
+    <h4>단어</h4>
+    <p>교육부 고시 영어과 교육과정 [별표] 기본 어휘 목록 (교육부 고시 제2022-33호 [별책 3] (국가교육위원회 고시 제2026-1호 일부개정 포함)). 국가의 고시는 저작권법 제7조에 따라 보호받지 않는 저작물이며, 한국어 뜻은 이 앱에서 따로 썼어요.</p>
+    <p>정답 판정용 영어 단어 목록은 SCOWL/ESDB(wordlist.aspell.net)로 만들었어요. 고지 원문:</p>
+    <blockquote lang="en"><p>${esc(copy||'')}</p>${perm.map(l=>`<p>${esc(l)}</p>`).join('')}</blockquote>
+    <h4>글꼴</h4>
+    <p>Jua, Lexend, Noto Sans KR (Google Fonts) — <span lang="en">SIL Open Font License 1.1</span></p>
+  </div>`,'닫기',()=>back&&back.focus());
 }
 function confirmBtn(sel,txt,fn){const b=$app.querySelector(sel);const orig=b.textContent;let armed=false,t;
   b.onclick=()=>{if(armed){clearTimeout(t);fn();return;}armed=true;b.textContent=txt;t=setTimeout(()=>{armed=false;b.textContent=orig;},3000);};}

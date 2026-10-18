@@ -20,6 +20,7 @@
   - `play-test.js` 도전 2단계 40턴, "이미 나온 단어" 오판 확인
   - `cpu-rules.js` 컴퓨터 단어 첫=끝 글자·수 단어 금지, 단어장 단어만(level 3·인정 전용 단어 금지), 기초 수준은 기본 어휘 ★·★★만(완성할 단어 포함) 확인
   - `core-vocab.js` 기본 어휘: 빌드에 예전 단어장 자료(뜻·쪽수·자료 이름) 없음, 기본 어휘 가중치 ×5, level 3는 출제 안 하고 학생 답으로 인정, 기본 어휘 탐험가 배지(예전 배지 유지)·수첩 사유
+  - `license.js` 저작권·출처: SCOWL 고지·허가문 전문이 빌드 결과·NOTICE.md·README·intro.html·앱 '출처·저작권' 창에 그대로 있는지(연도까지 wordlist.js와 같은지)
   - `accept.js 단어…` 학생 답으로 인정되는지 확인
   - `variety.js` 시작 글자 다양성 확인
   - `ime.js` 한글 자판으로 칠 때: 화면 키보드식 조합은 끝난 뒤 영어로(글자 빠짐·겹침 없음), 실제 키보드+한글 입력기는 영문 고정으로 바로 영어(Backspace·←→·Enter·다음 칸 유지·손가락으로 누르면 끔·빈칸 채우기 칸·입력기가 영문 고정 칸에 한글을 넣어도 두 번 입력·다음 칸 입력 없음) 확인(입력기 흉내)
@@ -182,9 +183,20 @@ python tools/blocklist.py check 단어 단어          # 막히는지 확인
 - 강한 표현은 정상 단어 안에 들어 있을 수 있으니 추가한 뒤 `node tests/blocklist.js`로 정상 단어가 막히지 않는지 확인한다(예: 'twat'은 saltwater·wristwatch를 막아서 정확히 같을 때만 막도록 둠)
 - 단어장(vocab.js)에 있는 단어는 금지어 목록과 관계없이 항상 허용된다. 단어장 단어를 막고 싶으면 단어장에서 지운다
 
+## 라이선스
+© 2026 miagua7801 (https://github.com/miagua7801) — [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.ko) (저작자표시-비영리-변경금지). 법적 전문은 [LICENSE](LICENSE).
+
+- 할 수 있는 것: 출처를 밝히고 비영리로 사용하기, 원본 그대로 공유하기(링크 전달, 파일 복사)
+- 할 수 없는 것: 판매 등 상업적 이용, 고쳐서 배포하기(단어 추가, 화면 변경, 일부를 다른 앱에 넣기 등)
+- 수업에 맞게 고쳐 쓰고 싶다면 저작자에게 따로 허락을 받아 주세요. (문의: GitHub miagua7801)
+- 적용 범위: 저작자가 만든 부분(앱 코드, 화면 구성, 게임 규칙, 한국어 뜻풀이, 문구)에만 적용된다. 교육부 영어과 교육과정 [별표] 기본 어휘 목록(저작권법 제7조에 따라 보호받지 못하는 저작물), SCOWL/ESDB 영어 단어 목록(`wordlist.js`, Kevin Atkinson의 고지·허가문), 웹 글꼴(SIL OFL 등)은 각자의 조건을 따른다 → [NOTICE.md](NOTICE.md)
+- 표시 위치: 소개 페이지(`intro.html`) 맨 아래, 앱 '출처·저작권' 창(아이디만, 실명 없음), 빌드 결과(`dist/*.html`) 맨 위 주석(`build.py`가 넣음), `LICENSE`
+
 ## 단어 출처와 라이선스
+모든 출처·SCOWL 고지 전문·웹 글꼴 라이선스는 [NOTICE.md](NOTICE.md)에 모았다. 앱에서는 단계 맵 아래 '출처·저작권' 창으로 보인다. 아래는 요약.
+
 ### 교육부 영어과 교육과정 기본 어휘
-- 출처: 교육부 고시 영어과 교육과정 [별표] 기본 어휘 목록(인쇄 쪽 402~434). 법령·고시 등 공공 문서로 저작권 보호 대상이 아니다(저작권법 제7조)
+- 출처: 교육부 고시 영어과 교육과정 [별표] 기본 어휘 목록(인쇄 쪽 402~434). 교육부 고시 제2022-33호 [별책 3] (국가교육위원회 고시 제2026-1호 일부개정 포함). 법령·고시 등 공공 문서로 저작권 보호 대상이 아니다(저작권법 제7조)
 - 표시 해석(범례 쪽은 원본 PDF에 없음): `*` 초등 권장 어휘 → level 1, `**` 중학교 어휘 → level 2, 표시 없음 → 고등학교 수준 → level 3
 - 괄호 안 단어(`act* (actual, interact)`)는 앞 단어의 level을 따르는 파생어로 함께 인정, 빗금 철자(`color* / colour*`)는 미국식을 기본으로 하고 나머지는 학생 답으로만 인정. 띄어쓰기·하이픈이 있는 표현(twenty-first 등)은 끝말잇기 단어에서 뺌. 자세한 개수·처리 내역은 `data/extract-report.md`
 - 뜻: 기존 단어장(VOCAB_E·M·TB·NUM·WF)에 있는 단어는 그 뜻, 없는 level 1·2 단어 659개는 새로 쓴 짧은 사전식 뜻(`data/new-meanings-review.tsv`)
@@ -194,7 +206,7 @@ python tools/blocklist.py check 단어 단어          # 막히는지 확인
 
 > Copyright 2000-2026 by Kevin Atkinson. Permission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation. Kevin Atkinson makes no representations about the suitability of this database for any purpose. It is provided "as is" without express or implied warranty.
 
-전체 고지문은 `wordlist.js` 맨 위 주석에 있다.
+전체 고지문은 `wordlist.js` 맨 위 주석(기준)과 [NOTICE.md](NOTICE.md)에 있다. 연도·문구가 바뀌면 `node tests/license.js`가 고칠 곳을 알려 준다.
 
 ## 배포
 - 아티팩트: https://claude.ai/artifact/NGfWkdm9cd8TZwe1x4yiXg (비공개 — 공유 메뉴에서 공개 설정 필요)
