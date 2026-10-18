@@ -1296,7 +1296,9 @@ function renderGuided(){
       if(el.dataset.i==='0'){ const good=el.value===w[0]; el.classList.toggle('ok',good&&!!el.value);
         if(el.value&&!good){ msg(FIRST_MSG,'info'); el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400); el.select(); return; }
         if(good){ linkLand(); msg('','info'); } }
-      if(el.value){ lastPut={el,ch:el.value,t:Date.now()}; const nx=ins[ins.indexOf(el)+1]; if(nx) setTimeout(()=>{ if(document.activeElement===el) nx.focus({preventScroll:true}); },0); } };
+      // 터치 기기는 바로 옮김(아이폰은 setTimeout 안에서 초점을 옮기면 자판이 내려갔다 올라오며 화면이 흔들릴 수 있음). 실제 키보드(PC·크롬북)는 키 입력이 끝난 뒤에
+      if(el.value){ lastPut={el,ch:el.value,t:Date.now()}; const nx=ins[ins.indexOf(el)+1];
+        if(nx){ if(window.matchMedia&&matchMedia('(pointer:coarse)').matches) nx.focus({preventScroll:true}); else setTimeout(()=>{ if(document.activeElement===el) nx.focus({preventScroll:true}); },0); } } };
     ins.forEach(el=>{ el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
       el.addEventListener('focus',()=>el.select());
       el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus({preventScroll:true}); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
@@ -1347,10 +1349,11 @@ function linkLand(){ if(calm()) return; [$app.querySelector('.cpu .big .last'),.
   const IOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1), IOS_BAR=64, pad=IOS?IOS_BAR:8;
   // 화면 떨림 막기: 같은 입력 묶음(빈칸 채우기 칸들·입력칸의 form)과 같은 보이는 높이에서는 한 번만 맞춤.
   // 칸을 옮길 때마다 브라우저(특히 아이폰 사파리)가 그 칸을 자판 위로 스크롤하는데, 그때마다 다시 맞추면 서로 밀고 당겨 위아래로 흔들림
-  let pinned=null;
+  // 아이폰 사파리는 스크롤하면 주소창(도구 막대)이 줄었다 늘었다 하며 보이는 높이가 50~80px 바뀜 → 그 정도 변화에는 다시 맞추지 않음(BIG 이상일 때만: 키보드 오르내림·종류 바뀜)
+  let pinned=null, kbH=0, kbUntil=0; const BIG=100;
   const pin=()=>{ const a=field(); if(!a||!root.classList.contains('kb')||Date.now()<touchUntil) return;
     const y=e=>e.getBoundingClientRect().bottom+scrollY+pad, form=a.closest('form')||a, cpu=$app.querySelector('.cpu');   // 문서 기준 아래끝(+가리는 바 높이)
-    if(pinned&&pinned.form===form&&Math.abs(pinned.h-vv.height)<4) return;
+    if(pinned&&pinned.form===form&&Math.abs(pinned.h-vv.height)<BIG) return;
     pinned={form,h:vv.height};
     // 확인 버튼까지 보이게 하되, 그러려면 컴퓨터 단어 카드가 가려지는 아주 작은 화면에서는 입력칸까지만(확인은 키보드의 Enter)
     // 이미 필요한 곳(컴퓨터 단어 카드 위쪽, 입력칸)이 다 보이면 건드리지 않음 — 칸을 옮길 때마다 브라우저의 스크롤과 다투면 화면이 떨림
@@ -1368,10 +1371,12 @@ function linkLand(){ if(calm()) return; [$app.querySelector('.cpu .big .last'),.
     full=Math.max(full,vv.height);
     // 터치 화면에서만(컴퓨터 창 크기 바꾸기 제외), 두 손가락으로 확대한 때는 제외
     const on=!!field()&&full-vv.height>120&&Math.abs((vv.scale||1)-1)<.05&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
-    if(on!==root.classList.contains('kb')){ root.classList.toggle('kb',on); if(!on&&scrollY>0&&$app.querySelector('.status')) scrollTo(0,0); }   // 키보드가 내려가면 게임 화면은 맨 위로
-    root.style.setProperty('--vvt',vv.offsetTop+'px'); root.style.setProperty('--kbh',Math.round(full-vv.height)+'px');
-    if(!on) pinned=null;
-    clearTimeout(timer); pin(); if(e&&e.type==='resize') timer=setTimeout(()=>{ pinned=null; pin(); },250); };   // 키보드가 오르내리면 다 움직인 뒤 한 번 더(그때는 다시 맞춤)
+    if(on!==root.classList.contains('kb')){ root.classList.toggle('kb',on); kbH=0; kbUntil=Date.now()+450; if(!on&&scrollY>0&&$app.querySelector('.status')) scrollTo(0,0); }   // 키보드가 내려가면 게임 화면은 맨 위로
+    root.style.setProperty('--vvt',vv.offsetTop+'px');
+    // 아래 여백(키보드 높이)은 키보드가 올라오는 동안(0.45초)만 늘리고, 그 뒤로는 크게(BIG 이상) 바뀔 때만 — 주소창 때문에 높이가 바뀔 때마다 문서 높이가 바뀌면 화면이 흔들림
+    if(on){ const h=Math.round(full-vv.height); if(h>kbH&&(Date.now()<kbUntil||!kbH||h-kbH>=BIG)){ kbH=h; root.style.setProperty('--kbh',kbH+'px'); } } else pinned=null;
+    clearTimeout(timer); pin();
+    if(e&&e.type==='resize'&&on&&(!pinned||Math.abs(vv.height-pinned.h)>=BIG||Date.now()<kbUntil)) timer=setTimeout(()=>{ pinned=null; pin(); },250); };   // 키보드가 오르내리면 다 움직인 뒤 한 번 더(그때는 다시 맞춤)
   // 브라우저가 스크롤만 한 때(visualViewport scroll)는 위치 값만 고치고 다시 맞추지 않음
   vv.addEventListener('resize',update); vv.addEventListener('scroll',()=>root.style.setProperty('--vvt',vv.offsetTop+'px'));
   addEventListener('focusin',()=>setTimeout(update,50)); addEventListener('focusout',()=>setTimeout(update,80));

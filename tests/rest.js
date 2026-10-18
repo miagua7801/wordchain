@@ -24,7 +24,7 @@ const {target,open}=require('./lib');
   // 주관식 단계: 목표 바로 앞까지 성공 수를 올린 뒤 기본 어휘가 아닌 단어로 정답 → 통과
   const passTyped=async()=>{ const goal=await H(()=>document.querySelectorAll('.status .dot').length);
     await H(g=>window.__wordchain.tweak({streak:g-1}),goal);
-    const cw=await H(()=>window.__wordchain.cpu()); const ok=w=>w[0]===cw.slice(-1)&&w!==cw; await typeW(W.find(ok)||ANYW.find(ok));
+    const cw=await H(()=>window.__wordchain.cpu()); const ok=w=>w[0]===cw.slice(-1)&&w!==cw&&!avoid.has(w); await typeW(W.find(ok)||ANYW.find(ok));
     await p.waitForSelector('#rest',{timeout:4000}); };
   const allShown=()=>p.waitForFunction(()=>{ const r=window.__wordchain.rest(); return r&&r.shown===r.hl.length&&!!document.getElementById('go'); },null,{timeout:15000});
   // ① 요약을 Enter로 닫고 ② 다시 보기를 Enter로 전부 → "다음 ▶" → ③ 상자(저절로 열림)
@@ -152,7 +152,7 @@ const {target,open}=require('./lib');
   await seed({'wordchain-v2':prog('normal'),'wordchain-stars-v1':'0'}); await startLv('normal',2);
   const L1=[];
   for(let i=0;i<2;i++){ const cw=await H(()=>window.__wordchain.cpu()); const w=await pick(W,cw.slice(-1)); L1.push(cw,w); await typeW(w); await nextCpu(cw); }
-  const miss=await H(()=>window.__wordchain.cpu()); const wrongW=W.find(w=>w[0]!==miss.slice(-1)&&!L1.includes(w));
+  const miss=await H(()=>window.__wordchain.cpu()); const wrongW=W.find(w=>w[0]!==miss.slice(-1)&&!L1.includes(w)); avoid.add(wrongW);
   await typeW(wrongW); await p.waitForSelector('#ov1'); await p.click('#ov1'); await p.waitForTimeout(900);
   const live=await H(()=>window.__wordchain.feed());
   ok(live.includes('cpu:'+miss)&&live.includes('---')&&!live.some(x=>x.endsWith(':'+wrongW)),'게임 중 채팅: 대답 못 한 컴퓨터 단어도 남고, 줄이 바뀌면 "새로 시작", 틀린 시도는 없음 — '+live.join(' '));

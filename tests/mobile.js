@@ -51,6 +51,16 @@ const {target,open,startLevel}=require('./lib');
       ok(n===0&&new Set(ys).size<=2,`아이폰 기초 ${lv}단계: 칸을 옮겨 쓰고 브라우저가 스크롤해도 앱이 다시 스크롤하지 않음(앱 스크롤 ${n}번, 위치 ${ys.join(',')})`);
       await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
     }
+    // 사파리 도구 막대: 스크롤하면 주소창이 줄었다 늘었다 하며 보이는 높이가 50~80px 바뀜. 그때마다 앱이 아래 여백·위치를 바꾸면 다시 스크롤 → 막대가 또 바뀌는 고리로 흔들림
+    // → 키보드가 떠 있는 동안 작은 높이 변화에는 여백(--kbh)도 위치도 그대로
+    await startLevel(p,url,'basic',3); await p.waitForTimeout(500);
+    await p.focus('#bslots .bin'); await p.evaluate(k=>window.__kb(k),K); await p.waitForTimeout(500);
+    const tb=await p.evaluate(async()=>{ let n=0; const o=window.scrollTo; window.scrollTo=function(){ n++; return o.apply(window,arguments); };
+      const kbh0=getComputedStyle(document.documentElement).getPropertyValue('--kbh'), H0=document.documentElement.scrollHeight, ks=new Set([kbh0]);
+      for(const d of [-60,0,-80,-20,0,-60,0]){ window.__kb(330+d); await new Promise(r=>setTimeout(r,320)); ks.add(getComputedStyle(document.documentElement).getPropertyValue('--kbh')); }
+      return {n,ks:[...ks],dh:document.documentElement.scrollHeight-H0}; });
+    ok(tb.n===0&&tb.ks.length===1&&tb.dh===0,`아이폰 기초 3단계: 주소창이 줄었다 늘었다 해도(보이는 높이 ±80px) 앱 스크롤 ${tb.n}번, 아래 여백 ${tb.ks.join('/')}, 문서 높이 변화 ${tb.dh}px — 흔들림 고리 없음`);
+    await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 휴대폰: 퀴즈 중에는 채팅 말풍선을 숨기고(정답 뒤에도 문제 창 그대로), 단계를 마친 뒤 다시 보기에서만 보임
   { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true}); const H=(f,a)=>p.evaluate(f,a);
