@@ -68,5 +68,6 @@ special lists in order to help improve the overall quality of ESDB.
 
 - 확인: Google Fonts 저장소(github.com/google/fonts)의 `ofl/<글꼴>/METADATA.pb`에 모두 `license: "OFL"`, 같은 폴더에 `OFL.txt`가 있음 (2026년 10월 확인)
 - 지금은 글꼴 파일을 저장소에 넣지 않고 Google Fonts에서 불러옵니다.
+- 이모지는 사용자 기기의 시스템 글꼴로 표시됨(이모지 그림이나 이모지 글꼴은 앱에 넣지 않음).
 - 메모: 나중에 글꼴 파일을 앱 안에 넣는(자체 포함) 방식으로 바꾸면, 각 글꼴의 저작권 고지와 OFL 1.1 전문(`OFL.txt`)을 함께 넣어야 합니다. 글꼴 이름을 바꾸어 고친 글꼴로 배포할 때는 OFL의 예약 글꼴 이름(Reserved Font Name) 조건도 확인합니다.
 

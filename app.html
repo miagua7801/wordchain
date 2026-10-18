@@ -591,7 +591,7 @@ function suggest(w){
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -1215,6 +1215,7 @@ function showCredits(back){
     <blockquote lang="en"><p>${esc(copy||'')}</p>${perm.map(l=>`<p>${esc(l)}</p>`).join('')}</blockquote>
     <h4>글꼴</h4>
     <p>Jua, Lexend, Noto Sans KR (Google Fonts) — <span lang="en">SIL Open Font License 1.1</span></p>
+    <p>이모지는 사용자 기기의 시스템 글꼴로 표시됨</p>
   </div>`,'닫기',()=>back&&back.focus());
 }
 function confirmBtn(sel,txt,fn){const b=$app.querySelector(sel);const orig=b.textContent;let armed=false,t;
@@ -1932,7 +1933,8 @@ function showHint(){
   const h=G.hintWord; if(!h) return;
   const shown=G.hintStep; // 1: 뜻 + 첫 글자, 2: 두 글자, 3: 세 글자
   const pat=disp(h).split('').map((c,i)=>i<shown?c:'_').join(' ');
-  area.innerHTML=`<div class="hintbox">💡 <b>${esc(h.ko)}</b> ${h.emoji||''} — ${h.w.length}글자${G.L.time?' (+5초)':''}<div class="pat word">${esc(pat)}</div>${shown<3?'<small>힌트를 한 번 더 쓰면 글자가 하나 더 보여요.</small>':''}</div>`;
+  // 힌트 뜻에서는 접미사 단어의 원래 단어 표시(예: kindly의 "(kind+ly)")를 뺌 — 답을 알려 주는 셈이라
+  area.innerHTML=`<div class="hintbox">💡 <b>${esc(plainKo(h.ko))}</b> ${h.emoji||''} — ${h.w.length}글자${G.L.time?' (+5초)':''}<div class="pat word">${esc(pat)}</div>${shown<3?'<small>힌트를 한 번 더 쓰면 글자가 하나 더 보여요.</small>':''}</div>`;
 }
 
 // ---------- 타이머 ----------

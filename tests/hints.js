@@ -57,6 +57,12 @@ const {target,open}=require('./lib');
   await p.click('#back'); await p.waitForTimeout(150);
   await p.click('#reset'); await p.click('#reset'); await p.waitForTimeout(200);
   ok((await p.textContent('.trackbar')).includes('보관 힌트 0/5')&&(await stars())===40,'이 수준 기록 지우기: 보관 힌트 0, 별 ⭐40 그대로');
+  // 힌트 뜻에는 접미사 단어의 원래 단어 표시(kindly의 "(kind+ly)")가 없음(답을 알려 주지 않게)
+  await seed({normal:lv(0)},0); await startLv('normal',2);
+  await p.evaluate(()=>{ window.__wordchain.forceCpu('book'); window.__wordchain.setHintWord('kindly'); }); await p.waitForTimeout(200);
+  await p.click('#hintBtn'); await p.waitForTimeout(150);
+  const hb=await p.textContent('#hintArea .hintbox');
+  ok(hb.includes('친절하게')&&!hb.includes('kind+ly')&&!hb.includes('('),'힌트 뜻: "친절하게"만(원래 단어 표시 "(kind+ly)" 없음) — '+hb.replace(/\s+/g,' ').slice(0,40));
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();
