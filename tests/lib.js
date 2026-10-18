@@ -7,12 +7,14 @@ const { pathToFileURL } = require('url');
 function target(arg){ return arg && /^https?:|^file:/.test(arg) ? arg : pathToFileURL(path.resolve(__dirname,'../dist/word-chain-challenge.html')).href; }
 
 // intro:true면 규칙 창(수준·단계 안내)을 띄움. 기본은 건너뜀(window.__wordchainNoIntro)
+// student:true면 학생 화면(선생님 모드 끔). 기본은 선생님 모드를 켜서 '모든 단계 열기' 버튼을 씀
 async function open(opts={}){
-  const {intro,...po}=opts;
+  const {intro,student,...po}=opts;
   const b=await chromium.launch({args:['--mute-audio']});
   const p=await b.newPage(po);
   await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(u){setTimeout(()=>u.onend&&u.onend(),0);},cancel(){}}}));
   if(!intro) await p.addInitScript(()=>{ window.__wordchainNoIntro=true; });
+  if(!student) await p.addInitScript(()=>{ try{ localStorage.setItem('wordchain-teacher','1'); }catch(e){} });
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));
   return {b,p,errs};
 }
@@ -27,6 +29,7 @@ const cpuWord=p=>p.$eval('.cpu .big',e=>e.textContent);
 // 일부러 틀려서 새 끝말잇기로 넘어감
 async function skip(p){
   if(await p.$('#inp')){ await p.fill('#inp','zzzz'); await p.press('#inp','Enter'); }
+  else if(await p.$('#bslots')) await p.evaluate(()=>{ const t=window.__wordchain.target(); document.querySelectorAll('#bslots .bin').forEach(b=>b.value=t[0]==='z'?'q':'z'); document.querySelector('#answer form').requestSubmit(); });   // 빈칸 채우기: 첫 글자를 틀리게
   else await p.click('.choice');
   await p.click('#ov1',{timeout:1500}).catch(()=>{});
 }

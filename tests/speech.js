@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
 const {target}=require('./lib');
 (async()=>{
   const url=target(process.argv[2]);
-  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage(); await p.addInitScript(()=>{ window.__wordchainNoIntro=true; });
+  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage(); await p.addInitScript(()=>{ window.__wordchainNoIntro=true; try{ localStorage.setItem('wordchain-teacher','1'); }catch(e){} });
   await p.addInitScript(()=>{
     const log=[]; window.__tts=log; let busy=0; const t0=performance.now(); const now=()=>Math.round(performance.now()-t0);
     const ss={ get speaking(){return busy>0;}, get pending(){return false;},

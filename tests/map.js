@@ -27,7 +27,8 @@ const {target,open}=require('./lib');
   ok((await H(()=>document.querySelector('.rpg-lines').classList.contains('all')))&&(await p.textContent('#rpgTitle')).includes('보통'),'줄이 나오는 중에 Enter → 한 번에 모두(쪽은 그대로)');
   await p.keyboard.press('Enter'); await p.waitForTimeout(80);
   const pg2=await p.textContent('.rpg-body');
-  ok(pg2.includes('통과 규칙')&&pg2.includes('하트를 다 잃기 전에')&&(await p.textContent('#rpgNext')).includes('단계 맵 보기'),'2쪽: 통과 규칙(하트), 마지막 버튼 "단계 맵 보기"');
+  const n2=await p.$$eval('.rpg-lines li',a=>a.length);
+  ok(pg2.includes('공통 규칙')&&pg2.includes('하트 3개')&&pg2.includes('다 잃으면 처음부터')&&pg2.includes('힌트는 도전마다 3번')&&n2<=3&&(await p.textContent('#rpgNext')).includes('단계 맵 보기'),`2쪽: 공통 규칙(하트·통과·힌트) ${n2}줄로 짧게, 마지막 버튼 "단계 맵 보기"`);
   await p.keyboard.press('Escape'); await p.waitForTimeout(80);
   ok(!(await p.$('.rpg-ov'))&&!!(await p.$('#map')),'Esc(또는 SKIP)로 닫힘 → 단계 맵');
   await p.click('#rules'); await p.waitForSelector('.rpg-ov'); await p.click('#rpgSkip'); await p.waitForTimeout(80);
@@ -67,7 +68,7 @@ const {target,open}=require('./lib');
   ok((await p.textContent('#rpgTitle'))==='1단계 · 빈칸 채우기'&&lines.some(l=>s1.includes(l)),'단계 규칙 1쪽: "1단계 · 빈칸 채우기" + 컴퓨터 한마디');
   await p.click('#rpgNext'); await p.click('#rpgNext'); await p.waitForTimeout(80);
   const s2=await p.textContent('.rpg-body');
-  ok(s2.includes('빈칸')&&s2.includes('5번 성공')&&s2.includes('힌트는 한 번 도전에 3번')&&(await p.textContent('#rpgNext')).includes('시작하기'),'단계 규칙 2쪽: 하는 방법(빈칸)·목표 5번·힌트 3번, "시작하기"');
+  ok(s2.includes('이번 단계')&&s2.includes('5번')&&s2.includes('첫 칸')&&!/힌트|하트/.test(s2)&&(await p.textContent('#rpgNext')).includes('시작하기'),'단계 규칙 2쪽: 이 단계만의 것(목표 5번·첫 칸 팁), 공통 규칙(힌트·하트)은 되풀이하지 않음, "시작하기"');
   await p.click('#rpgSkip'); await p.waitForTimeout(700);
 
   // 7. 게임 화면: ☰ · "보통 1단계" · 소리 아이콘, 채팅 위 가운데 문제 창
@@ -104,6 +105,19 @@ const {target,open}=require('./lib');
   await p.setViewportSize({width:375,height:812}); await p.waitForTimeout(200);
   const mw=await H(()=>{ const r=document.getElementById('qm').getBoundingClientRect(); return [Math.round(r.left),Math.round(r.right),document.documentElement.scrollWidth]; });
   ok(mw[0]>=8&&mw[1]<=367&&mw[2]<=375,'휴대폰 너비: 문제 창이 화면 안(가로 넘침 없음) '+mw);
+  // 10. 선생님 모드: 학생 화면에는 '모든 단계 열기'가 없고, 버전 글자를 5번 누르면 보임(이 기기에 저장), 끄기
+  { const s=await open({viewport:{width:1280,height:800},student:true}); const q=s.p;
+    await q.goto(url); await q.evaluate(()=>localStorage.clear()); await q.goto(url); await q.click('[data-t="basic"]'); await q.waitForTimeout(100);
+    ok(!(await q.$('#teacher'))&&!!(await q.$('#reset')),'학생 화면: "선생님: 모든 단계 열기" 버튼 없음(기록 지우기는 그대로)');
+    for(let i=0;i<4;i++) await q.click('#ver'); ok(!(await q.$('#teacher')),'  버전 글자 4번으로는 안 보임');
+    await q.click('#ver'); await q.waitForTimeout(100);
+    ok(!!(await q.$('#teacher'))&&(await q.evaluate(()=>localStorage.getItem('wordchain-teacher')))==='1','버전 글자를 3초 안에 5번 누르면 선생님 버튼이 보임(이 기기에 저장)');
+    await q.click('#teacher'); await q.click('#teacher'); await q.waitForTimeout(100);
+    ok((await q.$$('.map .node.locked')).length===0,'  선생님: 모든 단계 열기');
+    await q.click('#teacherOff'); await q.waitForTimeout(100); ok(!(await q.$('#teacher')),'"선생님 모드 끄기" → 다시 숨김');
+    await q.goto(url+'?teacher=1'); await q.click('[data-t="basic"]'); ok(!!(await q.$('#teacher')),'주소 ?teacher=1 로도 켜짐');
+    await q.goto(url+'?teacher=0'); await q.click('[data-t="basic"]'); ok(!(await q.$('#teacher')),'?teacher=0 으로 끔');
+    if(s.errs.length) console.log('errors',s.errs); await s.b.close(); }
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();

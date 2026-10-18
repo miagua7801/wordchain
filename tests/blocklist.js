@@ -13,7 +13,7 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   const plain=BL.strong.filter(s=>distNoAllow.includes(s)), inWl=BL.exact.filter(w=>wl.includes(w));
   ok(!plain.length&&!inWl.length,`소스에 강한 표현 ${plain.length}개·영어 단어 목록에 금지어 ${inWl.length}개 (목록 ${BL.exact.length+BL.strong.length}개는 base64로 인코딩)`);
 
-  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:1280,height:800}}); await p.addInitScript(()=>{ window.__wordchainNoIntro=true; });
+  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:1280,height:800}}); await p.addInitScript(()=>{ window.__wordchainNoIntro=true; try{ localStorage.setItem('wordchain-teacher','1'); }catch(e){} });
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));
   // 소리 기록용 가짜 음성 엔진(소리 없음)
   await p.addInitScript(()=>{ window.__said=[]; Object.defineProperty(window,'speechSynthesis',{value:{speak(u){ window.__said.push(u.text); setTimeout(()=>u.onend&&u.onend(),0); },cancel(){}}}); });

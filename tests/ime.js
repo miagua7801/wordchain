@@ -76,6 +76,27 @@ const KO={a:'ㅁ',b:'ㅠ',c:'ㅊ',d:'ㅇ',e:'ㄷ',f:'ㄹ',g:'ㅎ',h:'ㅗ',i:'ㅑ
   const vals=await p.$$eval('.bin',a=>a.map(e=>e.value).join(''));
   ok(vals===idx.map(i=>w[i]).join('')&&!/[ㄱ-ㅣ가-힣]/.test(vals),`빈칸 채우기(${w}): 한글 자판으로 친 글자 → 칸마다 "${vals}"`);
 
+  // ④ 실제 한글 입력기처럼 영문 고정(읽기 전용) 칸에도 조합한 한글을 넣는 경우: 키마다 영어 한 글자만, 다음 칸에 같은 글자가 들어가지 않음
+  // (입력기가 읽기 전용을 무시하는 것을 흉내: 키를 누른 뒤 지금 초점 칸의 읽기 전용을 잠깐 풀고 한글 조합을 확정)
+  const leakKey=async ch=>{ const code='Key'+ch.toUpperCase();
+    await cdp.send('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'Process',code,windowsVirtualKeyCode:229,nativeVirtualKeyCode:229});
+    await H(()=>{ document.activeElement.readOnly=false; });
+    await cdp.send('Input.imeSetComposition',{text:KO[ch],selectionStart:1,selectionEnd:1}); await cdp.send('Input.insertText',{text:KO[ch]});
+    await H(()=>{ if(document.activeElement.classList.contains('engmode')) document.activeElement.readOnly=true; });
+    await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Process',code,windowsVirtualKeyCode:229}); await p.waitForTimeout(40); };
+  await startLevel(p,url,'basic',3); await p.waitForTimeout(300);
+  const w4=await H(()=>window.__wordchain.target()); const idx4=await p.$$eval('.bin',a=>a.map(e=>+e.dataset.i));
+  await leakKey(w4[idx4[0]]); await p.waitForTimeout(80);
+  const v4=await p.$$eval('.bin',a=>a.map(e=>e.value));
+  ok(v4[0]===w4[idx4[0]]&&v4.slice(1).every(x=>x===''),`빈칸 채우기(${w4}): 입력기가 한글을 넣어도 첫 칸만 "${w4[idx4[0]]}", 다음 칸은 비어 있음 — ${JSON.stringify(v4)}`);
+  for(const i of idx4.slice(1)) await leakKey(w4[i]);
+  await p.waitForTimeout(80); const v4b=await p.$$eval('.bin',a=>a.map(e=>e.value).join(''));
+  ok(v4b===idx4.map(i=>w4[i]).join(''),`  모든 칸: "${v4b}"`);
+  await startLevel(p,url,'normal',4); await p.waitForTimeout(400); await p.focus('#inp');
+  for(const c of 'kite') await leakKey(c);
+  await p.waitForTimeout(80); const v5=await p.inputValue('#inp');
+  ok(v5==='kite',`보통 4단계 입력칸: 입력기가 한글을 넣어도 글자가 두 번씩 들어가지 않음 "${v5}"`);
+
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();

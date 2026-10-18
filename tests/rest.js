@@ -163,10 +163,13 @@ const {target,open}=require('./lib');
   ok(r4.length===7&&r4.slice(0,6).join()===expL.join()&&r4[6].startsWith('me:')&&!r4.some(x=>x==='cpu:'+miss||x.endsWith(':'+wrongW))&&(await p.textContent('#fl .fdiv')).trim()==='새로 시작',
     `다시 보기: 틀려서 새로 시작한 앞 줄의 이어 간 단어도 보여 주고 줄 사이 "새로 시작"(대답 못 한 ${miss}·틀린 시도 ${wrongW}는 없음): `+r4.join(' '));
 
-  // 5. 동작 줄이기: 처음부터 전부 보임
+  // 5. 동작 줄이기: 움직임 없이 하나씩 차례로
   await p.emulateMedia({reducedMotion:'reduce'});
   await seed({'wordchain-v2':prog('normal'),'wordchain-stars-v1':'0'}); await startLv('normal',2); await passTyped(); await toReplay();
-  ok((await RS()).shown===(await RS()).hl.length&&!(await p.$('#fl li.wait'))&&!(await p.$('#fl li.up'))&&!!(await p.$('#go')),'동작 줄이기: 말풍선이 처음부터 전부 보임(올라오는 효과 없음), "다음 ▶" 바로');
+  const rm0=await RS(), rmUp=await p.$('#fl li.up');
+  await p.waitForTimeout(800); const rm1=await RS();
+  ok(rm0.shown===1&&rm1.shown===2&&!rmUp&&!(await p.$('#fl li.up'))&&!(await p.$('#go')),`동작 줄이기: 올라오는 움직임 없이 말풍선이 하나씩 차례로(처음 ${rm0.shown}개, 0.8초 뒤 ${rm1.shown}개)`);
+  await allShown(); ok(!!(await p.$('#go')),'동작 줄이기: 다 나오면 "다음 ▶"');
   await p.click('#go'); await p.waitForSelector('#reward',{timeout:3000}); ok(!(await p.$('.gift.opening')),'동작 줄이기: 상자 흔들림 없이 열림');
   await p.emulateMedia({reducedMotion:'no-preference'});
 

@@ -21,6 +21,35 @@ const {target,open,startLevel}=require('./lib');
     }
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close();
   }
+  // 아이폰: 자판 위에 떠 있는 주소창(약 64px)에 입력칸·뜻이 가리지 않게
+  { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'}); await p.addInitScript(fakeVV);
+    const K=330;
+    for(const [t,lv] of [['normal',3],['basic',3],['hard',1]]){
+      await startLevel(p,url,t,lv); await p.waitForTimeout(500);
+      await p.focus(await p.$('#inp')?'#inp':'#bslots .bin'); await p.evaluate(()=>scrollTo(0,180));
+      await p.evaluate(k=>window.__kb(k),K); await p.waitForTimeout(400);
+      const r=await p.evaluate(()=>{ const a=document.activeElement, box=a.closest('.slots')||a, ko=document.querySelector('.target .tko')||document.querySelector('.cpu .ko');
+        return {inp:box.getBoundingClientRect().bottom,ko:ko.getBoundingClientRect().top,kob:ko.getBoundingClientRect().bottom}; });
+      ok(r.inp<=K-56&&r.ko>=0&&r.kob<=K-56,`아이폰 ${t} ${lv}단계: 입력칸(${Math.round(r.inp)})·뜻(${Math.round(r.ko)}~${Math.round(r.kob)})이 주소창(키보드 위 ${K-64}~${K}px)에 가리지 않음`);
+      await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
+    }
+    ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
+  // 휴대폰: 퀴즈 중에는 채팅 말풍선을 숨기고(정답 뒤에도 문제 창 그대로), 단계를 마친 뒤 다시 보기에서만 보임
+  { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true}); const H=(f,a)=>p.evaluate(f,a);
+    await startLevel(p,url,'hard',1); await p.waitForTimeout(400);
+    const W=await H(()=>(VOCAB_E+'|'+VOCAB_M).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w)));
+    const feedShown=()=>H(()=>{ const f=document.getElementById('feed'); return getComputedStyle(f).display!=='none'&&f.getBoundingClientRect().height>0; });
+    ok(!(await feedShown()),'휴대폰 퀴즈 중: 채팅 말풍선 숨김');
+    const cw=await H(()=>window.__wordchain.cpu()); await p.fill('#inp',W.find(x=>x[0]===cw.slice(-1)&&x!==cw)); await p.press('#inp','Enter'); await p.waitForTimeout(1300);
+    ok(!(await feedShown())&&!(await H(()=>document.getElementById('qm').classList.contains('away'))),'정답 뒤에도 말풍선 없이 문제 창 그대로');
+    const qt=await H(()=>document.getElementById('qm').getBoundingClientRect().top-document.querySelector('.gscreen .status').getBoundingClientRect().bottom);
+    ok(qt<30,`문제 창은 상태 줄 바로 아래(${Math.round(qt)}px)`);
+    const goal=await H(()=>document.querySelectorAll('.status .dot').length); await H(g=>window.__wordchain.tweak({streak:g-1}),goal);
+    for(let i=0;i<40&&(await H(()=>window.__wordchain.cpu()))===cw;i++) await p.waitForTimeout(100);
+    const c2=await H(()=>window.__wordchain.cpu()); await p.fill('#inp',W.find(x=>x[0]===c2.slice(-1)&&x!==c2&&x!==cw)); await p.press('#inp','Enter');
+    await p.waitForSelector('#rest',{timeout:5000}); await p.waitForTimeout(100); await p.keyboard.press('Enter'); await p.waitForTimeout(900);
+    ok((await H(()=>window.__wordchain.rest().step))===2&&(await feedShown())&&(await p.$$('#fl li:not(.wait)')).length>=1,'단계를 마친 뒤 다시 보기에서는 말풍선이 보임');
+    ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 끝 글자 건네주기: 휴대폰은 선 대신 끝 글자가 첫 글자 자리로 건너감(1단계 보기마다, 3단계 글자 없는 동그라미)
   const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true});
   for(const lv of [1,2,3]){

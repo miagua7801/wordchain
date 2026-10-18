@@ -13,15 +13,15 @@ const {target,open,startLevel}=require('./lib');
 
   // 1. 수준 목록·단계 목록: 목표 수와 하트 문구
   await p.evaluate(()=>localStorage.clear()); await p.goto(url);
-  // 수준 규칙 창 둘째 쪽(통과 규칙)을 읽음
+  // 수준 규칙 창 둘째 쪽(공통 규칙)을 읽음
   const introRules=async t=>{ await p.evaluate(()=>{ window.__wordchainNoIntro=false; }); await p.click(`[data-t="${t}"]`);
     await p.click('#rpgNext'); await p.click('#rpgNext').catch(()=>{}); await p.waitForFunction(()=>document.querySelectorAll('.rpg-dots i')[1]?.classList.contains('on'));
     const txt=await p.textContent('.rpg-body'); await p.click('#rpgSkip'); await p.evaluate(()=>{ window.__wordchainNoIntro=true; }); return txt.replace(/\s+/g,' '); };
   const rn=await introRules('normal');
   await p.hover('[data-lv="3"]'); await p.waitForTimeout(150); const tip3=await p.textContent('#tip');
-  ok(rn.includes('5 → 6 → 7 → 8번')&&rn.includes('하트를 다 잃기 전에')&&!rn.includes('틀리지 않고')&&tip3.includes('7번 성공 · ❤️ 3'),'보통 규칙 창: 5·6·7·8번 "하트를 다 잃기 전에", 단계 맵 말풍선 "7번 성공 · ❤️ 3"');
+  ok(rn.includes('하트 3개')&&rn.includes('다 잃으면 처음부터')&&!rn.includes('연속 기록')&&tip3.includes('7번 성공 · ❤️ 3'),'보통 규칙 창: "하트 3개 … 다 잃으면 처음부터", 단계 맵 말풍선 "7번 성공 · ❤️ 3"');
   await p.click('#chg'); const rh=await introRules('hard'); await p.click('#chg'); const rb=await introRules('basic');
-  ok(rh.includes('6 → 7 → 8 → 8 → 6번')&&rh.includes('하트')&&rb.includes('4 → 5 → 5 → 6번')&&rb.includes('틀리지 않고 연속으로')&&!rb.includes('하트'),'도전 6·7·8·8·6(하트), 기초는 그대로(연속)');
+  ok(rh.includes('하트 3개')&&rb.includes('연속 기록이 0부터')&&rb.includes('연속으로 성공')&&!rb.includes('하트'),'도전은 하트, 기초는 그대로(연속 기록)');
 
   // 2. 틀리면 하트 1개, 성공 수 그대로
   await startLevel(p,url,'normal',2); await p.waitForTimeout(900);
