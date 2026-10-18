@@ -2,44 +2,70 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0f6e7a">
+<meta name="theme-color" content="#343E7B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="끝말잇기">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Lexend:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <style>
-/* Layout: 한 화면 게임 — 위에 진행 상태, 가운데 컴퓨터 단어 카드, 아래에 답 영역. 단어들은 "기차 칸"처럼 이어짐 */
+/* Layout: 한 화면 게임 — 위에 진행 상태, 가운데 컴퓨터 단어 카드, 아래에 답 영역
+   색: 밝은 화면 = 아케이드 퀘스트(두꺼운 테두리·아래 그림자 버튼, 남색 점수판), 어두운 화면 = 별밤 탐험(남색 밤하늘·별, 수준 색으로 빛남)
+   수준(기초·보통·도전)마다 포인트 색(--lv-*)과 밝은 화면의 바탕(--lv-*-bg)이 다름. 끝 글자 강조(--key)는 수준과 관계없이 한 색 */
 :root{
-  --bg:#eef3f6; --surface:#ffffff; --surface-2:#e2eaf0; --ink:#17323f; --muted:#5b7280; --ink-2:#3f5663;
-  --accent:#0f6e7a; --accent-ink:#ffffff; --link:#e9a23b; --link-soft:#fbe6c2;
-  --good:#2e8b57; --good-soft:#d8f0e2; --bad:#c2453a; --bad-soft:#f8dcd8; --line:#c9d6de;
-  --shadow:0 2px 0 rgba(23,50,63,.12);
+  --bg:#F3F4FB; --surface:#FFFFFF; --surface-2:#E9EBF6; --ink:#1C1F3A; --muted:#5A5F7A; --ink-2:#3A3F5C;
+  --accent:#343E7B; --accent-ink:#FFFFFF; --link:#FFC83D; --link-soft:#FFF3CF; --link-ink:#3A2A00;
+  --key:#343E7B; --key-ink:#FFFFFF; --key-soft:#E3E6F7;
+  --good:#2E8B57; --good-soft:#DDF3E8; --bad:#C2453A; --bad-soft:#F8DCD8; --line:#D3D7EA;
+  --shadow:0 2px 0 rgba(28,31,58,.12);
+  --hud:#343E7B; --hud-ink:#FFFFFF;
+  --outline:#1C1F3A; --chunk:0 4px 0 #1C1F3A; --chunk5:0 5px 0 #1C1F3A; --glow-r:0px; --glow-a:0%; --stars-o:0; --road-glow:0px; --map-bg:rgba(255,255,255,.65);
+  --node-bd:#1C1F3A; --node-sh:0 5px 0 #1C1F3A; --lock-sh:0 5px 0 #B9BED6; --qm-bd:#1C1F3A; --qm-sh:0 6px 0 #1C1F3A; --in-bd:#1C1F3A;
+  --lv-basic:#59BD93; --lv-basic-ink:#0E3324; --lv-basic-bg:#E7F6EF;
+  --lv-normal:#5B67F0; --lv-normal-ink:#FFFFFF; --lv-normal-bg:#ECEEFF;
+  --lv-hard:#F69B63; --lv-hard-ink:#3D1C06; --lv-hard-bg:#FFEFE4;
   --f-display:"Jua","Noto Sans KR",system-ui,sans-serif;
   --f-word:"Lexend","Noto Sans KR",system-ui,sans-serif;
   --f-body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+  --stars:radial-gradient(1.3px 1.3px at 12% 18%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 68% 9%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 86% 46%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 33% 72%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 58% 88%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 4% 55%,#fff 50%,transparent 51%);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1c22; --surface:#172a33; --surface-2:#203741; --ink:#e4eef2; --muted:#9db3bd; --ink-2:#c3d4db;
-  --accent:#4fb8c4; --accent-ink:#06262b; --link:#f0b456; --link-soft:#3d3220;
-  --good:#5cc489; --good-soft:#173a29; --bad:#ef7a6f; --bad-soft:#40211e; --line:#2c4651;
-  --shadow:0 2px 0 rgba(0,0,0,.35); color-scheme:dark}}
+  --bg:#1E2450; --surface:#2A3268; --surface-2:#343E7B; --ink:#FBFBFB; --muted:#C2C8E0; --ink-2:#DDE1F2;
+  --accent:#FBFBFB; --accent-ink:#1E2450; --link:#FFD166; --link-soft:#4A4130; --link-ink:#2B2000;
+  --key:#FBFBFB; --key-ink:#1E2450; --key-soft:#3A4380;
+  --good:#59BD93; --good-soft:#1F4A44; --bad:#FF8A80; --bad-soft:#4A2433; --line:#3E4884;
+  --shadow:0 2px 0 rgba(0,0,0,.35);
+  --hud:#343E7B; --hud-ink:#FBFBFB;
+  --outline:rgba(255,255,255,.18); --chunk:0 0 0 transparent; --chunk5:0 0 0 transparent; --glow-r:18px; --glow-a:22%; --stars-o:1; --road-glow:4px; --map-bg:rgba(255,255,255,.04);
+  --node-bd:initial; --node-sh:initial; --lock-sh:none; --qm-bd:#3E4884; --qm-sh:0 14px 40px rgba(0,0,0,.45); --in-bd:#3E4884;
+  --lv-basic:#59BD93; --lv-basic-ink:#0B2A1D; --lv-basic-bg:#1E2450;
+  --lv-normal:#B7BEF5; --lv-normal-ink:#1E2450; --lv-normal-bg:#1E2450;
+  --lv-hard:#F69B63; --lv-hard-ink:#2B1203; --lv-hard-bg:#1E2450;
+  color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1c22; --surface:#172a33; --surface-2:#203741; --ink:#e4eef2; --muted:#9db3bd; --ink-2:#c3d4db;
-  --accent:#4fb8c4; --accent-ink:#06262b; --link:#f0b456; --link-soft:#3d3220;
-  --good:#5cc489; --good-soft:#173a29; --bad:#ef7a6f; --bad-soft:#40211e; --line:#2c4651;
-  --shadow:0 2px 0 rgba(0,0,0,.35); color-scheme:dark}
+  --bg:#1E2450; --surface:#2A3268; --surface-2:#343E7B; --ink:#FBFBFB; --muted:#C2C8E0; --ink-2:#DDE1F2;
+  --accent:#FBFBFB; --accent-ink:#1E2450; --link:#FFD166; --link-soft:#4A4130; --link-ink:#2B2000;
+  --key:#FBFBFB; --key-ink:#1E2450; --key-soft:#3A4380;
+  --good:#59BD93; --good-soft:#1F4A44; --bad:#FF8A80; --bad-soft:#4A2433; --line:#3E4884;
+  --shadow:0 2px 0 rgba(0,0,0,.35);
+  --hud:#343E7B; --hud-ink:#FBFBFB;
+  --outline:rgba(255,255,255,.18); --chunk:0 0 0 transparent; --chunk5:0 0 0 transparent; --glow-r:18px; --glow-a:22%; --stars-o:1; --road-glow:4px; --map-bg:rgba(255,255,255,.04);
+  --node-bd:initial; --node-sh:initial; --lock-sh:none; --qm-bd:#3E4884; --qm-sh:0 14px 40px rgba(0,0,0,.45); --in-bd:#3E4884;
+  --lv-basic:#59BD93; --lv-basic-ink:#0B2A1D; --lv-basic-bg:#1E2450;
+  --lv-normal:#B7BEF5; --lv-normal-ink:#1E2450; --lv-normal-bg:#1E2450;
+  --lv-hard:#F69B63; --lv-hard-ink:#2B1203; --lv-hard-bg:#1E2450;
+  color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
+body{background:radial-gradient(120% 55% at 50% 112%,color-mix(in srgb,var(--tc,var(--accent)) var(--glow-a),transparent),transparent 70%) fixed,var(--tc-bg,var(--bg));color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
 .wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 40px}
 button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--key);outline-offset:2px}   /* 키보드 초점: 밝은 화면 남색·어두운 화면 흰색(노랑은 흰 바탕에서 잘 안 보임) */
 .trackbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
 h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
 .word{font-family:var(--f-word)}
 /* 수준별 색: 기초 초록 · 보통 청록 · 도전 주황 (맵의 길·단계 원, 첫 화면 버튼) */
-[data-tc="basic"]{--tc:var(--good)} [data-tc="normal"]{--tc:var(--accent)} [data-tc="hard"]{--tc:var(--link)}
+[data-tc="basic"]{--tc:var(--lv-basic);--tc-ink:var(--lv-basic-ink);--tc-bg:var(--lv-basic-bg)} [data-tc="normal"]{--tc:var(--lv-normal);--tc-ink:var(--lv-normal-ink);--tc-bg:var(--lv-normal-bg)} [data-tc="hard"]{--tc:var(--lv-hard);--tc-ink:var(--lv-hard-ink);--tc-bg:var(--lv-hard-bg)}
 .iconbtn{width:44px;height:44px;flex:none;padding:0;display:grid;place-items:center;font-size:20px;line-height:1;background:var(--surface);border:2px solid var(--line);border-radius:12px}
 .iconbtn:hover{border-color:var(--accent)}
 
@@ -48,11 +74,11 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .title h1{font-size:clamp(34px,8vw,52px);line-height:1.1}
 .title .sub{margin:0;font-family:var(--f-word);font-weight:600;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
 .tracksel{display:grid;gap:14px;width:min(100%,340px);margin-top:22px}
-.track{display:flex;align-items:center;gap:14px;padding:14px 22px;border-radius:20px;border:3px solid var(--tc);background:var(--surface);box-shadow:0 5px 0 var(--tc);font-family:var(--f-display);font-size:28px;text-align:left;transition:transform .12s,box-shadow .12s}
-.track:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--tc)}
-.track:active{transform:translateY(3px);box-shadow:0 2px 0 var(--tc)}
+.track{display:flex;align-items:center;gap:14px;padding:14px 22px;border-radius:20px;border:2px solid var(--outline);background:var(--tc);color:var(--tc-ink);box-shadow:var(--chunk5),0 0 var(--glow-r) color-mix(in srgb,var(--tc) 45%,transparent);font-family:var(--f-display);font-size:28px;text-align:left;transition:transform .12s,box-shadow .12s}
+.track:hover{transform:translateY(-2px)}
+.track:active{transform:translateY(3px);box-shadow:none}
 .track .ic{font-size:32px;line-height:1}.track .nm{flex:1}
-.track .pg{display:flex;gap:4px}.track .pg i{width:9px;height:9px;border-radius:50%;border:2px solid var(--line);background:var(--surface-2)}.track .pg i.on{background:var(--tc);border-color:var(--tc)}
+.track .pg{display:flex;gap:4px}.track .pg i{width:9px;height:9px;border-radius:50%;border:2px solid currentColor;opacity:.45}.track .pg i.on{background:currentColor;opacity:1}
 .rvsmall{margin-top:18px;background:none;border:2px solid var(--line);border-radius:999px;padding:4px 14px;font-size:14px;font-weight:500;color:var(--ink-2)}
 .rvsmall:hover{border-color:var(--accent)}
 .rvsmall .cnt{display:inline-block;margin-left:4px;padding:0 7px;border-radius:999px;background:var(--bad);color:#fff;font-size:12px;font-weight:700}
@@ -83,18 +109,18 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .mapbar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .mapbar h2{flex:1;text-align:center;font-size:26px}
 .maptools{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
-.map{position:relative;max-width:520px;height:var(--mh);margin:12px auto 0;border-radius:26px;border:2px solid var(--line);overflow:hidden;
-  background:radial-gradient(circle at 20% 15%,color-mix(in srgb,var(--tc) 14%,transparent),transparent 45%),radial-gradient(circle at 85% 80%,color-mix(in srgb,var(--tc) 12%,transparent),transparent 45%),var(--surface-2)}
+.map{position:relative;max-width:520px;height:var(--mh);margin:12px auto 0;border-radius:26px;border:2px solid var(--line);overflow:hidden;background-color:var(--map-bg);
+  background:radial-gradient(circle at 20% 15%,color-mix(in srgb,var(--tc) 14%,transparent),transparent 45%),radial-gradient(circle at 85% 80%,color-mix(in srgb,var(--tc) 12%,transparent),transparent 45%))}
 .map svg{position:absolute;inset:0;width:100%;height:100%;transition:filter .2s,opacity .2s}
 .map .road{fill:none;stroke:var(--line);stroke-width:16;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.map .road.open{stroke:var(--tc)}
+.map .road.open{stroke:var(--tc);filter:drop-shadow(0 0 var(--road-glow) var(--tc))}
 .map .lane{fill:none;stroke:var(--surface);stroke-width:3;stroke-dasharray:1 11;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.9}
 .deco{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);font-size:26px;opacity:.5;pointer-events:none;transition:filter .2s,opacity .2s}
-.node{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:76px;height:76px;padding:0;border-radius:50%;border:4px solid var(--tc);background:var(--surface);color:var(--ink);box-shadow:0 5px 0 color-mix(in srgb,var(--tc) 70%,#000);font-family:var(--f-display);font-size:32px;line-height:1;display:grid;place-items:center;transition:filter .2s,opacity .2s,transform .15s}
+.node{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:76px;height:76px;padding:0;border-radius:50%;border:4px solid var(--node-bd,var(--tc));background:var(--surface);color:var(--ink);box-shadow:var(--node-sh,0 0 16px color-mix(in srgb,var(--tc) 55%,transparent));font-family:var(--f-display);font-size:32px;line-height:1;display:grid;place-items:center;transition:filter .2s,opacity .2s,transform .15s}
 .node .nl{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:12px;padding:1px 10px;white-space:nowrap;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-family:var(--f-body);font-size:13px;font-weight:700;color:var(--ink)}
-.node.cleared{background:var(--tc);color:var(--surface)}
+.node.cleared{background:var(--tc);color:var(--tc-ink)}
 .node .ck{position:absolute;right:-8px;top:-8px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:2px solid var(--tc);font-size:13px;color:var(--tc)}
-.node.locked{border-color:var(--line);background:var(--surface-2);color:var(--muted);box-shadow:0 5px 0 var(--line);font-size:24px}
+.node.locked{border-color:var(--line);background:var(--surface-2);color:var(--muted);box-shadow:var(--lock-sh);font-size:24px}
 .node.cur::after{content:'';position:absolute;inset:-12px;border-radius:50%;border:3px solid var(--tc);animation:ring 1.6s ease-out infinite;pointer-events:none}
 @keyframes ring{from{opacity:.9;transform:scale(.85)}to{opacity:0;transform:scale(1.3)}}
 .node.goal{border-style:dashed;font-size:30px;box-shadow:none;background:var(--surface);cursor:default;width:64px;height:64px}
@@ -123,7 +149,9 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .gscreen{display:flex;flex-direction:column;min-height:calc(100dvh - 60px)}
 .ghead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ghead h2{flex:1;min-width:0;text-align:center;font-size:24px}
-.gscreen .status{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding:8px 14px;margin:0}
+.gscreen .status{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding:8px 14px;margin:0;background:var(--hud);color:var(--hud-ink);border-color:transparent}
+.gscreen .status .label,.gscreen .status .score,.gscreen .status .diff{color:inherit}.gscreen .status .combo{color:var(--link)}
+.gscreen .status .dot{background:rgba(255,255,255,.16);border-color:transparent}.gscreen .status .dot.on{background:var(--tc,var(--good));border-color:var(--tc,var(--good))}
 .gscreen .status .label{margin:0}
 .gbody{flex:1;position:relative;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px 0;min-height:300px}
 .feed{position:absolute;inset:0;display:flex;flex-direction:column-reverse;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:12px 4px;pointer-events:none;transition:opacity .35s;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 56px);mask-image:linear-gradient(to bottom,transparent,#000 56px)}
@@ -141,16 +169,18 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .fl li.fc .hb{border-bottom-left-radius:4px}.fl li.fm .hb{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
 .hb.hid{color:var(--muted);letter-spacing:.15em;cursor:default}
 .fl li.fdiv{justify-content:center;align-items:center;gap:8px;font-size:12px;color:var(--muted)}.fl li.fdiv::before,.fl li.fdiv::after{content:'';flex:1;border-top:1px dashed var(--line)}
-.qmodal{position:relative;z-index:2;width:min(100%,540px);padding:16px;background:var(--surface);border:2px solid var(--line);border-radius:22px;box-shadow:0 14px 40px rgba(23,50,63,.2),var(--shadow);transition:opacity .3s ease,transform .3s ease}
+.qmodal{position:relative;z-index:2;width:min(100%,540px);padding:16px;background:var(--surface);border:2px solid var(--qm-bd);border-radius:22px;box-shadow:var(--qm-sh);transition:opacity .3s ease,transform .3s ease}
 .qmodal.away{opacity:0;transform:translateY(14px) scale(.97);pointer-events:none}
-.qmodal .cpu{background:var(--bg);box-shadow:none}
+.qmodal .cpu{background:var(--tc-bg,var(--bg));box-shadow:none}
 .qmodal .timer{margin:0 0 8px}.qmodal .timectl{margin:0 0 8px}.qmodal #buyTime{margin:0 0 8px auto}.qmodal .listenbar{margin:0 0 10px}
 .qfoot{display:flex;justify-content:flex-end;margin-top:10px}
 .qmodal .buyrow{margin:8px 0 0}
 .restlayer{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px 12px;pointer-events:none}
 .restlayer > *{pointer-events:auto}
-.restlayer{transition:background-color .3s}.restlayer.dim{background:rgba(10,25,32,.45)}   /* 다음 ▶·상자·마지막 버튼 뒤는 어둡게(말풍선은 그대로 눌러 읽기) */
-.restlayer.dim .hlnote{color:#fff}
+/* 다음 ▶·상자·마지막 버튼 뒤는 화면 전체를 어둡게 덮고, 덮인 요소(말풍선·제목줄 버튼 등)는 눌리지 않게 */
+.restlayer::before{content:'';position:fixed;inset:0;z-index:-1;background:rgba(10,25,32,0);pointer-events:none;transition:background-color .3s}
+.restlayer.dim::before{background:rgba(10,25,32,.55);pointer-events:auto}
+.restlayer.dim .hlnote{display:none}
 .restlayer .qmodal{text-align:center}
 .holdbar{height:4px;border-radius:2px;background:var(--surface-2);overflow:hidden;margin-top:10px}.holdbar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;animation:hold var(--hold,3000ms) linear forwards}
 @keyframes hold{from{transform:scaleX(1)}to{transform:scaleX(0)}}
@@ -186,11 +216,11 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .cpu .emoji{font-size:54px;line-height:1.1;margin-top:4px}
 .cpu .big{font-family:var(--f-word);font-weight:700;font-size:clamp(36px,9vw,54px);letter-spacing:.03em;line-height:1.15;margin-top:2px;word-break:break-word}
 /* 끝 글자 강조: 글자를 감싸는 상자를 다른 글자와 같은 기준선에 맞춤(inline이면 글꼴의 아래 여백까지 칠해져 상자가 아래로 처져 보임). g·j·p·q·y처럼 아래로 내려오는 글자만 아래를 더 */
-.cpu .big .last{display:inline-block;color:#2a1a00;background:var(--link);line-height:.86;padding:.05em .14em .09em;border-radius:.16em;margin-left:2px}.cpu .big .last.dsc{padding-bottom:.24em}
+.cpu .big .last{display:inline-block;color:var(--key-ink);background:var(--key);line-height:.86;padding:.05em .14em .09em;border-radius:.16em;margin-left:2px}.cpu .big .last.dsc{padding-bottom:.24em}
 .cpu .ko{color:var(--muted);font-size:17px}
 .speak{margin-top:6px;background:var(--surface-2);border:none;border-radius:999px;padding:4px 12px;font-size:14px}
 .ask{text-align:center;margin:16px 0 10px;font-size:18px}
-.ask b{font-family:var(--f-word);font-size:26px;color:#2a1a00;background:var(--link);border-radius:8px;padding:0 10px;margin-right:4px}
+.ask b{font-family:var(--f-word);font-size:26px;color:var(--key-ink);background:var(--key);border-radius:8px;padding:0 10px;margin-right:4px}
 
 /* 객관식: 한 줄에 보기 하나 — 단어(첫 글자 강조) 왼쪽, 뜻 오른쪽 */
 .choices{display:grid;grid-template-columns:1fr;gap:8px}
@@ -198,7 +228,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .choice:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
 .choice .w{font-family:var(--f-word);font-weight:600;font-size:26px;line-height:1.15}
 /* 첫 글자 밑줄: g·j·p·q·y처럼 아래로 내려오는 글자에서도 끊기지 않게, 꼬리보다 아래에 끊김 없이 그림 */
-.spell .choice .w .f{background:var(--link-soft);border-radius:4px;padding:0 3px}
+.spell .choice .w .f{background:var(--key-soft);border-radius:4px;padding:0 3px}
 .choice .w .f{font-weight:700;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:.45em;text-decoration-skip-ink:none}
 .choice .k{font-size:17px;color:var(--ink-2);text-align:right}
 .choice.gone{visibility:hidden}
@@ -210,8 +240,11 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .fcaret{position:absolute;width:2px;background:var(--ink);border-radius:1px;pointer-events:none;animation:fblink 1s steps(1) infinite}@keyframes fblink{50%{opacity:0}}
 .myword{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-soft)}
 .myword small{font-size:13px;color:var(--muted);white-space:nowrap}.myword .word{font-size:24px;font-weight:700;color:var(--ink)}
-.typing input{flex:1;min-width:0;font-family:var(--f-word);font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
-.btn{border:none;border-radius:12px;padding:10px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink);font-size:16px;box-shadow:var(--shadow)}
+.typing input{flex:1;min-width:0;font-family:var(--f-word);font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;border:2px solid var(--in-bd);background:var(--surface);color:var(--ink)}
+.btn{border:2px solid var(--outline);border-radius:12px;padding:10px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink);font-size:16px;box-shadow:var(--chunk)}
+.btn:not(:disabled):active{transform:translateY(2px);box-shadow:none}
+@media (hover:hover){.btn:not(:disabled):hover{filter:brightness(1.06)}}   /* PC: 마우스를 올리면 살짝 밝게 */
+.gscreen .btn:not(.soft):not(.hint):not(.buy){background:var(--tc,var(--accent));color:var(--tc-ink,var(--accent-ink))}
 .btn.soft{background:var(--surface-2);color:var(--ink)}
 .btn.hint{background:var(--link-soft);color:var(--ink);border:2px solid var(--link)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -239,9 +272,9 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .diff{font-weight:600;color:var(--accent);white-space:nowrap}
 .slots{display:flex;justify-content:center;gap:6px;flex-wrap:nowrap;margin:4px 0 10px;--n:5}
 .slot{width:min(46px,calc((100% - (var(--n) - 1) * 6px) / var(--n)));flex:none;padding:0;text-align:center;color:var(--ink);height:50px;border-radius:10px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-family:var(--f-word);font-weight:700;font-size:26px}
-.slot.fixed{background:var(--surface-2);border-color:var(--surface-2)}.slot.given{background:var(--link-soft);border-color:var(--link)}
-.slot.bin.first{background:var(--link-soft);border-width:3px}.slot.bin.first.ok{border-style:solid;border-color:var(--link)}
-.slot.bin{border-style:dashed;border-color:var(--link);background:var(--surface)}.slot.bin:focus{border-style:solid;border-color:var(--accent);outline:3px solid var(--link);outline-offset:1px}.slot.on{border-color:var(--accent)}.slot.blank{border-style:dashed;border-color:var(--link)}
+.slot.fixed{background:var(--surface-2);border-color:var(--surface-2)}.slot.given{background:var(--key-soft);border-color:var(--key)}
+.slot.bin.first{background:var(--key-soft);border-width:3px;border-color:var(--key)}.slot.bin.first.ok{border-style:solid;border-color:var(--key)}
+.slot.bin{border-style:dashed;border-color:var(--link);background:var(--surface)}.slot.bin:focus{border-style:solid;border-color:var(--accent);outline:3px solid var(--key);outline-offset:1px}.slot.on{border-color:var(--accent)}.slot.blank{border-style:dashed;border-color:var(--link)}
 .blocks{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;background:var(--surface-2);border-radius:14px;padding:8px 10px 10px}
 .tray-label{flex-basis:100%;text-align:center;font-size:12px;color:var(--muted)}.tray-label .linkbtn{font-size:13px;margin-left:8px;padding:4px 6px}.tray-label .linkbtn:disabled{opacity:.45;cursor:default;text-decoration:none}
 .blk{min-width:52px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-family:var(--f-word);font-weight:700;font-size:26px;box-shadow:var(--shadow)}
@@ -260,7 +293,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .combo{font-weight:700;color:var(--bad)}
 .card .sum{color:var(--ink)}
 .updbar{position:fixed;left:50%;top:calc(var(--vvt,0px) + 8px);transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--bg);padding:8px 10px 8px 16px;border-radius:999px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:calc(100% - 16px);animation:notepop .35s ease}
-.updbar button{min-height:36px;border-radius:999px;border:0;padding:4px 14px;font-weight:700;background:var(--link);color:#2a1a00}.updbar .x{background:none;color:inherit;padding:4px 8px}
+.updbar button{min-height:36px;border-radius:999px;border:0;padding:4px 14px;font-weight:700;background:var(--link);color:var(--link-ink)}.updbar .x{background:none;color:inherit;padding:4px 8px}
 .badge-note{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:notepop .35s ease;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 @keyframes notepop{0%{transform:translateX(-50%) scale(.92)}60%{transform:translateX(-50%) scale(1.04)}100%{transform:translateX(-50%) scale(1)}}
 .burst{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-family:var(--f-display);font-size:40px;color:var(--bad);z-index:15;pointer-events:none;animation:burst 1.3s ease forwards}
@@ -272,7 +305,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .nbguide{background:var(--link-soft);border:1px solid var(--link);border-radius:12px;padding:8px 12px;margin:0 0 10px;font-size:14px}
 .starchip{font-weight:700;white-space:nowrap}
 .btn.buy{background:var(--surface);color:var(--ink);border:2px solid var(--link);font-size:14px;padding:6px 12px;box-shadow:none}
-.btn.buy.armed{background:var(--link);color:#2a1a00}
+.btn.buy.armed{background:var(--link);color:var(--link-ink)}
 .btn.buy small{font-weight:500;color:var(--muted)}
 .buywrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.qty{display:flex;align-items:center;gap:6px;font-size:13px}.qty .tbtn{padding:0 9px;min-height:28px}
 .lboxes.inline{display:inline-flex;margin:0 4px;vertical-align:middle}.lboxes.inline .lbox{width:14px;height:18px}
@@ -298,7 +331,9 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .card .credits p{margin:4px 0}
 .credits blockquote{margin:6px 0;padding:8px 10px;border-left:3px solid var(--line, #c9d6dd);background:var(--surface-2, #eef3f6);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
 .linkbtn.credit{margin-left:12px;font-size:12px}
-#app{position:relative}
+#app{position:relative;z-index:1}
+/* 어두운 화면의 별(밝은 화면에서는 안 보임) */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:var(--stars);background-size:240px 240px;opacity:var(--stars-o)}
 .rcard h3{margin:6px 0 8px}.rcard .big-e{font-size:52px;line-height:1.1}
 .rstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
 .rstats div{background:var(--surface-2);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;gap:2px}
@@ -388,10 +423,10 @@ html.kb #answer .row{margin-top:4px}
 html.kb .msg{margin-top:2px}
 html.kb .badge-note{bottom:auto;top:calc(var(--vvt,0px) + 8px)}
 /* 끝 글자 → 첫 글자: 선 대신 끝 글자가 첫 글자 칸으로 한 번 건너가고(.hand), 닿은 칸이 반짝임(.land) */
-.hand{position:fixed;z-index:3;pointer-events:none;display:grid;place-items:center;font-family:var(--f-word);font-weight:700;color:#2a1a00;background:var(--link);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-.hand.dot{background:none;border:3px solid var(--link);border-radius:50%;box-shadow:0 0 10px var(--link)}
+.hand{position:fixed;z-index:3;pointer-events:none;display:grid;place-items:center;font-family:var(--f-word);font-weight:700;color:var(--key-ink);background:var(--key);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.hand.dot{background:none;border:3px solid var(--key);border-radius:50%;box-shadow:0 0 10px var(--key)}
 .land{animation:land .6s ease}
-@keyframes land{0%{box-shadow:0 0 0 0 var(--link)}40%{transform:scale(1.15);box-shadow:0 0 14px 4px var(--link)}100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
+@keyframes land{0%{box-shadow:0 0 0 0 var(--key)}40%{transform:scale(1.15);box-shadow:0 0 14px 4px var(--key)}100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
 </style>
 
 <div class="wrap" id="app"></div>
@@ -558,19 +593,19 @@ window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.t
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
 const TRACKS={
   // 기초 1~3단계: 앱이 '다음에 올 단어'(컴퓨터 단어의 끝 글자로 시작)를 정하고 뜻·그림·소리를 보여 줌 → 학생은 그 철자를 완성. tMin·tMax: 다음 단어 글자 수
-  basic:{name:'기초',tag:'Basic',icon:'🌱',desc:'영어 단어가 아직 낯선 친구. 뜻·그림·소리를 보고 단어의 철자를 완성해 봐요.',levels:[
+  basic:{name:'기초',tag:'Basic',icon:'🏕️',desc:'영어 단어가 아직 낯선 친구. 뜻·그림·소리를 보고 단어의 철자를 완성해 봐요.',levels:[
     {id:1,name:'철자 고르기',desc:'다음 단어의 뜻·그림·소리를 보고, 철자가 맞는 것을 골라요.',mode:'spell',pool:1,cpu:1,goal:4,min:2,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
     {id:2,name:'글자 블록 조립',desc:'섞인 글자 블록을 순서대로 눌러 단어를 완성해요. 키보드로 쳐도 돼요.',mode:'blocks',pool:1,cpu:1,goal:5,min:2,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
     {id:3,name:'빈칸 채우기',desc:'비어 있는 글자를 채워 단어를 완성해요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:2,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
     {id:4,name:'직접 쓰기',desc:'주관식: 2글자 이상 단어를 직접 써요. (me, us 같은 대명사도 OK)',mode:'type',pool:1,cpu:1,goal:6,min:2,cpuMin:3}
   ]},
-  normal:{name:'보통',tag:'Intermediate',icon:'🌿',desc:'기본 단어는 자신 있는 친구. 직접 쓰기와 스피드에 도전해요.',levels:[
+  normal:{name:'보통',tag:'Intermediate',icon:'⛵',desc:'기본 단어는 자신 있는 친구. 직접 쓰기와 스피드에 도전해요.',levels:[
     {id:1,name:'빈칸 채우기',desc:'다음 단어의 뜻·소리를 보고 비어 있는 글자를 채워요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:3,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
     {id:2,name:'직접 쓰기 · 기초',desc:'주관식: 3글자 이상. 컴퓨터는 초등 수준 단어를 내요.',mode:'type',pool:1,cpu:1,goal:6,min:3,cpuMin:4,listenOpt:true},
     {id:3,name:'직접 쓰기 · 중학',desc:'주관식: 4글자 이상. 컴퓨터도 5글자 이상 중학교 단어를 내요.',mode:'type',pool:2,cpu:2,goal:7,min:4,cpuMin:5,listenOpt:true},
     {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:8,min:4,cpuMin:5,time:30,listenOpt:true}
   ]},
-  hard:{name:'도전',tag:'Advanced',icon:'🌳',desc:'영어 단어를 많이 아는 친구. 긴 단어와 빠른 속도로 겨뤄요.',levels:[
+  hard:{name:'도전',tag:'Advanced',icon:'🌋',desc:'영어 단어를 많이 아는 친구. 긴 단어와 빠른 속도로 겨뤄요.',levels:[
     {id:1,name:'직접 쓰기 · 기본',desc:'주관식: 4글자 이상 단어를 써요. 컴퓨터는 4글자 이상 단어를 내요.',mode:'type',pool:2,cpu:2,goal:6,min:4,cpuMin:4},
     {id:2,name:'직접 쓰기 · 중학',desc:'주관식: 4글자 이상 단어를 써요.',mode:'type',pool:2,cpu:2,goal:7,min:4,cpuMin:5},
     {id:3,name:'긴 단어 쓰기',desc:'주관식: 5글자 이상 단어만 인정돼요.',mode:'type',pool:2,cpu:2,goal:8,min:5,cpuMin:6},
@@ -756,9 +791,9 @@ const BADGES=[
   {id:'comeback',icon:'💪',name:'다시 일어서기',cond:`틀린 직후 판에서 ${B.comeback}연속 성공`},
   {id:'review',icon:'📒',name:'복습왕',cond:`단어 수첩에서 '외운 단어' ${B.review}개`},
   {id:'ears',icon:'🎧',name:'귀가 밝아요',cond:`듣고 쓰기 모드로 ${B.ears}연속 성공`},
-  {id:'master-basic',icon:'🌱',name:'기초 정복',cond:'기초 수준의 모든 단계 통과'},
-  {id:'master-normal',icon:'🌿',name:'보통 정복',cond:'보통 수준의 모든 단계 통과'},
-  {id:'master-hard',icon:'🌳',name:'도전 정복',cond:'도전 수준의 모든 단계 통과'},
+  {id:'master-basic',icon:'🏕️',name:'기초 정복',cond:'기초 수준의 모든 단계 통과'},
+  {id:'master-normal',icon:'⛵',name:'보통 정복',cond:'보통 수준의 모든 단계 통과'},
+  {id:'master-hard',icon:'🌋',name:'도전 정복',cond:'도전 수준의 모든 단계 통과'},
 ];
 const hasBadge=id=>badges.some(b=>b.id===id);
 function award(id){
@@ -781,9 +816,11 @@ function badgeScreen(){
   $app.querySelector('#back').onclick=goBack;
 }
 
+// 수준 색: 단계 맵·게임 화면에서는 <html data-tc=수준>으로 그 수준의 바탕·포인트 색을 씀(첫 화면은 수준 색 없이)
+function lvTheme(t){ const r=document.documentElement; if(t) r.setAttribute('data-tc',t); else r.removeAttribute('data-tc'); }
 // ---------- 첫 화면: 제목 · 기초/보통/도전 · 복습하기(작게) ----------
 function chooseTrack(){
-  audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null;
+  audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null; lvTheme(null);
   const due=nbList().length;
   $app.innerHTML=`
   <div class="title">
@@ -1077,12 +1114,13 @@ function setTeacher(on){ try{ on?localStorage.setItem(TEACHER_KEY,'1'):localStor
 (()=>{ const m=/[?&]teacher=([01])/.exec(location.search); if(m) setTeacher(m[1]==='1'); })();
 // ---------- 단계 맵: 단계를 이은 길. 마우스를 올리거나(키보드 초점) 손가락으로 한 번 누르면 말풍선 설명, 다른 단계는 흐리게 ----------
 // 마우스로 누르면 바로 규칙 창 → 시작. 손가락은 한 번 눌러 설명을 보고, 한 번 더(또는 말풍선의 ▶ 시작) 누르면 시작
-const MAP_DECO={basic:['🌱','🌼','🍀','🌷'],normal:['🌿','🍃','🌾','🪨'],hard:['🌳','⛰️','🌲','🦅']};
+// 수준 이모지(모험): 기초 🏕️ 캠프(출발) · 보통 ⛵ 항해 · 도전 🌋 화산(정상) — 맵 장식도 그 지형으로
+const MAP_DECO={basic:['🌲','🍄','⛺','🌼'],normal:['🌊','🐚','🐟','☁️'],hard:['🌋','🪨','🦅','⚡']};
 function home(){
   audioKeepAlive(false); if(G&&!G.locked) bankStars();
-  stopTimer(); offKeys(); origin='map'; REST=null;
+  stopTimer(); offKeys(); origin='map'; REST=null; lvTheme(track);
   const T=TRACKS[track], n=LEVELS.length, GAP=150, TOP=86, X=[30,70,32,68,36];
-  // 단계 원 위치(가로는 %, 세로는 px), 마지막 단계 아래에 🏆 도착점
+  // 단계 원 위치(가로는 %, 세로는 px), 마지막 단계 아래에 👑 도착점(수준 정복)
   const pts=[...LEVELS.map((L,i)=>({x:X[i%X.length],y:TOP+i*GAP})),{x:50,y:TOP+n*GAP-20}], H=pts[n].y+70;
   const cur=LEVELS.find(L=>L.id<=save.unlocked&&!save.cleared[L.id]), all=LEVELS.every(L=>save.cleared[L.id]);
   const seg=(a,b)=>`M${a.x} ${a.y} C${a.x} ${a.y+GAP*.55},${b.x} ${b.y-GAP*.55},${b.x} ${b.y}`;
@@ -1097,7 +1135,7 @@ function home(){
     ${dpos.filter(p=>p[1]<H-30).map((p,i)=>`<span class="deco" style="--x:${p[0]}%;--y:${p[1]}px" aria-hidden="true">${deco[i%deco.length]||''}</span>`).join('')}
     ${LEVELS.map((L,i)=>{ const open=L.id<=save.unlocked, cleared=!!save.cleared[L.id];
       return `<button class="node lv${cleared?' cleared':''}${open?'':' locked'}${L===cur?' cur':''}" data-lv="${L.id}" style="--x:${pts[i].x}%;--y:${pts[i].y}px" aria-label="${L.id}단계 ${esc(L.name)}${cleared?' (통과)':open?'':' (잠김)'}">${open?L.id:'🔒'}${cleared?'<span class="ck" aria-hidden="true">✔</span>':''}<span class="nl">${esc(L.name)}</span></button>`; }).join('')}
-    <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">🏆</span>
+    <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">👑</span>
   </div>
   <div class="foot">
     <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span><button class="linkbtn credit" id="credits">출처·저작권</button></span>
@@ -1504,7 +1542,7 @@ function gameShell(){
     <div class="status" id="gstat"></div>
     <div class="gbody" id="gbody"><div class="feed" id="feed"><ol class="fl" id="fl" aria-label="주고받은 단어"></ol></div><div class="qmodal" id="qm" role="group" aria-label="문제"></div></div>
   </div>`;
-  $app.querySelector('#gscreen')._g=G; G.feedN=0; setSndBtn();
+  $app.querySelector('#gscreen')._g=G; G.feedN=0; setSndBtn(); lvTheme(track);
   $app.querySelector('#back').onclick=home;
   $app.querySelector('#snd').onclick=()=>{
     if(REST||!G.cur){ soundOn=!soundOn; audioKeepAlive(soundOn); setSndBtn(); return; }
@@ -1712,8 +1750,10 @@ const restGo=step=>{ if(!REST) return; REST.step=step; renderRest(); };
 function restTap(S,step,fn){
   const off=()=>{ document.removeEventListener('keydown',onKey,true); document.removeEventListener('click',onClick,true); };
   const alive=()=>REST===S&&S.step===step&&!!$app.querySelector('#rest');
-  const onKey=e=>{ if(!alive()) return off(); if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); off(); fn(); } };
-  const onClick=e=>{ if(!alive()) return off(); if(e.target.closest('.ghead')) return; e.preventDefault(); e.stopPropagation(); off(); fn(); };
+  // 다시 보기 중 말풍선(철자)을 누르거나 그 위에서 Enter → 그 단어를 읽기만 하고 넘어가지 않음
+  const onWord=e=>e.target&&e.target.closest&&e.target.closest('#fl .hb');
+  const onKey=e=>{ if(!alive()) return off(); if(e.key==='Enter'){ if(onWord(e)) return; e.preventDefault(); e.stopPropagation(); off(); fn(); } };
+  const onClick=e=>{ if(!alive()) return off(); if(e.target.closest('.ghead')||onWord(e)) return; e.preventDefault(); e.stopPropagation(); off(); fn(); };
   document.addEventListener('keydown',onKey,true); document.addEventListener('click',onClick,true);
   return off;
 }
@@ -1745,7 +1785,8 @@ function restShow(box){
   $app.querySelector('#gbody').classList.add('free');
   fl.innerHTML=''; fl.setAttribute('aria-label','방금 통과한 단계의 끝말잇기');
   S.hl.forEach((x,i)=>{ const li=feedLi(x,i,false,true); if(i>=S.shown) li.classList.add('wait'); fl.appendChild(li); });
-  fl.querySelectorAll('.hb').forEach(b=>b.onclick=()=>{ if(S.shown<n) return; audioKeepAlive(true); const o=soundOn; soundOn=true; speak(S.hl[+b.dataset.i].w); soundOn=o; });
+  // 말풍선을 누르면 읽기(다시 보기 중에도, 이미 나온 말풍선이면). "다음 ▶"이 나온 뒤에는 화면 전체 딤드가 덮어 눌리지 않음
+  fl.querySelectorAll('.hb').forEach(b=>b.onclick=()=>{ if(b.closest('li.wait')) return; audioKeepAlive(true); const o=soundOn; soundOn=true; speak(S.hl[+b.dataset.i].w); soundOn=o; });
   const alive=()=>REST===S&&S.step===2&&$app.querySelector('#fl')===fl;
   let off=()=>{};
   const finish=()=>{ clearTimeout(S.tm); off(); if(!alive()) return; S.shown=n; fl.querySelectorAll('li.wait,li.up').forEach(li=>li.classList.remove('wait','up'));   // 올라오던 말풍선도 바로 제자리에
