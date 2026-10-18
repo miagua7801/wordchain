@@ -43,7 +43,7 @@ const norm=s=>s.split(/\r?\n/).map(l=>l.replace(/^\s*(\/\/|>)\s?/,'')).join(' ')
   for(const f of ['README.md','NOTICE.md']) ok(R(f).includes(ME)&&R(f).includes(CC),`${f}: 저작권 줄 + 라이선스 링크`);
   const it=norm(R('intro.html'));
   ok(/© 2026 <span id="author">[^<]+<\/span>/.test(R('intro.html'))&&R('intro.html').includes(CC+'/deed.ko'),'intro.html: 저작권 표시(이름은 id="author" 한곳) + 라이선스 링크');
-  ok(it.includes('할 수 있는 것 출처를 밝히고 비영리로 사용하기, 원본 그대로 공유하기(링크 전달, 파일 복사)')&&it.includes('할 수 없는 것 판매 등 상업적 이용, 고쳐서 배포하기(단어 추가, 화면 변경, 일부를 다른 앱에 넣기 등)')&&it.includes('수업에 맞게 내용을 수정하려면 저작자의 허락을 받아야 합니다. (문의: GitHub miagua7801)')&&/저작자가 만든 부분.*에만 적용/.test(it),'intro.html: 할 수 있는 것/없는 것·문의·적용 범위');
+  ok(it.includes('할 수 있는 것 출처를 밝히고 비영리로 사용하기, 원본 그대로 공유하기(링크 전달, 파일 복사)')&&it.includes('할 수 없는 것 판매 등 상업적 이용, 고쳐서 배포하기(단어 추가, 화면 변경, 일부를 다른 앱에 넣기 등)')&&it.includes('수업에 맞게 내용을 수정하려면 저작자의 허락을 받아야 합니다. (문의: miagua7801@gmail.com')&&/href="mailto:miagua7801@gmail.com/.test(R('intro.html'))&&/저작자가 만든 부분.*에만 적용/.test(it),'intro.html: 할 수 있는 것/없는 것·문의·적용 범위');
   ok(R('intro.html').indexOf('class="lic"')<R('intro.html').indexOf('class="src"'),'intro.html: 내 저작권 표시가 기존 출처 표시 위');
 
   // 3. 앱 화면: 단계 맵 아래 '출처·저작권' → 창에 한국어 안내 + 영어 고지 원문. 선생님 모드('버전' 5번 누르기)와 따로 동작
