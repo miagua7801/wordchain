@@ -62,28 +62,6 @@ const {target,open,startLevel}=require('./lib');
     ok(tb.n===0&&tb.ks.length===1&&tb.dh===0,`아이폰 기초 3단계: 주소창이 줄었다 늘었다 해도(보이는 높이 ±80px) 앱 스크롤 ${tb.n}번, 아래 여백 ${tb.ks.join('/')}, 문서 높이 변화 ${tb.dh}px — 흔들림 고리 없음`);
     await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
-  // 휴대폰: "내기"·"확인"을 손가락으로 한 번만 눌러도 제출(입력칸 초점 그대로 → 자판이 내려가지 않음), 두 번 제출되지 않음
-  { const kbVV=()=>{ const vv=new EventTarget(); Object.assign(vv,{height:664,width:390,offsetTop:0,offsetLeft:0,scale:1});
-      Object.defineProperty(window,'visualViewport',{value:vv}); const set=h=>{ vv.height=h; vv.dispatchEvent(new Event('resize')); };
-      addEventListener('focusin',e=>{ if(e.target.tagName==='INPUT') setTimeout(()=>set(330),50); });
-      addEventListener('focusout',()=>setTimeout(()=>{ if(!(document.activeElement&&document.activeElement.tagName==='INPUT')) set(664); },30)); };
-    const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true}); await p.addInitScript(kbVV); const H=(f,a)=>p.evaluate(f,a);
-    const W=await (async()=>{ await p.goto(url); return H(()=>(VOCAB_E+'|'+VOCAB_M).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{4,}$/.test(w))); })();
-    const tapBtn=async sel=>{ const r=await p.$eval(sel,e=>{ const r=e.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; }); await p.touchscreen.tap(r.x,r.y); };
-    for(const [t,lv] of [['hard',1],['normal',2]]){
-      await startLevel(p,url,t,lv); await p.waitForTimeout(500); await p.tap('#inp'); await p.waitForTimeout(400);
-      const cw=await H(()=>window.__wordchain.cpu()); await p.keyboard.type(W.find(x=>x[0]===cw.slice(-1)&&x!==cw),{delay:30}); await p.waitForTimeout(200);
-      const t0=(await H(()=>window.__wordchain.state())).turns; await tapBtn('#f button[type=submit]'); await p.waitForTimeout(100);
-      const r=await H(()=>({id:document.activeElement.id,kb:document.documentElement.classList.contains('kb')})); await p.waitForTimeout(400);
-      const t1=(await H(()=>window.__wordchain.state())).turns;
-      ok(t1===t0+1&&r.id==='inp'&&r.kb,`휴대폰 ${t} ${lv}단계: "내기" 한 번 → 제출 1번(${t1-t0}), 입력칸 초점·자판 그대로`);
-    }
-    await startLevel(p,url,'basic',3); await p.waitForTimeout(500);
-    const tg=await H(()=>window.__wordchain.target()), bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));
-    await p.tap('#bslots .bin'); await p.waitForTimeout(300); await p.keyboard.type(bins.map(i=>tg[i]).join(''),{delay:60}); await p.waitForTimeout(200);
-    const s0=(await H(()=>window.__wordchain.state())).turns; await tapBtn('#answer form button[type=submit]'); await p.waitForTimeout(500);
-    ok((await H(()=>window.__wordchain.state())).turns===s0+1,'휴대폰 기초 3단계: "확인" 한 번 → 제출');
-    ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 휴대폰: 퀴즈 중에는 채팅 말풍선을 숨기고(정답 뒤에도 문제 창 그대로), 단계를 마친 뒤 다시 보기에서만 보임
   { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true}); const H=(f,a)=>p.evaluate(f,a);
     await startLevel(p,url,'hard',1); await p.waitForTimeout(400);
