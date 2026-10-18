@@ -8,13 +8,13 @@ const {target,open}=require('./lib');
   const lv=(stored)=>({unlocked:4,best:{},cleared:{},storedHints:stored});
   const startLv=async(t,n)=>{ await p.click(`[data-t="${t}"]`); await p.click(`[data-lv="${n}"]`); await p.waitForTimeout(400); };
   const W=await (async()=>{ await p.goto(url); return H(()=>(VOCAB_E).split(/[|\n]/).map(x=>x.trim().split(' ')[0]).filter(w=>/^[a-z]{3,}$/.test(w)&&!/(er|est)$/.test(w))); })();
-  const nextWord=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent));
+  const nextWord=async()=>{ const cw=await H(()=>window.__wordchain.cpu()); const used=await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent));
     await p.fill('#inp',W.find(w=>w[0]===cw.slice(-1)&&w!==cw&&!used.includes(w))); await p.press('#inp','Enter'); await p.waitForTimeout(2700); };
   const hint=async()=>{ await p.click('#hintBtn'); await p.waitForTimeout(120); };
 
   // 1. 무료 힌트가 먼저 쓰임, 표시 "무료 💡 N · 보관 💡 N"
   await seed({normal:lv(2)},0); await startLv('normal',2);
-  ok((await p.textContent('.status .hcount')).includes('무료 💡 3 · 보관 💡 2'),'힌트 표시: 무료 💡 3 · 보관 💡 2');
+  ok((await p.textContent('#qm .hcount')).includes('무료 💡 3 · 보관 💡 2'),'힌트 표시: 무료 💡 3 · 보관 💡 2');
   await hint(); let h=await HS();
   ok(h.free===2&&h.stored===2,'힌트를 쓰면 무료 힌트부터 줄어듦(무료 2, 보관 2)');
   await hint(); await hint(); h=await HS();
@@ -27,7 +27,7 @@ const {target,open}=require('./lib');
   await seed({normal:lv(4)},0); await startLv('normal',2);
   for(let i=0;i<3;i++) await hint(); await nextWord(); await hint(); await hint();
   h=await HS();
-  ok(h.stored===2&&(await p.$eval('#hintBtn',e=>e.disabled))&&(await p.textContent('.status')).includes('한 번 도전에 2번까지'),'한 번 도전에 보관 힌트 2번까지: 2개 남아도 힌트 버튼 비활성 + 안내');
+  ok(h.stored===2&&(await p.$eval('#hintBtn',e=>e.disabled))&&(await p.textContent('#qm')).includes('한 번 도전에 2번까지'),'한 번 도전에 보관 힌트 2번까지: 2개 남아도 힌트 버튼 비활성 + 안내');
 
   // 3. 단계가 바뀌어도 남음, 다른 수준으로 안 옮겨짐
   await p.click('#back'); await p.waitForTimeout(200);
@@ -51,7 +51,7 @@ const {target,open}=require('./lib');
   await p.click('#buyHint'); await p.click('#buyHint'); await p.waitForTimeout(200);
   h=await HS();
   ok(h.stored===5&&(await stars())===40&&(await p.textContent('#msg')).includes('다른 수준으로는 옮겨지지 않아요'),'보관 힌트 2개 구매: ⭐ -10, 보관 5개, 안내 문구');
-  ok((await p.$eval('#buyHint',e=>e.disabled))&&(await p.textContent('.status')).includes('보관 힌트가 가득 찼어요 (5/5)'),'한도가 차면 구매 버튼 비활성 + "보관 힌트가 가득 찼어요 (5/5)"');
+  ok((await p.$eval('#buyHint',e=>e.disabled))&&(await p.textContent('#qm')).includes('보관 힌트가 가득 찼어요 (5/5)'),'한도가 차면 구매 버튼 비활성 + "보관 힌트가 가득 찼어요 (5/5)"');
 
   // 5. 이 수준 기록 지우기: 보관 힌트도 지움, 별은 그대로
   await p.click('#back'); await p.waitForTimeout(150);

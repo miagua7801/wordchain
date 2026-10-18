@@ -6,10 +6,13 @@ const { pathToFileURL } = require('url');
 // 인자로 주소를 주면 그 주소(예: GitHub Pages), 없으면 로컬 빌드 결과
 function target(arg){ return arg && /^https?:|^file:/.test(arg) ? arg : pathToFileURL(path.resolve(__dirname,'../dist/word-chain-challenge.html')).href; }
 
+// intro:true면 규칙 창(수준·단계 안내)을 띄움. 기본은 건너뜀(window.__wordchainNoIntro)
 async function open(opts={}){
+  const {intro,...po}=opts;
   const b=await chromium.launch({args:['--mute-audio']});
-  const p=await b.newPage(opts);
+  const p=await b.newPage(po);
   await p.addInitScript(()=>Object.defineProperty(window,'speechSynthesis',{value:{speak(u){setTimeout(()=>u.onend&&u.onend(),0);},cancel(){}}}));
+  if(!intro) await p.addInitScript(()=>{ window.__wordchainNoIntro=true; });
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));
   return {b,p,errs};
 }

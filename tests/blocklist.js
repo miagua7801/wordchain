@@ -13,7 +13,7 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   const plain=BL.strong.filter(s=>distNoAllow.includes(s)), inWl=BL.exact.filter(w=>wl.includes(w));
   ok(!plain.length&&!inWl.length,`소스에 강한 표현 ${plain.length}개·영어 단어 목록에 금지어 ${inWl.length}개 (목록 ${BL.exact.length+BL.strong.length}개는 base64로 인코딩)`);
 
-  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:1280,height:800}});
+  const b=await chromium.launch({args:['--mute-audio']}); const p=await b.newPage({viewport:{width:1280,height:800}}); await p.addInitScript(()=>{ window.__wordchainNoIntro=true; });
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));
   // 소리 기록용 가짜 음성 엔진(소리 없음)
   await p.addInitScript(()=>{ window.__said=[]; Object.defineProperty(window,'speechSynthesis',{value:{speak(u){ window.__said.push(u.text); setTimeout(()=>u.onend&&u.onend(),0); },cancel(){}}}); });
@@ -54,7 +54,7 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   const st3=await H(()=>window.__wordchain.state());
   ok(ovt.includes('아쉬워요!')&&ovt.includes('하트를 1개 잃었어요')&&!/사용할 수 없|금지/.test(ovt)&&st3.lives===2&&st3.streak===before.streak,'3번째 금지어: 평범한 오답 화면(이유 설명 없음, 다른 오답처럼 하트 1개)');
   await p.click('#ov1'); await p.waitForTimeout(400);
-  ok(!(await p.$('.chain'))&&!(await p.$('.overlay')),'새 판 시작');
+  ok((await p.evaluate(()=>window.__wordchain.feed().slice(-2,-1)[0]))==='---'&&!(await p.$('.overlay')),'새 판 시작(채팅에 "새로 시작")');
 
   // 5. 복습에서 금지어 입력: 기록하지 않음
   await p.evaluate(()=>{ const d=new Date(); d.setDate(d.getDate()-1); const y=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

@@ -9,11 +9,11 @@ const {target,open,startLevel,cpuWord}=require('./lib');
     await startLevel(p,url,t,lv);
     const asked=[], mine=new Set(); let rep=0;
     for(let i=0;i<turns;i++){
-      if(await p.$('#rest')){ await p.click('#again'); await p.waitForTimeout(100); continue; }
+      if(await p.$('#rest')){ await p.evaluate(()=>window.__wordchain.again()); await p.waitForTimeout(100); continue; }
       if(await p.$('.overlay')){ await p.click('#ov2').catch(()=>p.click('#ov1')); await p.waitForTimeout(100); continue; }
       const cw=await cpuWord(p), ch=cw.slice(-1);
       if(asked.slice(-2).includes(ch)) rep++; asked.push(ch);
-      const used=new Set(await p.$$eval('.chain .tile',a=>a.map(e=>e.textContent))); used.add(cw);
+      const used=new Set(await p.$$eval('#fl .hb',a=>a.map(e=>e.textContent))); used.add(cw);
       const ans=words.find(w=>w[0]===ch&&!used.has(w)&&!mine.has(w)); if(!ans) break; mine.add(ans);
       await p.fill('#inp',ans); await p.press('#inp','Enter'); await p.waitForTimeout(2600);
     }

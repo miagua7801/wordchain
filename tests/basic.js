@@ -13,7 +13,7 @@ const {target,open,startLevel}=require('./lib');
   const st=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordchain-v2')));
   ok(!st.prog.basic&&st.prog.normal.cleared[1]&&st.basicVer===2,'예전 기초 진도만 초기화, 보통 진도 유지');
   await p.click('[data-t="basic"]');
-  ok((await p.$$('.levels .lv')).length===4,'기초 4단계로 구성');
+  ok((await p.$$('.map .lv')).length===4,'기초 4단계로 구성');
 
   // 틀린 보기 규칙
   const ms=await p.evaluate(()=>['tiger','apple','cake','bird','happy'].map(w=>[w,window.__wordchain.misspellings(w,3)]));
@@ -28,10 +28,11 @@ const {target,open,startLevel}=require('./lib');
   const t=await T(); const n=(await p.$$('.spell .choice')).length; if(i===3) ok(n===4,`3연속 정답 뒤 보기 ${n}개(난이도 ▲)`);
     await p.click(`.spell .choice[data-v="${t}"]`); await waitNext(t);
   }
+  await p.waitForSelector('#rest'); await p.evaluate(()=>window.__wordchain.restGo(4));
   const skip=await p.$('#skip3'); ok(!!skip,'처음에 힌트·실수 없이 통과 → "3단계로 바로 가기" 버튼');
   await skip.click(); await p.waitForTimeout(400);
   const st2=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordchain-v2')).prog.basic);
-  ok(st2.cleared[1]&&st2.cleared[2]&&(await p.textContent('.topbar h2')).includes('3단계'),'건너뛰기: 1·2단계 통과 처리 후 3단계 시작');
+  ok(st2.cleared[1]&&st2.cleared[2]&&(await p.textContent('.ghead h2')).includes('3단계'),'건너뛰기: 1·2단계 통과 처리 후 3단계 시작');
 
   // 3단계 빈칸 채우기: 첫 글자 + 1칸이 빈칸, 첫 글자를 틀리면 안내, 맞으면 반짝임
   const t3=await T(); const bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));

@@ -53,7 +53,7 @@ const day=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return `${d.getFull
   await seed({'wordchain-v2':{track:'normal',prog:{},time:{},basicVer:2},'wordchain-stars-v1':'2'});
   await startLv('normal',2);
   for(let i=0;i<3;i++){ await p.click('#hintBtn'); await p.waitForTimeout(100); }
-  ok(!(await p.$('#hintBtn:not([disabled])'))&&(await p.$eval('#buyHint',e=>e.disabled))&&(await p.textContent('.status')).includes('별이 부족해요 (⭐ 2/5)'),'무료 힌트 3번 뒤: 별 부족 → 버튼 비활성 + "별이 부족해요 (⭐ 2/5)"');
+  ok(!(await p.$('#hintBtn:not([disabled])'))&&(await p.$eval('#buyHint',e=>e.disabled))&&(await p.textContent('#qm')).includes('별이 부족해요 (⭐ 2/5)'),'무료 힌트 3번 뒤: 별 부족 → 버튼 비활성 + "별이 부족해요 (⭐ 2/5)"');
   // 보관 힌트 사기·쓰기는 tests/hints.js에서 확인
   await seed({'wordchain-v2':{track:'normal',prog:{},time:{},basicVer:2},'wordchain-stars-v1':'10'});
   // 5. 시간 +10초(시간 제한 단계)·다시 듣기 +1(듣고 쓰기), 한 판에 1번
