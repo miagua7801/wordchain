@@ -5,6 +5,8 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   const url=target(process.argv[2]);
   const {b,p,errs}=await open(); let fail=0; const ok=(c,m)=>{ if(!c) fail++; console.log((c?'PASS ':'FAIL ')+m); };
   const H=(f,a)=>p.evaluate(f,a), NB=()=>H(()=>JSON.parse(localStorage.getItem('wordchain-notebook-v1')||'{}'));
+  // 수첩 목록에서 체크박스로 단어를 고르고 "선택한 단어 학습하기"
+  const studyPick=async ws=>{ for(const w of ws) await p.check(`.nbck[value="${w}"]`); await p.click('#studySel'); await p.waitForTimeout(250); };
   const answer=async v=>{ await p.fill('#inp',v); await p.press('#inp','Enter'); await p.waitForTimeout(150); };
   // 예전 저장본처럼 복습 날짜(due)가 미래인 단어도 섞음 → 날짜와 관계없이 학습
   await p.goto(url);
@@ -22,20 +24,27 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   ok(nb.learned.apple&&!nb.items.apple&&nb.items.tiger.stamps===1&&nb.items.car.stamps===2,'맞힐 때마다 도장 +1: apple 도장 3개 → 외운 단어, tiger 0→1, car 1→2');
   await p.click('#done'); await p.waitForTimeout(200);
 
-  // 2. 수첩 목록에서 단어를 누르면 그 단어만 학습. 바로 다시 해도 도장(제한 없음) → 3번이면 외운 단어
+  // 2. 수첩 목록에서 체크박스로 고른 단어만 학습. 바로 다시 해도 도장(제한 없음) → 3번이면 외운 단어
   await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await p.waitForTimeout(200);
   const t=await p.textContent('#app');
   ok(t.includes('모은 단어 2개')&&t.includes('외운 단어 1개')&&t.includes('호랑이')&&!t.includes('다음 복습')&&t.includes('언제든'),'수첩 화면: 모은 단어 2개·외운 단어 1개·뜻, 복습 날짜 표시 없음, "언제든" 안내');
+  const sel0=await H(()=>({dis:document.getElementById('studySel').disabled,n:document.getElementById('selN').textContent,cks:document.querySelectorAll('.nblist .nbck').length}));
+  ok(sel0.dis&&sel0.n==='0'&&sel0.cks===2,'단어마다 체크박스, 아무것도 고르지 않으면 "선택한 단어 학습하기" 비활성');
+  await p.click('#selAll'); const sel1=await H(()=>({n:document.getElementById('selN').textContent,dis:document.getElementById('studySel').disabled,t:document.getElementById('selAll').textContent}));
+  await p.click('#selAll'); const sel2=await H(()=>document.getElementById('selN').textContent);
+  ok(sel1.n==='2'&&!sel1.dis&&sel1.t==='선택 해제'&&sel2==='0','전체 선택 → 2개(버튼 켜짐, "선택 해제"), 다시 누르면 0개');
+  await p.click('.nbrow:has(.nbck[value="tiger"]) .nbko'); ok((await H(()=>document.querySelector('.nbck[value="tiger"]').checked))&&(await p.textContent('#selN'))==='1','줄(뜻)을 눌러도 체크됨 → 1개');
+  await p.click('.nbrow:has(.nbck[value="tiger"]) .nbko');
   for(let k=0;k<2;k++){
-    await p.click('.nbrow[data-w="tiger"]'); await p.waitForTimeout(250);
-    ok((await H(()=>window.__wordchain.review()))==='tiger'&&!(await p.textContent('.topbar h2')).includes('/'),`  tiger를 누르면 tiger 하나만 학습(${k+1}번째)`);
+    await studyPick(['tiger']);
+    ok((await H(()=>window.__wordchain.review()))==='tiger'&&!(await p.textContent('.topbar h2')).includes('/'),`  tiger만 골라 학습하기 → tiger 하나만 학습(${k+1}번째)`);
     await answer('tiger'); await p.click('#next'); await p.waitForTimeout(150); await p.click('#done'); await p.waitForTimeout(200);
   }
   nb=await NB(); ok(nb.learned.tiger&&!nb.items.tiger,'같은 날 연달아 맞혀도 도장 → tiger 도장 3개, 외운 단어(횟수 제한 없음)');
   ok(!!(await p.$('.nblearned [data-w="tiger"]'))&&(await p.textContent('.topbar h2')).includes('단어 수첩'),'학습이 끝나면 단어 수첩으로 돌아옴, 외운 단어에 tiger');
 
   // 3. 두 번 틀리면 정답 → ✏️ 연습하기(철자를 보고 따라 쓰기) → 🔁 다시 도전(맞히면 도장)
-  await p.click('.nbrow[data-w="car"]'); await p.waitForTimeout(250);
+  await studyPick(['car']);
   await answer('cat');
   ok((await p.textContent('#msg')).includes('한 번 더')&&!(await p.$('#prac'))&&(await H(()=>window.__wordchain.studyPhase())).tries===1,'첫 번째 틀림: "한 번 더 써 보세요"');
   await answer('kar');
@@ -52,7 +61,7 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   await p.click('#next'); await p.click('#done'); await p.waitForTimeout(200);
   // 다시 도전에서도 두 번 틀리면 정답만 보여 주고 다음으로(연습하기는 한 번)
   await H(()=>{ const s=JSON.parse(localStorage.getItem('wordchain-notebook-v1')); s.items.house={w:'house',reason:'hint',stamps:0}; localStorage.setItem('wordchain-notebook-v1',JSON.stringify(s)); }); await p.goto(url);
-  await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await p.click('.nbrow[data-w="house"]'); await p.waitForTimeout(250);
+  await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await studyPick(['house']);
   await answer('hose'); await answer('hause'); await p.click('#prac'); await p.waitForTimeout(150); await answer('house'); await p.click('#retry'); await p.waitForTimeout(150);
   await answer('hose'); await answer('hause');
   ok((await p.textContent('#msg')).includes('정답은 house')&&!(await p.$('#prac'))&&!!(await p.$('#next'))&&(await NB()).items.house.stamps===0,'다시 도전에서도 두 번 틀리면 정답과 "다음"만(도장 그대로)');

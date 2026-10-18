@@ -101,12 +101,18 @@ const {target,open}=require('./lib');
   ok(lay.every(g=>g>=11),'말풍선이 겹치지 않고 한 줄씩(위아래 간격 '+lay.join(',')+'px)');
   const plain=await H(()=>({txt:[...document.querySelectorAll('#fl .hb')].map(b=>b.textContent),av:document.querySelectorAll('#fl li.fc .fav').length,me:document.querySelectorAll('#fl li.fm .fav').length}));
   ok(plain.txt.join()===r.hl.map(x=>x.split(':')[1]).join()&&plain.av===4&&plain.me===0,'말풍선에는 단어만, 컴퓨터 말풍선 옆에만 🤖');
-  const dim=await H(()=>{ const at=(el)=>{ const r=el.getBoundingClientRect(); const x=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); return x&&x.id; };
-    const cs=getComputedStyle(document.getElementById('rest'),'::before'); return {bubble:at(document.querySelector('#fl .hb[data-i="6"]')),back:at(document.getElementById('back')),corner:document.elementFromPoint(3,3)?.id,pos:cs.position,bg:cs.backgroundColor}; });
-  ok(dim.bubble==='rest'&&dim.back==='rest'&&dim.corner==='rest'&&dim.pos==='fixed'&&dim.bg!=='rgba(10, 25, 32, 0)',`"다음 ▶" 뒤는 화면 전체 딤드(${dim.bg}), 뒤의 말풍선·제목줄 버튼·화면 구석이 눌리지 않음`);
+  // "다음 ▶"일 때: 딤드 없이 버튼만 — 말풍선이 그대로 보이고 눌러 읽을 수 있음
+  const nx=await H(()=>{ const b=document.querySelector('#fl .hb[data-i="6"]'), r=b.getBoundingClientRect(), x=document.elementFromPoint(r.left+8,r.top+r.height/2);
+    return {hitBubble:!!x&&b.contains(x),dim:document.getElementById('rest').classList.contains('dim'),tip:getComputedStyle(document.getElementById('hlTip')).display}; });
+  ok(nx.hitBubble&&!nx.dim&&nx.tip!=='none','"다음 ▶"일 때는 딤드 없이 가운데 버튼만, 말풍선은 그대로 보이고 눌림');
+  await H(()=>{ window.__said=[]; }); await p.click('#fl .hb[data-i="6"]',{position:{x:8,y:10}}); await p.waitForTimeout(150);
+  ok((await H(()=>window.__said)).includes(cpus[3])&&(await RS()).step===2,`다시 보기가 끝난 뒤에도 철자(말풍선)를 누르면 읽기: ${cpus[3]}`);
   ok(!(await p.$('#grade')),'② 화면에는 상자가 없음');
   // ③ 선물 상자: "다음 ▶" → 은상자 창이 저절로 뜨고, 저절로 열려 ⭐ 2, 저절로 닫힘
   await p.focus('#go'); await p.keyboard.press('Enter'); await p.waitForSelector('#grade');
+  const dim=await H(()=>{ const at=(el)=>{ const r=el.getBoundingClientRect(); const x=document.elementFromPoint(r.left+8,r.top+r.height/2); return x&&x.id; };
+    const cs=getComputedStyle(document.getElementById('rest'),'::before'); return {bubble:at(document.querySelector('#fl .hb[data-i="6"]')),back:at(document.getElementById('back')),corner:document.elementFromPoint(3,3)?.id,pos:cs.position}; });
+  ok(dim.bubble==='rest'&&dim.back==='rest'&&dim.corner==='rest'&&dim.pos==='fixed','선물 상자부터는 화면 전체 딤드, 뒤의 말풍선·제목줄 버튼·화면 구석이 눌리지 않음');
   r=await RS();
   ok(r.step===3&&r.lost===1&&r.grade==='silver'&&(await p.textContent('#grade'))==='🥈 은상자'&&!(await p.$('#reward')),'"다음 ▶" → 🥈 은상자 창(하트 1개 잃음·힌트 씀), 처음엔 닫힌 상자');
   await p.waitForSelector('#reward',{timeout:2000});

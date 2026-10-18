@@ -159,7 +159,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .gbody.resting .feed{pointer-events:auto}
 /* 휴대폰(좁은 화면·가로로 눕힌 휴대폰): 퀴즈 중에는 채팅을 숨기고(화면이 좁아 말풍선이 보였다 안 보였다 함) 통과 뒤 다시 보기에서만, 문제 창은 위쪽에 */
 @media (max-width:640px),(pointer:coarse) and (max-height:500px){.gbody:not(.resting) .feed{display:none}.gbody:not(.resting){place-items:start center}}
-.fl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.fl{list-style:none;margin:0 auto;padding:0;width:100%;max-width:540px;display:flex;flex-direction:column;gap:12px}   /* PC: 좌우 말풍선이 너무 멀지 않게 문제 창 폭으로 */
 /* 카톡처럼: 컴퓨터는 왼쪽(🤖), 나는 오른쪽. 새 말풍선은 높이가 0 → 제 높이로 늘며 앞 말풍선을 밀어 올림 */
 .fl li{display:flex;align-items:flex-end;gap:8px}.fl li.fm{justify-content:flex-end}.fl li.wait{display:none}
 .fl li.up{overflow:hidden;animation:hlup var(--dur,600ms) cubic-bezier(.4,0,.2,1) both}.fl li.fc{transform-origin:left bottom}.fl li.fm{transform-origin:right bottom}
@@ -177,7 +177,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .qmodal .buyrow{margin:8px 0 0}
 .restlayer{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px 12px;pointer-events:none}
 .restlayer > *{pointer-events:auto}
-/* 다음 ▶·상자·마지막 버튼 뒤는 화면 전체를 어둡게 덮고, 덮인 요소(말풍선·제목줄 버튼 등)는 눌리지 않게 */
+/* 선물 상자·마지막 버튼 뒤는 화면 전체를 어둡게 덮고, 덮인 요소(말풍선·제목줄 버튼 등)는 눌리지 않게. "다음 ▶"일 때는 딤드 없이 버튼만(말풍선을 보고 눌러 읽기) */
 .restlayer::before{content:'';position:fixed;inset:0;z-index:-1;background:rgba(10,25,32,0);pointer-events:none;transition:background-color .3s}
 .restlayer.dim::before{background:rgba(10,25,32,.55);pointer-events:auto}
 .restlayer.dim .hlnote{display:none}
@@ -258,10 +258,14 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .note{color:var(--muted);font-size:14px}
 .stamps{color:var(--link);letter-spacing:2px;font-size:15px;white-space:nowrap}
 .nblist,.rules .nblist{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
-.nbrow{display:grid;grid-template-columns:minmax(90px,auto) 1fr auto;gap:2px 12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.nbrow{display:grid;grid-template-columns:auto minmax(90px,auto) 1fr auto;gap:2px 12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .nbrow{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:border-color .12s}.nbrow:hover{border-color:var(--accent)}.nblist li{list-style:none}
 .nblearned .chip{border:0;font:inherit;cursor:pointer}.nblearned .chip:hover{outline:2px solid var(--good)}
-.nbrow .word{font-size:18px}.nbrow small{grid-column:1/-1;color:var(--muted);font-size:12px}
+.nbrow .word{font-size:18px}.nbrow small{grid-column:2/-1;color:var(--muted);font-size:12px}
+.nbck{width:20px;height:20px;margin:0;accent-color:var(--accent);cursor:pointer}.nbrow.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+/* 고른 단어 막대: 목록이 길어도 화면 아래에 붙어 보임 */
+.nbbar{position:sticky;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;border-radius:14px;background:var(--surface);border:2px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.nbbar .btn{padding:8px 14px;font-size:15px}
 .nblearned{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .review-end{margin:40px auto}
 .target{background:var(--surface);border:2px dashed var(--accent);border-radius:16px;padding:10px 14px;margin-bottom:10px;text-align:center}
@@ -743,20 +747,31 @@ function notebook(){
   stopTimer();
   // 단어장에서 빠진 단어(예전 단어장에만 있던 단어 등)는 저장은 그대로 두고 화면·개수에서만 뺌
   const items=nbList().sort((a,b)=>b.stamps-a.stamps||a.w.localeCompare(b.w)), learned=Object.values(nb.learned).filter(x=>DICT.has(x.w));
-  const row=x=>{ const d=DICT.get(x.w); return `<li><button class="nbrow" data-w="${esc(x.w)}" aria-label="${esc(disp(d))} 학습하기"><b class="word">${esc(disp(d))}</b><span class="nbko">${esc(plainKo(d.ko))}</span>${stampHTML(x.stamps)}<small>${NB_REASON[x.reason]||''}</small></button></li>`; };
+  // 모은 단어: 줄을 누르면(체크박스) 학습할 단어로 고름 → 아래 "선택한 단어 학습하기"로 넘어감
+  const row=x=>{ const d=DICT.get(x.w); return `<li><label class="nbrow"><input type="checkbox" class="nbck" value="${esc(x.w)}" aria-label="${esc(disp(d))} 고르기"><b class="word">${esc(disp(d))}</b><span class="nbko">${esc(plainKo(d.ko))}</span>${stampHTML(x.stamps)}<small>${NB_REASON[x.reason]||''}</small></label></li>`; };
   $app.innerHTML=`
   <div class="topbar"><button class="back" id="back">← 돌아가기</button><h2>📒 나의 단어 수첩</h2></div>
-  <p class="nbguide">단어를 누르면 바로 학습해요. 맞힐 때마다 도장 1개, ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'! 언제든, 몇 번이든 할 수 있어요.</p>
+  <p class="nbguide">학습할 단어를 골라(체크) "선택한 단어 학습하기"를 누르거나, 모두 학습해요. 맞힐 때마다 도장 1개, ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'! 언제든, 몇 번이든 할 수 있어요.</p>
   ${items.length?`<div class="row" style="justify-content:flex-start;margin:0 0 6px"><button class="btn" id="study">✏️ 모두 학습하기 ${items.length}개</button></div>`:''}
   <section class="rules"><h2>모은 단어 ${items.length}개</h2>
     <p class="note">틀렸을 때 나온 예시, 힌트로 본 단어, 처음 맞힌 기본 어휘가 모여요.</p>
-    ${items.length?`<ul class="nblist">${items.map(row).join('')}</ul>`:'<p class="note">아직 모은 단어가 없어요.</p>'}</section>
+    ${items.length?`<ul class="nblist">${items.map(row).join('')}</ul>
+    <div class="nbbar" role="group" aria-label="고른 단어"><button class="linkbtn" id="selAll" type="button">전체 선택</button><button class="btn" id="studySel" type="button" disabled>선택한 단어 학습하기 <b id="selN">0</b>개 ▶</button></div>`:'<p class="note">아직 모은 단어가 없어요.</p>'}</section>
   <section class="rules"><h2>외운 단어 ${learned.length}개</h2>
     ${learned.length?`<div class="nblearned">${learned.map(x=>{const d=DICT.get(x.w);return `<button class="chip ok word" data-w="${esc(x.w)}" aria-label="${esc(disp(d))} 연습하기">${esc(disp(d))}</button>`;}).join('')}</div>`:'<p class="note">도장을 다 모은 단어가 여기에 와요.</p>'}</section>
   <div class="foot"><span>수첩은 이 기기의 브라우저에만 저장돼요.</span><button class="linkbtn" id="nbclear">수첩 비우기</button></div>`;
   $app.querySelector('#back').onclick=goBack;
   $app.querySelector('#study')?.addEventListener('click',()=>startStudy(null,'nb'));
-  $app.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>startStudy([nb.items[b.dataset.w]||{w:b.dataset.w}],'nb'));
+  // 외운 단어를 누르면 도장 없이 연습
+  $app.querySelectorAll('.nblearned [data-w]').forEach(b=>b.onclick=()=>startStudy([{w:b.dataset.w}],'nb'));
+  // 고른 단어: 고른 수를 보여 주고, 하나 이상이면 "선택한 단어 학습하기"(목록 순서대로)
+  const cks=[...$app.querySelectorAll('.nbck')], sb=$app.querySelector('#studySel'), sa=$app.querySelector('#selAll');
+  const sync=()=>{ const n=cks.filter(c=>c.checked).length; if(!sb) return; $app.querySelector('#selN').textContent=n; sb.disabled=!n; sa.textContent=n===cks.length?'선택 해제':'전체 선택';
+    cks.forEach(c=>c.closest('.nbrow').classList.toggle('on',c.checked)); };
+  cks.forEach(c=>c.addEventListener('change',sync));
+  sa?.addEventListener('click',()=>{ const all=cks.every(c=>c.checked); cks.forEach(c=>c.checked=!all); sync(); });
+  sb?.addEventListener('click',()=>{ const ws=cks.filter(c=>c.checked).map(c=>nb.items[c.value]).filter(Boolean); if(ws.length) startStudy(ws,'nb'); });
+  sync();
   confirmBtn('#nbclear','정말 비울까요? 한 번 더 누르세요',()=>{ nb={items:{},learned:{},tbSeen:[]}; nbSave(); notebook(); });
 }
 
@@ -938,7 +953,10 @@ function latinize(inp){ const v=inp.value; if(!KO_RE.test(v)) return false;
 })();
 // 영어 단어 입력칸(게임·복습·빈칸 채우기 공통)
 // inputmode=email: 휴대폰에서 영문 자판이 뜸. lang=en: 일부 PC 브라우저가 영문 입력기로 전환
-const enFormHTML=(ph,label,btn)=>`<form class="typing" id="f" autocomplete="off"><input id="inp" type="text" lang="en" inputmode="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${esc(ph)}" aria-label="${esc(label)}"><button class="btn" type="submit">${btn}</button></form>`;
+// 자동 완성 끄기: 입력칸마다 매번 새 name(예전 입력 기록과 맞지 않게) + Chrome이 모르는 autocomplete 값("off"는 무시될 때가 있음)
+const AC_OFF='wordchain-answer-off';
+const acName=()=>'w'+Math.random().toString(36).slice(2,9);
+const enFormHTML=(ph,label,btn)=>`<form class="typing" id="f" autocomplete="off"><input id="inp" name="${acName()}" type="text" lang="en" inputmode="email" autocomplete="${AC_OFF}" aria-autocomplete="none" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${esc(ph)}" aria-label="${esc(label)}"><button class="btn" type="submit">${btn}</button></form>`;
 // 한글 자판: 입력기가 글자를 조합하는 동안 값을 바꾸면 글자가 빠지므로(rose → roe) 조합이 끝난 뒤에만 영어로 바꿈.
 // 조합 중에는 바뀔 영어를 안내만 하고, 낼 때 한 번 더 바꿈. onInput(값): 글자가 바뀔 때마다(빈칸 채우기 미리 보기용)
 function enInput(inp,form,onSubmit,onInput){
@@ -1359,7 +1377,7 @@ function renderGuided(){
     // 빈칸 칸에 바로 글자를 씀: 한 칸을 채우면 다음 빈칸으로, Backspace로 앞 빈칸으로, Enter로 확인. 힌트로 다시 그려도 쓴 글자는 유지
     G.blankVals=G.blankVals||{};
     ans.innerHTML=`<form id="f" autocomplete="off"><div class="slots" id="bslots" style="--n:${w.length}" role="group" aria-label="빈칸이 있는 단어">${w.split('').map((c,i)=>G.blankIdx.includes(i)
-        ?`<input class="slot bin${i===0?' first'+(G.blankVals[0]===c?' ok':''):''}" data-i="${i}" value="${esc(G.blankVals[i]||'')}" maxlength="2" lang="en" inputmode="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="${i?`${i+1}번째 글자(빈칸)`:'첫 글자(빈칸): 컴퓨터 단어의 끝 글자'}">`
+        ?`<input class="slot bin${i===0?' first'+(G.blankVals[0]===c?' ok':''):''}" data-i="${i}" value="${esc(G.blankVals[i]||'')}" maxlength="2" lang="en" inputmode="email" name="${acName()}" autocomplete="${AC_OFF}" aria-autocomplete="none" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="${i?`${i+1}번째 글자(빈칸)`:'첫 글자(빈칸): 컴퓨터 단어의 끝 글자'}">`
         :slotHTML(c,i===0?'given':'fixed')).join('')}</div>
       <p class="note center">빈칸 ${G.blankIdx.length}칸을 채우고 Enter · 첫 칸은 끝 글자</p><div class="row"><button class="btn" type="submit">확인</button></div></form>`;
     const ins=[...ans.querySelectorAll('.bin')];
@@ -1791,7 +1809,6 @@ function restShow(box){
   let off=()=>{};
   const finish=()=>{ clearTimeout(S.tm); off(); if(!alive()) return; S.shown=n; fl.querySelectorAll('li.wait,li.up').forEach(li=>li.classList.remove('wait','up'));   // 올라오던 말풍선도 바로 제자리에
     const tip=box.querySelector('#hlTip'); if(tip) tip.textContent='말풍선을 누르면 단어를 읽어 줘요.';
-    box.classList.add('dim');
     if(!box.querySelector('#go')){ const b=document.createElement('button'); b.className='btn big restnext pop'; b.id='go'; b.textContent='다음 ▶'; box.appendChild(b); b.onclick=()=>restGo(3); b.focus({preventScroll:true}); } };
   if(S.shown>=n){ finish(); return; }
   off=restTap(S,2,finish);
@@ -1801,7 +1818,7 @@ function restShow(box){
 }
 // ③ 🎁 선물 상자(저절로): 등급 상자가 흔들리다 열려 보상을 보여 주고(giftShake → giftShow) 저절로 닫힘. 누르거나 Enter면 다음으로 빨리
 function restBox(box){
-  const S=REST, g=GRADES[S.grade], RB=SETTINGS.restBox;
+  const S=REST, g=GRADES[S.grade], RB=SETTINGS.restBox; box.classList.add('dim');
   $app.querySelector('#gbody').classList.remove('free');
   const draw=()=>{ const r=S.reward;
     box.innerHTML=`<div class="qmodal rcard gift-card pop" role="dialog" aria-label="선물 상자">

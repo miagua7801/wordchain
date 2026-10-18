@@ -14,7 +14,7 @@ const day=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return `${d.getFull
   await seed({'wordchain-v2':{track:'normal',prog:{},time:{},basicVer:2},'wordchain-notebook-v1':{items,learned:{zebra:{w:'zebra',date:day(-3)}},tbSeen:[]}});
   await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await p.waitForTimeout(200);
   const t=await p.textContent('#app');
-  ok(t.includes('단어를 누르면 바로 학습해요')&&t.includes('언제든, 몇 번이든')&&(await p.textContent('#study')).includes('12개'),'수첩 안내 문구, "모두 학습하기 12개"');
+  ok(t.includes('학습할 단어를 골라(체크)')&&t.includes('언제든, 몇 번이든')&&(await p.textContent('#study')).includes('12개'),'수첩 안내 문구, "모두 학습하기 12개"');
   await p.click('#study'); await p.waitForTimeout(300);
   ok((await p.textContent('.topbar h2')).includes('/ 12'),'모두 학습하기: 수첩 단어 12개 모두(개수 제한 없음)');
   const seen=[];
