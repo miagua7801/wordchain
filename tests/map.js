@@ -81,7 +81,7 @@ const {target,open}=require('./lib');
   ok(lay.behind&&lay.n===1&&(await H(()=>window.__wordchain.feed()))[0].startsWith('cpu:'),'뒤에는 채팅(흐리게), 컴퓨터 첫 단어 말풍선');
   // 정답 → 잠깐 뒤 문제 창을 감추고 내 말풍선이 채팅에 → 다음 컴퓨터 단어와 함께 문제 창이 다시
   const tg=await H(()=>window.__wordchain.target()), bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));
-  await p.focus('#bslots .bin'); await p.keyboard.type(bins.map(i=>tg[i]).join('')); await p.keyboard.press('Enter');
+  await p.focus('#bslots .bin'); await p.keyboard.type(bins.map(i=>tg[i]).join(''),{delay:40}); await p.keyboard.press('Enter');
   await p.waitForTimeout(1250);
   const aw=await H(()=>({away:document.getElementById('qm').classList.contains('away'),free:document.getElementById('gbody').classList.contains('free'),feed:[...document.querySelectorAll('#fl li')].map(l=>l.className.split(' ')[0]+':'+l.textContent.replace('🤖',''))}));
   ok(aw.away&&aw.free&&aw.feed.length===2&&aw.feed[1]==='fm:'+tg,'정답 뒤: 문제 창을 감추고 채팅에 내 말풍선(오른쪽) '+aw.feed.join(' '));

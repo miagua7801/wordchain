@@ -12,6 +12,9 @@ const NUM=/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\w+t
     if(bad.size) fail++;
     console.log(`${t} ${lv}: 컴퓨터 단어 ${n}개, 규칙 위반 ${[...bad].join(', ')||'없음'}`);
   }
+  // 출제하지 않을 단어(SETTINGS.noAsk): spaghetti는 출제 단어에 없고 학생 답으로는 인정
+  const sp=await p.evaluate(()=>[window.__wordchain.inAll('spaghetti'),window.__wordchain.judge('spaghetti')]);
+  if(sp[0]||sp[1]!=='dict') fail++; console.log(`spaghetti: 출제 ${sp[0]?'됨(실패)':'안 함'}, 학생 답 판정 ${sp[1]}`);
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();

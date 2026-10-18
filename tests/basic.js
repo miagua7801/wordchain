@@ -44,7 +44,7 @@ const {target,open,startLevel}=require('./lib');
   ok((await p.textContent('#msg'))==='컴퓨터 단어의 끝 글자를 다시 봐요.'&&(await H(()=>document.activeElement.dataset.i))==='0','첫 글자를 틀리면 "컴퓨터 단어의 끝 글자를 다시 봐요." + 첫 칸에 그대로');
   await p.keyboard.type(t3[0]); await p.waitForTimeout(100);
   ok(!!(await p.$('.cpu .big .last.land'))&&!!(await p.$('#bslots .bin.first.ok'))&&(await H(()=>document.activeElement.dataset.i))===String(bins[1]),'첫 글자를 맞게 채우면 끝 글자와 첫 칸이 반짝이고 다음 빈칸으로');
-  await p.keyboard.type(bins.slice(1).map(i=>t3[i]).join('')); await p.keyboard.press('Enter'); await p.waitForTimeout(200);
+  await p.keyboard.type(bins.slice(1).map(i=>t3[i]).join(''),{delay:40}); await p.keyboard.press('Enter'); await p.waitForTimeout(200);
   ok((await p.textContent('#msg')).startsWith('좋아요'),`빈칸 칸에 ${bins.map(i=>t3[i]).join('')}을 써서 ${t3} 완성`);
   // 긴 단어도 글자 칸이 한 줄(휴대폰 너비)
   await p.setViewportSize({width:360,height:640}); await p.evaluate(()=>window.__wordchain.forceTarget('umbrella')); await p.waitForTimeout(200);

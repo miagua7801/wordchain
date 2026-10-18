@@ -33,6 +33,24 @@ const {target,open,startLevel}=require('./lib');
       ok(r.inp<=K-56&&r.ko>=0&&r.kob<=K-56,`아이폰 ${t} ${lv}단계: 입력칸(${Math.round(r.inp)})·뜻(${Math.round(r.ko)}~${Math.round(r.kob)})이 주소창(키보드 위 ${K-64}~${K}px)에 가리지 않음`);
       await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
     }
+    // 화면 떨림: 사파리는 칸에 초점이 갈 때마다 그 칸이 자판 바로 위에 오게 스크롤함. 앱이 그때마다 다시 스크롤하면 위아래로 떨림
+    // → 빈칸 채우기에서 칸을 옮겨 가며 써도 앱은 다시 스크롤하지 않음
+    for(const lv of [3,4]){
+      await startLevel(p,url,'basic',lv); await p.waitForTimeout(500);
+      const sel=lv===3?'#bslots .bin':'#inp'; await p.focus(sel); await p.evaluate(k=>window.__kb(k),K); await p.waitForTimeout(500);
+      await p.evaluate(()=>{ window.__appScroll=0; const o=window.scrollTo; window.scrollTo=function(){ window.__appScroll++; return o.apply(window,arguments); };
+        // 사파리 흉내: 초점이 간 칸의 아래끝이 자판 바로 위(보이는 높이 - 10px)에 오게 문서를 스크롤하고 visualViewport scroll 이벤트
+        addEventListener('focusin',e=>setTimeout(()=>{ const r=e.target.getBoundingClientRect(), vv=window.visualViewport; const d=r.bottom-(vv.height-10);
+          if(Math.abs(d)>1){ document.scrollingElement.scrollTop+=d; vv.dispatchEvent(new Event('scroll')); } },0)); });
+      const ys=[];
+      if(lv===3){ const tg=await p.evaluate(()=>window.__wordchain.target()), bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));
+        for(const i of bins.slice(0,-1)){ await p.keyboard.type(tg[i]); await p.waitForTimeout(350); ys.push(await p.evaluate(()=>scrollY)); } }
+      else for(const c of 'abc'){ await p.keyboard.type(c); await p.waitForTimeout(200); ys.push(await p.evaluate(()=>scrollY)); }
+      for(let k=0;k<3;k++){ await p.evaluate(()=>window.visualViewport.dispatchEvent(new Event('scroll'))); await p.waitForTimeout(300); ys.push(await p.evaluate(()=>scrollY)); }
+      const n=await p.evaluate(()=>window.__appScroll);
+      ok(n===0&&new Set(ys).size<=2,`아이폰 기초 ${lv}단계: 칸을 옮겨 쓰고 브라우저가 스크롤해도 앱이 다시 스크롤하지 않음(앱 스크롤 ${n}번, 위치 ${ys.join(',')})`);
+      await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },664); await p.waitForTimeout(200);
+    }
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 휴대폰: 퀴즈 중에는 채팅 말풍선을 숨기고(정답 뒤에도 문제 창 그대로), 단계를 마친 뒤 다시 보기에서만 보임
   { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true}); const H=(f,a)=>p.evaluate(f,a);

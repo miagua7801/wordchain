@@ -683,6 +683,8 @@ const SETTINGS={
   listen:{normalReplays:2, hardReplays:1, revealHold:3000, challengeRevealHold:2500, slowRate:0.45},
   // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
   basicSpeech:{rate:0.6, targetGap:1500},
+  // 출제하지 않을 단어(컴퓨터 단어·완성할 단어·보기·힌트·예시에서 뺌). 학생이 답으로 쓰면 그대로 인정
+  noAsk:['spaghetti'],
   // 기본 어휘 우선 출제: 컴퓨터 출제·객관식 정답·기초 다음 단어·힌트·예시·철자 도움에서 교육부 기본 어휘 level 1·2 단어를 이 배수만큼 더 자주
   coreWeight:5,
   // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘 보너스(level 2 core2 · level 1 core1) + 단어장 밖 단어
@@ -766,8 +768,9 @@ function isBlocked(w,inVocab){
   if(inVocab||BL_AL.has(n2)) return false;
   return BL.strong.some(x=>n2.includes(x))||(st&&BL_ST1.some(x=>norm1(w).includes(x)));
 }
-// 컴퓨터 출제·힌트·예시·보기·듣고 쓰기·복습에 쓰는 단어에서 금지어를 모두 뺌
-const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w));
+// 컴퓨터 출제·힌트·예시·보기·듣고 쓰기·복습에 쓰는 단어에서 금지어와 출제하지 않을 단어(SETTINGS.noAsk)를 모두 뺌
+const NO_ASK=new Set(SETTINGS.noAsk.map(w=>w.toLowerCase()));
+const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w)&&!NO_ASK.has(x.w));
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 단어 판정: 단어장 단어 / 단어장 밖 올바른 단어 / 틀린 단어 ----------
@@ -1114,7 +1117,7 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-18 12:40'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-18 13:04'; // build.py가 빌드 시각으로 바꿈
 
 // 새 버전 알림: 배포된 version.json의 빌드 시각이 지금 페이지와 다르면 안내 띠를 띄우고, 누르면 새 주소(?v=)로 이동해 캐시된 예전 페이지를 건너뜀
 // (file://·아티팩트처럼 version.json이 없는 곳에서는 조용히 넘어감)
@@ -1554,13 +1557,18 @@ function renderGuided(){
         :slotHTML(c,i===0?'given':'fixed')).join('')}</div>
       <p class="note center">빈칸 ${G.blankIdx.length}칸을 채우고 Enter · 첫 칸은 끝 글자</p><div class="row"><button class="btn" type="submit">확인</button></div></form>`;
     const ins=[...ans.querySelectorAll('.bin')];
-    const fix=(el,e)=>{ if(e&&e.isComposing) return; const raw=el.value; const v=koToEn(raw).toLowerCase().replace(/[^a-z]/g,''); el.value=v.slice(-1); G.blankVals[el.dataset.i]=el.value;
+    // 철자 겹침 막기: 다음 칸으로는 이번 키 입력이 다 끝난 뒤에 옮기고(같은 키의 남은 입력이 다음 칸에 들어가지 않게),
+    // 그래도 방금 다른 칸에 쓴 글자가 40ms 안에 이 빈칸에 또 들어오면 같은 키의 남은 입력으로 보고 버림(입력기·브라우저·운영체제와 관계없이)
+    let lastPut=null;
+    const fix=(el,e)=>{ if(e&&e.isComposing) return; const raw=el.value; const v=koToEn(raw).toLowerCase().replace(/[^a-z]/g,''), ch=v.slice(-1);
+      if(ch&&lastPut&&lastPut.el!==el&&lastPut.ch===ch&&Date.now()-lastPut.t<40&&!G.blankVals[el.dataset.i]){ el.value=''; G.blankVals[el.dataset.i]=''; return; }
+      el.value=ch; G.blankVals[el.dataset.i]=el.value;
       if(KO_RE.test(raw)) msg('한글 자판이에요. 한/영 키를 눌러 영어로 바꿔 주세요.','info');
       // 첫 글자 칸: 맞으면 연결선이 이어지고, 틀리면 끝 글자를 다시 보게 함(다음 칸으로 넘어가지 않음)
       if(el.dataset.i==='0'){ const good=el.value===w[0]; el.classList.toggle('ok',good&&!!el.value);
         if(el.value&&!good){ msg(FIRST_MSG,'info'); el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400); el.select(); return; }
         if(good){ linkLand(); msg('','info'); } }
-      if(el.value){ const nx=ins[ins.indexOf(el)+1]; if(nx) nx.focus({preventScroll:true}); } };
+      if(el.value){ lastPut={el,ch:el.value,t:Date.now()}; const nx=ins[ins.indexOf(el)+1]; if(nx) setTimeout(()=>{ if(document.activeElement===el) nx.focus({preventScroll:true}); },0); } };
     ins.forEach(el=>{ el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
       el.addEventListener('focus',()=>el.select());
       el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus({preventScroll:true}); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
@@ -1609,8 +1617,13 @@ function linkLand(){ if(calm()) return; [$app.querySelector('.cpu .big .last'),.
   const field=()=>{ const a=document.activeElement; return a&&a.tagName==='INPUT'&&/^(text|search|email)$/.test(a.type)&&$app.contains(a)?a:null; };
   // 아이폰·아이패드 사파리: 자판을 띄우면 주소창이 자판 바로 위에 떠서 보이는 영역(visualViewport)의 아래쪽을 가림 → 그만큼(IOS_BAR) 더 위로
   const IOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1), IOS_BAR=64, pad=IOS?IOS_BAR:8;
+  // 화면 떨림 막기: 같은 입력 묶음(빈칸 채우기 칸들·입력칸의 form)과 같은 보이는 높이에서는 한 번만 맞춤.
+  // 칸을 옮길 때마다 브라우저(특히 아이폰 사파리)가 그 칸을 자판 위로 스크롤하는데, 그때마다 다시 맞추면 서로 밀고 당겨 위아래로 흔들림
+  let pinned=null;
   const pin=()=>{ const a=field(); if(!a||!root.classList.contains('kb')||Date.now()<touchUntil) return;
     const y=e=>e.getBoundingClientRect().bottom+scrollY+pad, form=a.closest('form')||a, cpu=$app.querySelector('.cpu');   // 문서 기준 아래끝(+가리는 바 높이)
+    if(pinned&&pinned.form===form&&Math.abs(pinned.h-vv.height)<4) return;
+    pinned={form,h:vv.height};
     // 확인 버튼까지 보이게 하되, 그러려면 컴퓨터 단어 카드가 가려지는 아주 작은 화면에서는 입력칸까지만(확인은 키보드의 Enter)
     // 이미 필요한 곳(컴퓨터 단어 카드 위쪽, 입력칸)이 다 보이면 건드리지 않음 — 칸을 옮길 때마다 브라우저의 스크롤과 다투면 화면이 떨림
     // 화면이 바뀌며 브라우저가 스크롤을 그대로 두어 맨 윗줄만 가려진 경우는, 필요한 곳이 보여도 덜 내린 자리로 한 번 되돌림
@@ -1622,15 +1635,17 @@ function linkLand(){ if(calm()) return; [$app.querySelector('.cpu .big .last'),.
     const now=scrollY+vv.offsetTop;
     if(seen&&want>=now-2) return;
     if(Math.abs(want-now)>2) scrollTo(0,want-vv.offsetTop); };
-  const update=()=>{
+  const update=e=>{
     if(innerWidth!==wid){ wid=innerWidth; full=0; }                                  // 회전하면 기준 높이를 다시 잼
     full=Math.max(full,vv.height);
     // 터치 화면에서만(컴퓨터 창 크기 바꾸기 제외), 두 손가락으로 확대한 때는 제외
     const on=!!field()&&full-vv.height>120&&Math.abs((vv.scale||1)-1)<.05&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
     if(on!==root.classList.contains('kb')){ root.classList.toggle('kb',on); if(!on&&scrollY>0&&$app.querySelector('.status')) scrollTo(0,0); }   // 키보드가 내려가면 게임 화면은 맨 위로
     root.style.setProperty('--vvt',vv.offsetTop+'px'); root.style.setProperty('--kbh',Math.round(full-vv.height)+'px');
-    clearTimeout(timer); pin(); timer=setTimeout(pin,250); };                        // 키보드가 다 올라온 뒤 한 번 더
-  vv.addEventListener('resize',update); vv.addEventListener('scroll',update);
+    if(!on) pinned=null;
+    clearTimeout(timer); pin(); if(e&&e.type==='resize') timer=setTimeout(()=>{ pinned=null; pin(); },250); };   // 키보드가 오르내리면 다 움직인 뒤 한 번 더(그때는 다시 맞춤)
+  // 브라우저가 스크롤만 한 때(visualViewport scroll)는 위치 값만 고치고 다시 맞추지 않음
+  vv.addEventListener('resize',update); vv.addEventListener('scroll',()=>root.style.setProperty('--vvt',vv.offsetTop+'px'));
   addEventListener('focusin',()=>setTimeout(update,50)); addEventListener('focusout',()=>setTimeout(update,80));
   // 학생이 직접 화면을 끌어 볼 때는 되돌리지 않음
   addEventListener('touchmove',()=>{ touchUntil=Infinity; },{passive:true});
