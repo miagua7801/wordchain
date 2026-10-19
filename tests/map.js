@@ -44,7 +44,7 @@ const {target,open}=require('./lib');
   await p.hover('[data-lv="2"]'); await p.waitForTimeout(250);
   const tip2=await H(()=>{ const t=document.getElementById('tip'), n=document.querySelector('[data-lv="2"]').getBoundingClientRect(), r=t.getBoundingClientRect(), o=document.querySelector('[data-lv="1"]'), cs=getComputedStyle(o);
     return {txt:t.textContent,above:r.bottom<=n.top,focus:document.getElementById('map').classList.contains('focus'),blur:cs.filter,op:+cs.opacity,me:getComputedStyle(document.querySelector('[data-lv="2"]')).filter}; });
-  ok(tip2.txt.includes('2단계 · 직접 쓰기 · 기초')&&tip2.txt.includes('6번 성공 · ❤️ 3')&&tip2.txt.includes('1단계를 통과하면 열려요')&&tip2.above,'2단계에 마우스: 단계 위에 말풍선(이름·설명·목표, 잠김 안내)');
+  ok(tip2.txt.includes('2단계 · 직접 쓰기')&&tip2.txt.includes('6번 성공 · ❤️ 3')&&tip2.txt.includes('1단계를 통과하면 열려요')&&tip2.above,'2단계에 마우스: 단계 위에 말풍선(이름·설명·목표, 잠김 안내)');
   ok(tip2.focus&&/blur/.test(tip2.blur)&&tip2.op<0.6&&tip2.me==='none','다른 단계는 흐리게(blur·딤드), 가리킨 단계는 그대로 — '+tip2.blur+' / '+tip2.op);
   await p.hover('[data-lv="1"]'); await p.waitForTimeout(150);
   ok((await p.textContent('#tip')).includes('1단계 · 빈칸 채우기')&&(await p.$$('.tip')).length===1&&!!(await p.$('#tipGo')),'다른 단계로 옮기면 말풍선도 옮김(열린 단계는 "▶ 시작")');
