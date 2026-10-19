@@ -49,7 +49,16 @@ const norm=s=>s.split(/\r?\n/).map(l=>l.replace(/^\s*(\/\/|>)\s?/,'')).join(' ')
   // 3. 앱 화면: 단계 맵 아래 '출처·저작권' → 창에 한국어 안내 + 영어 고지 원문. 선생님 모드('버전' 5번 누르기)와 따로 동작
   const {b,p,errs}=await open({student:true,viewport:{width:390,height:760},isMobile:true,hasTouch:true});
   await p.goto(url); await p.evaluate(()=>localStorage.clear()); await p.goto(url);
+  // 늘 보이는 한 줄: 첫 화면과 단계 맵 아래, 휴대폰 너비에서 두 줄 이하·가로로 밀어내지 않음
+  const own=()=>p.$eval('.own',e=>{ const r=e.getBoundingClientRect(), lh=parseFloat(getComputedStyle(e).lineHeight);
+    return {t:e.innerText.replace(/\s+/g,' ').trim(), lines:Math.round(r.height/lh), inside:r.left>=0&&r.right<=innerWidth, wide:document.documentElement.scrollWidth>innerWidth}; }).catch(()=>null);
+  const LINE='© 2026 miagua7801 · CC BY-NC-ND 4.0 · 출처·저작권';
+  let o=await own(); ok(o&&o.t===LINE&&o.lines<=2&&o.inside&&!o.wide,`첫 화면: 저작권 한 줄 "${o&&o.t}" (${o&&o.lines}줄, 넘침 ${o&&o.wide})`);
+  await p.click('#credits'); ok(!!(await p.$('.overlay [role=dialog][aria-label="출처·저작권"]')),'첫 화면: 출처 창 열림');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(100); ok(!(await p.$('.overlay')),'첫 화면: Esc로 닫힘');
   await p.click('[data-t="basic"]'); await p.waitForSelector('#credits');
+  o=await own(); ok(o&&o.t===LINE&&o.lines<=2&&o.inside&&!o.wide,`단계 맵: 저작권 한 줄 (${o&&o.lines}줄, 넘침 ${o&&o.wide})`);
+  ok(!(await p.evaluate(()=>/@[a-z0-9-]+\.[a-z]/i.test(document.body.innerText))),'학생 화면에 이메일 주소 없음');
   // 두 글자 상자 사이 거리(가로 또는 세로)가 8px 이상이면 잘못 누를 일이 적음. 줄이 바뀌어 아래로 가도 됨
   const box=await p.$eval('#credits',e=>{ const r=e.getBoundingClientRect(), v=document.querySelector('#ver').getBoundingClientRect();
     return {vis:r.width>0, gap:Math.max(r.left-v.right, v.left-r.right, r.top-v.bottom, v.top-r.bottom)}; });
@@ -62,8 +71,13 @@ const norm=s=>s.split(/\r?\n/).map(l=>l.replace(/^\s*(\/\/|>)\s?/,'')).join(' ')
   ok(dt.includes('© 2026 miagua7801')&&lk&&lk.href.includes(CC)&&lk.t==='_blank'&&/할 수 없는 것/.test(dt),'출처 창: © 2026 miagua7801 + CC BY-NC-ND 4.0 링크(새 창) + 할 수 있는 것/없는 것');
   ok(/저작자가 만든|앱 코드·화면·게임 규칙·한국어 뜻풀이·문구에 적용/.test(dt),'출처 창: 라이선스 적용 범위');
   ok(/교육부 고시 영어과 교육과정/.test(dt)&&dt.includes('교육부 고시 제2022-33호 [별책 3]')&&/저작권법 제7조/.test(dt)&&/Open Font License/.test(dt),'출처 창: 기본 어휘 출처·고시 번호·근거, 글꼴 라이선스(한국어 안내)');
+  ok(!(await p.evaluate(()=>/@[a-z0-9-]+\.[a-z]/i.test(document.body.innerText))),'출처 창에도 이메일 주소 없음');
   await p.click('#ov1');
   ok(!(await p.$('.overlay'))&&await p.evaluate(()=>document.activeElement&&document.activeElement.id==='credits'),'닫기 → 창 닫히고 초점은 출처 버튼으로');
+  await p.focus('#credits'); await p.keyboard.press('Enter'); await p.waitForTimeout(100);
+  const kb=await p.evaluate(()=>!!document.querySelector('.overlay')&&document.activeElement.id==='ov1');
+  await p.keyboard.press('Enter'); await p.waitForTimeout(100);
+  ok(kb&&!(await p.$('.overlay'))&&await p.evaluate(()=>document.activeElement.id==='credits'),'키보드: Enter로 열고(초점은 닫기) Enter로 닫음 → 초점은 출처 버튼');
   for(let i=0;i<5;i++){ await p.click('#credits'); await p.click('#ov1'); }
   ok(await p.evaluate(()=>localStorage.getItem('wordchain-teacher')!=='1'&&!document.querySelector('#teacher')),'출처 버튼을 5번 눌러도 선생님 모드는 켜지지 않음');
   ok(!errs.length,'페이지 오류 없음 '+errs.join(' | '));

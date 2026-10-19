@@ -340,7 +340,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .credits a{color:var(--accent, #0f6e7a)}
 .card .credits p{margin:4px 0}
 .credits blockquote{margin:6px 0;padding:8px 10px;border-left:3px solid var(--line, #c9d6dd);background:var(--surface-2, #eef3f6);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
-.linkbtn.credit{margin-left:12px;font-size:12px}
+.own{margin:14px 0 0;text-align:center;font-size:12px;line-height:1.6;color:var(--muted);word-break:keep-all}
+.own .linkbtn.credit{font-size:12px;padding:6px 2px}
 #app{position:relative;z-index:1}
 /* 어두운 화면의 별(밝은 화면에서는 안 보임) */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:var(--stars);background-size:240px 240px;opacity:var(--stars-o)}
@@ -757,6 +758,11 @@ const SETTINGS={
   // 배지 조건 숫자 (core: 기본 어휘 탐험가 — 서로 다른 기본 어휘 level 1·2 단어 수)
   badge:{fire:[5,10], longWord:7, core:[10,30], outside:5, comeback:5, review:10, ears:5},
 };
+// 이 앱의 저작권 표시(저작자·연도·라이선스는 여기 한곳에서만 바꿈, 학생 화면에는 실명 대신 아이디). 법적 전문은 저장소의 LICENSE
+const OWNER={year:2026, name:'miagua7801', license:'CC BY-NC-ND 4.0', licenseKo:'저작자표시-비영리-변경금지'};
+const LICENSE_URL='https://creativecommons.org/licenses/by-nc-nd/4.0/deed.ko';
+// 첫 화면·단계 맵 아래 늘 보이는 한 줄. '출처·저작권'을 누르면 출처 창
+const ownLine=()=>`<p class="own">© ${OWNER.year} ${OWNER.name} · ${OWNER.license} · <button class="linkbtn credit" id="credits">출처·저작권</button></p>`;
 
 // 단계 규칙 창 첫 쪽의 🤖 컴퓨터 한마디: '수준-단계 번호'마다 1~3개, 그중 하나를 무작위로 보여 줌(선생님이 고쳐 써도 됨)
 // 해당 칸이 없으면 시간 제한 단계는 time, 듣기 챌린지는 listen, 나머지는 other에서 고름
@@ -1118,7 +1124,9 @@ function chooseTrack(){
       return `<button class="track" data-t="${k}" data-tc="${k}" aria-label="${T.name} 수준"><span class="ic" aria-hidden="true">${T.icon}</span><span class="nm">${T.name}</span><span class="pg" aria-hidden="true">${T.levels.map(L=>`<i class="${p.cleared&&p.cleared[L.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('')}</div>
     <button class="rvsmall" id="rv">📒 복습하기${due?` <span class="cnt" aria-label="복습할 단어 ${due}개">${due}</span>`:''}</button>
   </div>
+  ${ownLine()}
   <div class="title-ver">버전 ${BUILD}</div>`;
+  const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{ setTrack(b.dataset.t); home(); trackIntro(); });
   // 수첩에 학습할 단어가 있으면 바로 학습(모든 단어), 없으면 단어 수첩
   $app.querySelector('#rv').onclick=()=>due?startStudy():notebook();
@@ -1177,11 +1185,9 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-18 20:45'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-19 09:44'; // build.py가 빌드 시각으로 바꿈
 // 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
 const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
-// 이 앱의 라이선스(저작자 miagua7801, 학생 화면에는 실명을 넣지 않음). 법적 전문은 저장소의 LICENSE
-const LICENSE_URL='https://creativecommons.org/licenses/by-nc-nd/4.0/deed.ko';
 
 // 새 버전 알림: 배포된 version.json의 빌드 시각이 지금 페이지와 다르면 안내 띠를 띄우고, 누르면 새 주소(?v=)로 이동해 캐시된 예전 페이지를 건너뜀
 // (file://·아티팩트처럼 version.json이 없는 곳에서는 조용히 넘어감)
@@ -1429,9 +1435,10 @@ function home(){
     <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">👑</span>
   </div>
   <div class="foot">
-    <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span><button class="linkbtn credit" id="credits">출처·저작권</button></span>
+    <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span></span>
     <span><button class="linkbtn" id="reset">이 수준 기록 지우기</button>${teacherOn()?' · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button> · <button class="linkbtn" id="teacherOff">선생님 모드 끄기</button>':''}</span>
-  </div>`;
+  </div>
+  ${ownLine()}`;
   const map=$app.querySelector('#map'); let on=null, ptype='mouse', wasOn=false;
   const hideTip=()=>{ on=null; map.classList.remove('focus'); map.querySelectorAll('.node.on').forEach(b=>{ b.classList.remove('on'); b.removeAttribute('aria-describedby'); }); map.querySelector('.tip')?.remove(); };
   const showTip=b=>{
@@ -1476,9 +1483,9 @@ function home(){
 // 출처·저작권 창: 한국어 안내 + 영어 고지 원문. back = 닫은 뒤 초점을 돌려줄 버튼
 function showCredits(back){
   const [copy,...perm]=SCOWL_NOTICE.split('\n');
-  toast('📜','출처·저작권',`<div class="credits">
+  const ov=toast('📜','출처·저작권',`<div class="credits">
     <h4>이 앱</h4>
-    <p>© 2026 miagua7801 · <a href="${LICENSE_URL}" target="_blank" rel="noopener" lang="en">CC BY-NC-ND 4.0</a> (저작자표시-비영리-변경금지)</p>
+    <p>© ${OWNER.year} ${OWNER.name} · <a href="${LICENSE_URL}" target="_blank" rel="noopener" lang="en">${OWNER.license}</a> (${OWNER.licenseKo})</p>
     <p>할 수 있는 것: 출처를 밝히고 비영리로 사용하기, 원본 그대로 공유하기</p>
     <p>할 수 없는 것: 판매 등 상업적 이용, 고쳐서 배포하기</p>
     <p>이 라이선스는 앱 코드·화면·게임 규칙·한국어 뜻풀이·문구에 적용돼요. 아래 단어 목록과 글꼴은 각자의 조건을 따라요.</p>
@@ -1489,7 +1496,10 @@ function showCredits(back){
     <h4>글꼴</h4>
     <p>Jua, Lexend, Noto Sans KR (Google Fonts) — <span lang="en">SIL Open Font License 1.1</span></p>
     <p>이모지는 사용자 기기의 시스템 글꼴로 표시됨</p>
-  </div>`,'닫기',()=>back&&back.focus());
+  </div>`,'닫기',()=>{ document.removeEventListener('keydown',onKey,true); back&&back.focus(); });
+  // Esc로도 닫기(닫기 버튼과 같은 동작)
+  const onKey=e=>{ if(e.key==='Escape'&&ov.isConnected){ e.preventDefault(); ov.querySelector('#ov1').click(); } };
+  document.addEventListener('keydown',onKey,true);
 }
 function confirmBtn(sel,txt,fn){const b=$app.querySelector(sel);const orig=b.textContent;let armed=false,t;
   b.onclick=()=>{if(armed){clearTimeout(t);fn();return;}armed=true;b.textContent=txt;t=setTimeout(()=>{armed=false;b.textContent=orig;},3000);};}

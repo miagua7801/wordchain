@@ -10,7 +10,7 @@ const {target,open}=require('./lib');
 
   // 1. 첫 화면
   const tb=await H(()=>[...document.querySelectorAll('#app button')].map(b=>b.id||b.dataset.t));
-  ok(tb.join()==='basic,normal,hard,rv'&&(await p.textContent('h1'))==='영어 끝말잇기 챌린지','첫 화면: 제목 + 기초·보통·도전 + 복습하기 버튼만 — '+tb.join());
+  ok(tb.join()==='basic,normal,hard,rv,credits'&&(await p.textContent('h1'))==='영어 끝말잇기 챌린지','첫 화면: 제목 + 기초·보통·도전 + 복습하기 + 아래 출처·저작권 — '+tb.join());
   const sz=await H(()=>{ const r=e=>document.querySelector(e).getBoundingClientRect(); return {rv:r('#rv').height,t:r('[data-t=basic]').height}; });
   ok(sz.rv<sz.t*0.6,`복습하기는 작게(${Math.round(sz.rv)}px < 수준 버튼 ${Math.round(sz.t)}px)`);
   await p.click('#rv'); await p.waitForTimeout(150);
