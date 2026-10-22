@@ -60,6 +60,7 @@ python build.py
 node tests/levels.js
 node tests/play-test.js
 node tests/cpu-rules.js
+node tests/storage.js
 ```
 필요: Python 3.12, Node.js LTS, `npm i -g playwright` + `npx playwright install chromium`. Git Bash의 PATH·NODE_PATH는 `~/.bashrc`에 설정.
 
@@ -180,13 +181,30 @@ node tests/cpu-rules.js
 ## localStorage 키 (학생 기기에만 저장, 개인 정보 없음)
 | 키 | 저장 내용 |
 |---|---|
-| `wordchain-v2` | 마지막 수준(`track`), 수준별 진도 `prog.{basic,normal,hard}` = `{unlocked, best(단계별 최고 연속·성공 수), cleared, bestScore(단계별 최고 점수), storedHints(그 수준의 보관 힌트 개수)}`, 제한 시간 설정 `time`, 듣고 쓰기 토글 `listen`, 배지용 누적 기록 `stats = {tb: 맞힌 기본 어휘(키 이름은 예전 그대로), outside: 단어장 밖 단어 수}`, 기초 구성 버전 `basicVer` |
+| `wordchain-v2` | 저장 형식 번호 `schemaVersion`(지금 2), 마지막 수준(`track`), 수준별 진도 `prog.{basic,normal,hard}` = `{unlocked, best(단계별 최고 연속·성공 수), cleared, bestScore(단계별 최고 점수), storedHints(그 수준의 보관 힌트 개수)}`, 제한 시간 설정 `time`, 듣고 쓰기 토글 `listen`, 배지용 누적 기록 `stats = {tb: 맞힌 기본 어휘(키 이름은 예전 그대로), outside: 단어장 밖 단어 수}`, 처음 쓴 날 `since`(저장 안내용), 형식이 바뀌며 옮기지 못한 예전 기록 `archive`(예: 3단계 시절 기초 진도 `archive.basicV1`), 기초 구성 버전 `basicVer`(예전 버전 앱이 기초 진도를 지우지 않게 2로 남겨 둠) |
 | `wordchain-notebook-v1` | 단어 수첩 `items = {단어: {w, reason, stamps}}`(예전 저장본의 `due`는 쓰지 않음), 외운 단어 `learned = {단어: {w, date}}`, 처음 맞힌 기본 어휘 `tbSeen`(키 이름은 예전 그대로, 수첩 사유 키 `textbook`도 그대로 두고 화면에는 "처음 맞힌 기본 어휘") |
 | `wordchain-badges-v1` | 얻은 배지 `[{id, date}]` |
 | `wordchain-stars-v1` | 모은 별 개수(숫자 하나). 기기에 저장되므로 공용 기기(교실 크롬북 등)에서는 다른 학생이 모은 별을 쓸 수 있음 |
-| `wordchain-teacher` | 선생님 모드("1"이면 단계 맵에 "선생님: 모든 단계 열기" 버튼) |
+| `wordchain-teacher` | 선생님 모드("1"이면 단계 맵에 "선생님: 모든 단계 열기" 버튼). 기록 파일에는 넣지 않음 |
+| `wordchain-backup-v1` | 마지막으로 기록 파일을 저장한 날 `{last: "YYYY-MM-DD"}` |
+| `<키>-broken` | 읽을 수 없게 깨진 기록의 원문(예: `wordchain-v2-broken`). 앱은 새 기록으로 시작하지만 원문은 지우지 않고 남김 |
 
-이름·학번·목소리 등은 받거나 저장하지 않는다. 음성 인식은 쓰지 않고 음성 합성(speechSynthesis)만 쓴다.
+이름·학번·목소리 등은 받거나 저장하지 않는다.
+
+### 저장 형식을 바꿀 때 (규칙)
+- **앞으로 저장 형식을 바꿀 때는 반드시 이전 함수를 추가하고, 기존 키를 지우지 않는다.** 키 이름도 바꾸지 않는다.
+- 방법: `app.html`의 `SCHEMA`를 1 올리고, `MIGRATE[예전 번호]`에 "예전 형식 → 새 형식" 함수를 하나 더한다. 앱이 시작될 때 `migrateStore()`가 저장본의 `schemaVersion`부터 차례로 옮긴 뒤 저장한다.
+- 옮길 수 없는 항목만 기본값으로 두고 나머지는 살린다. 버려야 하는 예전 값은 `archive`에 보관한다.
+- 기록 전체를 지우는 코드는 학생이 직접 누르는 버튼("이 수준 기록 지우기", "수첩 비우기", 두 번 눌러 확인)에만 둔다.
+- 예전 기록이 새 형식으로 옮겨지는지 `tests/storage.js`에 경우를 더한다.
+
+### 기록 지키기와 백업
+- 앱이 시작될 때 `navigator.storage.persist()`를 요청해 브라우저가 저장 공간을 정리할 때 기록을 지우지 않게 한다. 지원하지 않거나 거절돼도 그대로 동작한다.
+- 저장할 수 없는 창(시크릿 창, 저장 차단)이면 단계 맵 위에 "이 창에서는 기록이 저장되지 않아요. 일반 창으로 열어 주세요."가 보인다.
+- 단계 맵 아래 **💾 내 기록 저장하기**: 진도·수첩·별·배지를 `wordchain-기록-YYYY-MM-DD.json` 파일 하나로 내려받는다(이름 등 개인 정보 없음).
+- **📂 기록 불러오기**: 파일을 고르면 내용을 확인해 요약을 보여 주고, "이 기록으로 바꾸기"를 한 번 더 눌러야 지금 기록을 덮어쓴다. 형식이 맞지 않는 파일이면 아무것도 바꾸지 않고 안내만 한다.
+- 마지막으로 저장한 지 `SETTINGS.backupReminderDays`(14)일이 지나면(한 번도 저장하지 않았으면 처음 쓴 날부터) 단계 맵에 "기록을 저장해 둘까요?"가 작게 보인다. 기록이 하나도 없으면 보이지 않는다.
+- 기기를 바꾸거나 브라우저 기록을 지우기 전에 저장해 두고, 새 기기에서 불러오면 된다. 음성 인식은 쓰지 않고 음성 합성(speechSynthesis)만 쓴다.
 
 ## 금지어 목록 고치기 (선생님용)
 목록은 `blocklist.js`에 인코딩되어 있어 직접 열어 고치지 않고 명령으로 고친다. 고친 뒤에는 `python build.py`로 다시 빌드한다.

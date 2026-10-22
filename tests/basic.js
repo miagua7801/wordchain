@@ -6,12 +6,12 @@ const {target,open,startLevel}=require('./lib');
   const T=()=>p.evaluate(()=>window.__wordchain.target()), H=f=>p.evaluate(f);
   const waitNext=async prev=>{ for(let i=0;i<40;i++){ await p.waitForTimeout(150); if(await p.$('.overlay')||await p.$('#rest')) return; const t=await T(); if(t&&t!==prev) return; } };
 
-  // 진도 초기화: 예전 기초 진도만 지우고 다른 수준은 유지
+  // 기초 4단계 재구성 전 기록: 예전 기초 진도는 지우지 않고 archive에 보관(열린 단계 수는 살림), 다른 수준은 유지
   await p.goto(url);
   await p.evaluate(()=>{ localStorage.clear(); localStorage.setItem('wordchain-v2',JSON.stringify({track:'basic',prog:{basic:{unlocked:3,best:{},cleared:{1:true,2:true}},normal:{unlocked:2,best:{1:5},cleared:{1:true}}},time:{}})); });
   await p.goto(url);
   const st=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordchain-v2')));
-  ok(!st.prog.basic&&st.prog.normal.cleared[1]&&st.basicVer===2,'예전 기초 진도만 초기화, 보통 진도 유지');
+  ok(st.archive.basicV1.cleared[2]&&st.prog.basic.unlocked===3&&!Object.keys(st.prog.basic.cleared).length&&st.prog.normal.cleared[1]&&st.basicVer===2&&st.schemaVersion===2,'예전 기초 진도는 archive에 보관·열린 단계 유지, 보통 진도 유지');
   await p.click('[data-t="basic"]');
   ok((await p.$$('.map .lv')).length===4,'기초 4단계로 구성');
 

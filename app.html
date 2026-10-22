@@ -334,6 +334,11 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .credits a{color:var(--accent, #0f6e7a)}
 .card .credits p{margin:4px 0}
 .credits blockquote{margin:6px 0;padding:8px 10px;border-left:3px solid var(--line, #c9d6dd);background:var(--surface-2, #eef3f6);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
+.nostore{margin:4px 0 8px;text-align:center;font-size:12px;color:var(--bad)}
+.backup{margin-top:16px;text-align:center}
+.bkrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.bkhint{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.bkmsg p{margin:8px 0 4px;font-size:13px;word-break:keep-all}.bkmsg .bad{color:var(--bad)}
 .own{margin:14px 0 0;text-align:center;font-size:12px;line-height:1.6;color:var(--muted);word-break:keep-all}
 .own .linkbtn.credit{font-size:12px;padding:6px 2px}
 #app{position:relative;z-index:1}
@@ -484,6 +489,8 @@ const SETTINGS={
   combo:{show:3, celebrate:[5,10]},
   // 배지 조건 숫자 (core: 기본 어휘 탐험가 — 서로 다른 기본 어휘 level 1·2 단어 수)
   badge:{fire:[5,10], longWord:7, core:[10,30], outside:5, comeback:5, review:10, ears:5},
+  // 기록 파일: 마지막으로 저장한 뒤 이 날수가 지나면 단계 맵에 '기록을 저장해 둘까요?' 안내
+  backupReminderDays:14,
 };
 // 이 앱의 저작권 표시(저작자·연도·라이선스는 여기 한곳에서만 바꿈, 학생 화면에는 실명 대신 아이디). 법적 전문은 저장소의 LICENSE
 const OWNER={year:2026, name:'miagua7801', license:'CC BY-NC-ND 4.0', licenseKo:'저작자표시-비영리-변경금지'};
@@ -627,12 +634,40 @@ const HINTS=3;
 let track=null, LEVELS=[];
 
 // ---------- 저장 (수준별 진도) ----------
+// 저장 키는 바꾸지 않음(wordchain-v2). 형식이 바뀌면 SCHEMA를 올리고 MIGRATE에 한 단계를 더함 — 기존 기록을 지우지 않음
 const KEY='wordchain-v2';
+const SCHEMA=2;
+function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// 형식 n → n+1. 옮길 수 없는 것만 기본값으로 두고 나머지는 살림
+const MIGRATE={
+  // 1 → 2: 기초 수준이 3단계 → 4단계로 바뀜. 예전 단계와 새 단계가 달라 통과·최고 기록은 옮기지 않고 archive에 그대로 보관,
+  //        열린 단계 수와 보관 힌트는 살림(예전 기초를 끝까지 통과했으면 새 기초 4단계를 모두 열어 줌)
+  1:s=>{ const o=s.prog.basic;
+    if(o){ (s.archive=s.archive||{}).basicV1=o;
+      const done=!!(o.cleared&&o.cleared[3]);
+      s.prog.basic={unlocked:done?4:Math.max(1,Math.min(3,o.unlocked|0||1)),best:{},cleared:{},...(o.storedHints?{storedHints:o.storedHints}:{})}; }
+    s.basicVer=2; return s; },
+};
+// 저장본 형식 번호: schemaVersion이 없으면 basicVer로 판단(basicVer 2 = 형식 2)
+const schemaOf=s=>s.schemaVersion||(s.basicVer===2?2:1);
+function migrateStore(s){
+  s.prog=s.prog&&typeof s.prog==='object'?s.prog:{};
+  for(let v=schemaOf(s); v<SCHEMA; v++) s=MIGRATE[v](s);
+  s.schemaVersion=SCHEMA; s.basicVer=2; // basicVer는 예전 버전 앱이 기초 진도를 지우지 않게 남겨 둠
+  s.time=s.time||{}; s.since=s.since||ymd(new Date());
+  return s;
+}
+// 읽을 수 없는 기록은 지우지 않고 '<키>-broken'에 원문 그대로 남김(비어 있으면 아무것도 안 함)
+function keepBroken(key){ try{ const raw=localStorage.getItem(key); if(raw!=null&&raw!=='null') localStorage.setItem(key+'-broken',raw); }catch(e){} }
 let store={track:null,prog:{}};
-try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.prog) store=s;}catch(e){}
-store.time=store.time||{};
-// 기초 수준을 4단계로 다시 구성(v2) → 예전 기초 진도만 초기화, 다른 수준 진도는 그대로
-if(store.basicVer!==2){ delete store.prog.basic; store.basicVer=2; try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){} }
+(function loadStore(){ let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){}
+  if(raw==null){ store=migrateStore({schemaVersion:SCHEMA,track:null,prog:{}}); return; }
+  let s=null; try{ s=JSON.parse(raw); }catch(e){}
+  if(!s||typeof s!=='object'||Array.isArray(s)){ // 읽을 수 없는 기록: 지우지 않고 다른 키에 그대로 보관한 뒤 새로 시작
+    keepBroken(KEY); store=migrateStore({track:null,prog:{}}); }
+  else store=migrateStore(s);
+  try{ if(raw!==JSON.stringify(store)) localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
+})();
 const blank=()=>({unlocked:1,best:{},cleared:{}});
 let save=blank();
 function persist(){try{store.track=track;store.prog[track]=save;localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
@@ -656,7 +691,7 @@ function bindTimeCtl(root,L,after){ root.querySelectorAll('.timectl .tbtn').forE
 // (예전 저장본의 due(복습 날짜)는 쓰지 않음)
 const NB_KEY='wordchain-notebook-v1';
 let nb={items:{},learned:{},tbSeen:[]};
-try{ const s=JSON.parse(localStorage.getItem(NB_KEY)); if(s&&s.items) nb=Object.assign(nb,s); }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem(NB_KEY)); if(s&&typeof s.items==='object') nb=Object.assign(nb,s); else keepBroken(NB_KEY); }catch(e){ keepBroken(NB_KEY); }
 function nbSave(){ try{ localStorage.setItem(NB_KEY,JSON.stringify(nb)); }catch(e){} }
 const dstr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>dstr(new Date());
@@ -799,7 +834,7 @@ function armBuy(btn,price,label,fn){
 // ---------- 배지 ----------
 // 이 기기의 localStorage(wordchain-badges-v1)에 [{id, date}]만 저장 — 이름 등 개인 정보 없음
 const BADGE_KEY='wordchain-badges-v1', B=SETTINGS.badge;
-let badges=[]; try{ const s=JSON.parse(localStorage.getItem(BADGE_KEY)); if(Array.isArray(s)) badges=s; }catch(e){}
+let badges=[]; try{ const s=JSON.parse(localStorage.getItem(BADGE_KEY)); if(Array.isArray(s)) badges=s; else keepBroken(BADGE_KEY); }catch(e){ keepBroken(BADGE_KEY); }
 const BADGES=[
   {id:'first',icon:'👣',name:'첫걸음',cond:'첫 정답'},
   {id:'fire5',icon:'🔥',name:'불꽃 '+B.fire[0],cond:B.fire[0]+'콤보 달성'},
@@ -839,6 +874,56 @@ function badgeScreen(){
 
 // 수준 색: 단계 맵·게임 화면에서는 <html data-tc=수준>으로 그 수준의 바탕·포인트 색을 씀(첫 화면은 수준 색 없이)
 function lvTheme(t){ const r=document.documentElement; if(t) r.setAttribute('data-tc',t); else r.removeAttribute('data-tc'); }
+// ---------- 기록 지키기: 저장 공간 유지 요청 · 저장 가능 여부 · 기록 파일 저장/불러오기 ----------
+// 기록 파일 = 진도(wordchain-v2)·수첩·별·배지를 JSON 하나로. 이름 등 개인 정보 없음. 선생님 모드 표시는 넣지 않음
+const BACKUP_KEY='wordchain-backup-v1'; // {last:'YYYY-MM-DD'} 마지막으로 기록 파일을 저장한 날
+const STORAGE_OK=(()=>{ try{ const k='wordchain-test'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch(e){ return false; } })();
+// 브라우저가 저장 공간을 정리할 때 이 사이트 기록은 지우지 않게 요청(지원 안 하거나 거절돼도 그대로 동작)
+try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{}); }catch(e){}
+function lastBackup(){ try{ return (JSON.parse(localStorage.getItem(BACKUP_KEY))||{}).last||null; }catch(e){ return null; } }
+const daysSince=d=>{ const t=d?new Date(d+'T00:00:00').getTime():NaN; return isNaN(t)?Infinity:Math.floor((Date.now()-t)/864e5); };
+function needBackup(){ if(!STORAGE_OK) return false;
+  const any=Object.values(store.prog).some(p=>p&&p.cleared&&Object.keys(p.cleared).length)||Object.keys(nb.items).length||stars>0||badges.length;
+  return !!any&&daysSince(lastBackup()||store.since)>=SETTINGS.backupReminderDays; }
+function exportData(){ if(track) store.prog[track]=save;
+  return {app:'wordchain',schemaVersion:SCHEMA,saved:today(),data:{progress:store,notebook:nb,stars,badges}}; }
+function downloadBackup(){ const url=URL.createObjectURL(new Blob([JSON.stringify(exportData(),null,1)],{type:'application/json'}));
+  const a=document.createElement('a'); a.href=url; a.download=`wordchain-기록-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  try{ localStorage.setItem(BACKUP_KEY,JSON.stringify({last:today()})); }catch(e){} }
+// 불러온 파일 확인: 형식이 맞으면 내용, 아니면 null(아무것도 바꾸지 않음). 더 새 앱에서 만든 파일도 받지 않음
+function checkBackup(text){ let d=null; try{ d=JSON.parse(text); }catch(e){ return null; }
+  if(!d||d.app!=='wordchain'||!d.data||typeof d.data!=='object'||(d.schemaVersion|0)>SCHEMA) return null;
+  const x=d.data, p=x.progress, n=x.notebook;
+  if(!p||typeof p!=='object'||!p.prog||typeof p.prog!=='object'||Array.isArray(p.prog)) return null;
+  if(n!=null&&(typeof n!=='object'||!n.items||typeof n.items!=='object')) return null;
+  if(x.badges!=null&&!Array.isArray(x.badges)) return null;
+  if(x.stars!=null&&!(Number.isFinite(+x.stars)&&+x.stars>=0)) return null;
+  return d; }
+function backupSummary(d){ const x=d.data, P=x.progress.prog;
+  const cl=Object.values(P).reduce((a,p)=>a+Object.keys((p&&p.cleared)||{}).length,0);
+  return `통과한 단계 ${cl}개 · 수첩 단어 ${Object.keys((x.notebook&&x.notebook.items)||{}).length}개 · 별 ${parseInt(x.stars,10)||0}개 · 배지 ${(x.badges||[]).length}개${d.saved?` (${esc(String(d.saved))}에 저장)`:''}`; }
+function applyBackup(d){ const x=JSON.parse(JSON.stringify(d.data));
+  store=migrateStore(x.progress); nb=Object.assign({items:{},learned:{},tbSeen:[]},x.notebook||{}); badges=x.badges||[];
+  try{ localStorage.setItem(KEY,JSON.stringify(store)); localStorage.setItem(NB_KEY,JSON.stringify(nb)); localStorage.setItem(BADGE_KEY,JSON.stringify(badges)); }catch(e){}
+  setStars(parseInt(x.stars,10)||0);
+  setTrack(TRACKS[track]?track:TRACKS[store.track]?store.track:'basic'); }
+// 단계 맵 아래: 💾 저장하기 · 📂 불러오기(파일 확인 → 요약 + '이 기록으로 바꾸기'를 한 번 더 눌러야 바뀜)
+function backupHTML(){ return `<div class="backup">${needBackup()?'<p class="bkhint">기록을 저장해 둘까요?</p>':''}
+    <div class="bkrow"><button class="back" id="bkSave">💾 내 기록 저장하기</button><button class="back" id="bkLoad">📂 기록 불러오기</button></div>
+    <input type="file" id="bkFile" accept=".json,application/json" hidden><div class="bkmsg" id="bkMsg" aria-live="polite"></div></div>`; }
+function bindBackup(){ const m=$app.querySelector('#bkMsg'), f=$app.querySelector('#bkFile');
+  $app.querySelector('#bkSave').onclick=()=>{ downloadBackup(); $app.querySelector('.bkhint')?.remove(); m.innerHTML='<p>기록 파일을 내려받았어요. 잘 보관해 두세요.</p>'; };
+  $app.querySelector('#bkLoad').onclick=()=>{ f.value=''; f.click(); };
+  f.onchange=async()=>{ const file=f.files&&f.files[0]; if(!file) return; let text=''; try{ text=await file.text(); }catch(e){}
+    const d=checkBackup(text);
+    if(!d){ m.innerHTML='<p class="bad">끝말잇기 기록 파일이 아니에요. 지금 기록은 그대로예요.</p>'; return; }
+    m.innerHTML=`<p>${backupSummary(d)}</p><p><b>이 기록으로 바꿀까요? 지금 기록은 덮어써져요.</b></p>
+      <div class="bkrow"><button class="btn" id="bkYes">이 기록으로 바꾸기</button><button class="back" id="bkNo">그만두기</button></div>`;
+    m.querySelector('#bkYes').onclick=()=>{ applyBackup(d); home(); $app.querySelector('#bkMsg').innerHTML='<p>기록을 되살렸어요.</p>'; };
+    m.querySelector('#bkNo').onclick=()=>{ m.innerHTML=''; };
+    m.querySelector('#bkYes').focus(); }; }
+
 // ---------- 첫 화면: 제목 · 기초/보통/도전 · 복습하기(작게) ----------
 function chooseTrack(){
   audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null; lvTheme(null);
@@ -1154,6 +1239,7 @@ function home(){
   <div class="mapbar"><button class="iconbtn" id="chg" aria-label="처음 화면으로(수준 바꾸기)">←</button><h2>${T.icon} ${T.name} 수준</h2><button class="iconbtn" id="rules" aria-label="수준 규칙 다시 보기">📜</button></div>
   <div class="trackbar"><span class="chip starchip">⭐ <b class="stars-n">${stars}</b></span><span class="chip" title="별로 산 힌트">💡 보관 힌트 ${storedHints()}/${SETTINGS.shop.maxStored}</span></div>
   <div class="maptools"><button class="back" id="nbBtn">📒 단어 수첩</button><button class="back" id="bdBtn">🏅 배지</button>${nbList().length?`<button class="btn soft" id="rv">📒 복습하기 ${nbList().length}개</button>`:''}</div>
+  ${STORAGE_OK?'':'<p class="nostore" role="status">이 창에서는 기록이 저장되지 않아요. 일반 창으로 열어 주세요.</p>'}
   <div class="map" id="map" data-tc="${track}" style="--mh:${H}px">
     <svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">${roads}</svg>
     ${dpos.filter(p=>p[1]<H-30).map((p,i)=>`<span class="deco" style="--x:${p[0]}%;--y:${p[1]}px" aria-hidden="true">${deco[i%deco.length]||''}</span>`).join('')}
@@ -1161,6 +1247,7 @@ function home(){
       return `<button class="node lv${cleared?' cleared':''}${open?'':' locked'}${L===cur?' cur':''}" data-lv="${L.id}" style="--x:${pts[i].x}%;--y:${pts[i].y}px" aria-label="${L.id}단계 ${esc(L.name)}${cleared?' (통과)':open?'':' (잠김)'}">${open?L.id:'🔒'}${cleared?'<span class="ck" aria-hidden="true">✔</span>':''}<span class="nl">${esc(L.name)}</span></button>`; }).join('')}
     <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">👑</span>
   </div>
+  ${backupHTML()}
   <div class="foot">
     <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span></span>
     <span><button class="linkbtn" id="reset">이 수준 기록 지우기</button>${teacherOn()?' · <button class="linkbtn" id="teacher">선생님: 모든 단계 열기</button> · <button class="linkbtn" id="teacherOff">선생님 모드 끄기</button>':''}</span>
@@ -1206,6 +1293,7 @@ function home(){
   // 선생님 모드 켜기: 아래 '버전' 글자를 3초 안에 5번 누름(학생 화면에는 선생님 버튼이 안 보임)
   let taps=[]; $app.querySelector('#ver').onclick=()=>{ const n=Date.now(); taps=taps.filter(t=>n-t<3000).concat(n); if(taps.length>=5&&!teacherOn()){ setTeacher(true); home(); } };
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
+  bindBackup();
 }
 // 출처·저작권 창: 한국어 안내 + 영어 고지 원문. back = 닫은 뒤 초점을 돌려줄 버튼
 function showCredits(back){
