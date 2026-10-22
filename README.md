@@ -151,7 +151,7 @@ node tests/storage.js
 - 수준 색은 단계 맵·게임 화면에서 `<html data-tc=수준>`으로 적용(첫 화면은 수준 색 없이 세 버튼만 수준 색). 색 값은 `app.html` 맨 위 `:root`(밝은 화면)와 `prefers-color-scheme: dark` 블록(어두운 화면)의 `--lv-*`·`--key`·`--hud` 등에서 고침
 - 단계 통과 뒤 다시 보기가 끝나면 딤드 없이 가운데 "다음 ▶" 버튼만(단어 체인을 그대로 보고 말풍선을 눌러 읽기). 선물 상자·마지막 버튼 뒤는 화면 전체를 딤드로 덮고 뒤의 요소는 눌리지 않음. 다시 보기 중에는 말풍선(철자)을 누르거나 Enter로 읽기만 하고 넘어가지 않음(그 밖의 곳을 누르면 전부 바로)
 - PC에서도 단어 체인(채팅)은 문제 창 폭(540px)까지만 넓어져 좌우 말풍선이 너무 멀지 않음
-- 입력칸 자동 완성 끔: Chrome이 `autocomplete="off"`를 무시하고 예전에 쓴 답을 제안할 수 있어, 입력칸마다 알 수 없는 autocomplete 값(`wordchain-answer-off`)과 그릴 때마다 새 name, 비밀번호 관리자 무시 표시를 씀
+- 입력칸 자동 완성·자판 추천 끔: 휴대폰·크롬북 화면 자판이 추천 단어 줄을 보이지 않게 `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"`, `spellcheck="false"`를 넣고, Chrome이 예전에 쓴 답을 목록으로 제안하지 않게 그릴 때마다 입력칸 name을 새로 만듦. 자판 앱 설정(예: Gboard의 추천 단어 켜짐)에 따라 추천 줄이 남을 수 있음
 
 ## 설정값 위치
 `app.html` 스크립트 맨 위 `SETTINGS` 객체에 모여 있다. 숫자만 바꾸고 `python build.py`.

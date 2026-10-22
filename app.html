@@ -1046,8 +1046,9 @@ function latinize(inp){ const v=inp.value; if(!KO_RE.test(v)) return false;
 })();
 // 영어 단어 입력칸(게임·복습·빈칸 채우기 공통)
 // inputmode=email: 휴대폰에서 영문 자판이 뜸. lang=en: 일부 PC 브라우저가 영문 입력기로 전환
-// 자동 완성 끄기: 입력칸마다 매번 새 name(예전 입력 기록과 맞지 않게) + Chrome이 모르는 autocomplete 값("off"는 무시될 때가 있음)
-const AC_OFF='wordchain-answer-off';
+// 자동 완성·자판 추천 끄기: autocomplete="off"(휴대폰·크롬북 화면 자판이 추천 단어 줄을 끄는 신호) + autocorrect·autocapitalize·spellcheck 끔
+// + 입력칸마다 매번 새 name(Chrome이 예전에 쓴 답을 목록으로 제안하지 않게)
+const AC_OFF='off';
 const acName=()=>'w'+Math.random().toString(36).slice(2,9);
 const enFormHTML=(ph,label,btn)=>`<form class="typing" id="f" autocomplete="off"><input id="inp" name="${acName()}" type="text" lang="en" inputmode="email" autocomplete="${AC_OFF}" aria-autocomplete="none" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${esc(ph)}" aria-label="${esc(label)}"><button class="btn" type="submit">${btn}</button></form>`;
 // 한글 자판: 입력기가 글자를 조합하는 동안 값을 바꾸면 글자가 빠지므로(rose → roe) 조합이 끝난 뒤에만 영어로 바꿈.

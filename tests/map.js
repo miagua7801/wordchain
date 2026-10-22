@@ -79,9 +79,9 @@ const {target,open}=require('./lib');
     return {dx:Math.round(q.left+q.width/2-(g.left+g.width/2)),dy:Math.round(q.top+q.height/2-(g.top+g.height/2)),inQ:!!document.querySelector('#qm .cpu')&&!!document.querySelector('#qm #answer')&&!!document.querySelector('#qm #hintBtn'),behind:getComputedStyle(f).position==='absolute'&&+getComputedStyle(f).opacity<1,n:document.querySelectorAll('#fl li').length}; });
   ok(Math.abs(lay.dx)<=2&&Math.abs(lay.dy)<=2&&lay.inQ,`문제(컴퓨터 단어)·답·힌트는 화면 가운데 문제 창 안(${lay.dx},${lay.dy})`);
   ok(lay.behind&&lay.n===1&&(await H(()=>window.__wordchain.feed()))[0].startsWith('cpu:'),'뒤에는 채팅(흐리게), 컴퓨터 첫 단어 말풍선');
-  // 자동 완성 끄기: 입력칸마다 Chrome이 모르는 autocomplete 값 + 그릴 때마다 새 name(예전 입력 기록과 맞지 않게), PC에서 채팅 폭은 문제 창 폭(540px) 이하
+  // 자동 완성·자판 추천 끄기: autocomplete="off"·autocorrect·autocapitalize·spellcheck 끔 + 그릴 때마다 새 name(예전 입력 기록과 맞지 않게), PC에서 채팅 폭은 문제 창 폭(540px) 이하
   const ac=await H(()=>{ const b=[...document.querySelectorAll('#bslots .bin')]; return {a:b.map(x=>x.getAttribute('autocomplete')),n:b.map(x=>x.name),aria:b.map(x=>x.getAttribute('aria-autocomplete')),fw:document.getElementById('fl').getBoundingClientRect().width}; });
-  ok(ac.a.every(x=>x&&x!=='on'&&x!=='off')&&new Set(ac.n).size===ac.n.length&&ac.n.every(Boolean)&&ac.aria.every(x=>x==='none'),'빈칸 칸: 자동 완성 끔(알 수 없는 autocomplete 값·칸마다 다른 name) '+ac.a[0]);
+  ok(ac.a.every(x=>x==='off')&&new Set(ac.n).size===ac.n.length&&ac.n.every(Boolean)&&ac.aria.every(x=>x==='none'),'빈칸 칸: 자동 완성 끔(알 수 없는 autocomplete 값·칸마다 다른 name) '+ac.a[0]);
   ok(ac.fw<=541,`PC: 채팅(단어 체인) 폭 ${Math.round(ac.fw)}px — 좌우 말풍선이 너무 멀지 않게`);
   // 정답 → 잠깐 뒤 문제 창을 감추고 내 말풍선이 채팅에 → 다음 컴퓨터 단어와 함께 문제 창이 다시
   const tg=await H(()=>window.__wordchain.target()), bins=await p.$$eval('#bslots .bin',a=>a.map(s=>+s.dataset.i));
@@ -105,7 +105,7 @@ const {target,open}=require('./lib');
   ok((await p.textContent('.rpg-body .tval'))==='35초','+5초 → 35초'); await p.click('#rpgNext'); if(await p.$('.rpg-ov')) await p.click('#rpgNext'); await p.waitForTimeout(300);
   ok((await p.textContent('.ghead h2'))==='보통 4단계'&&(await p.textContent('#qm .tval'))==='35초','"시작하기" → 4단계, 조절한 시간 그대로');
   const nm1=await p.getAttribute('#inp','name'), ac1=await p.getAttribute('#inp','autocomplete'); await p.click('#hintBtn'); const nm2=await p.getAttribute('#inp','name');
-  ok(ac1==='wordchain-answer-off'&&nm1&&nm2&&nm1!==nm2&&(await p.getAttribute('#inp','aria-autocomplete'))==='none','입력칸: 자동 완성 끔(autocomplete 값 '+ac1+', 다시 그릴 때마다 name이 바뀜)');
+  ok(ac1==='off'&&(await p.getAttribute('#inp','autocorrect'))==='off'&&(await p.getAttribute('#inp','spellcheck'))==='false'&&(await p.getAttribute('#inp','autocapitalize'))==='off'&&nm1&&nm2&&nm1!==nm2&&(await p.getAttribute('#inp','aria-autocomplete'))==='none','입력칸: 자동 완성 끔(autocomplete 값 '+ac1+', 다시 그릴 때마다 name이 바뀜)');
 
   // 9. 휴대폰 너비: 문제 창이 화면 안에
   await p.setViewportSize({width:375,height:812}); await p.waitForTimeout(200);
