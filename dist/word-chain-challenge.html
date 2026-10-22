@@ -247,6 +247,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .myword{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-soft)}
 .myword small{font-size:13px;color:var(--muted);white-space:nowrap}.myword .word{font-size:24px;font-weight:700;color:var(--ink)}
 .typing input{flex:1;min-width:0;font-family:var(--f-word);font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;border:2px solid var(--in-bd);background:var(--surface);color:var(--ink)}
+/* 답 입력칸: 엔터로 내면 키보드 초점 링(남색 두꺼운 테두리)이 생겨 화면에 큰 타원처럼 보임 → 링 대신 테두리 색만 바꿈 */
+.typing input:focus,.typing input:focus-visible{outline:none;border-color:var(--accent)}
 .btn{border:2px solid var(--outline);border-radius:12px;padding:10px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink);font-size:16px;box-shadow:var(--chunk)}
 .btn:not(:disabled):active{transform:translateY(2px);box-shadow:none}
 @media (hover:hover){.btn:not(:disabled):hover{filter:brightness(1.06)}}   /* PC: 마우스를 올리면 살짝 밝게 */
@@ -1272,7 +1274,7 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-22 14:09'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-22 15:23'; // build.py가 빌드 시각으로 바꿈
 // 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
 const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
 
