@@ -737,7 +737,7 @@ const SETTINGS={
   // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
   basicSpeech:{rate:0.6, targetGap:1500},
   // 출제하지 않을 단어(컴퓨터 단어·완성할 단어·보기·힌트·예시에서 뺌). 학생이 답으로 쓰면 그대로 인정
-  noAsk:['spaghetti'],
+  noAsk:['spaghetti','kiss'],
   // 기본 어휘 우선 출제: 컴퓨터 출제·객관식 정답·기초 다음 단어·힌트·예시·철자 도움에서 교육부 기본 어휘 level 1·2 단어를 이 배수만큼 더 자주
   coreWeight:5,
   // 점수(한 판 기준, 감점 없음): 정답 기본 + 길이 보너스(lenFrom글자 이상이면 (글자 수 − lenFrom + 1) × lenPer) + 기본 어휘 보너스(level 2 core2 · level 1 core1) + 단어장 밖 단어
@@ -1270,7 +1270,7 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-22 10:29'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-22 10:40'; // build.py가 빌드 시각으로 바꿈
 // 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
 const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
 
