@@ -11,9 +11,11 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   // 예전 저장본처럼 복습 날짜(due)가 미래인 단어도 섞음 → 날짜와 관계없이 학습
   await p.goto(url);
   await H(nb=>{ localStorage.clear(); localStorage.setItem('wordchain-notebook-v1',JSON.stringify(nb)); localStorage.setItem('wordchain-v2',JSON.stringify({track:'normal',prog:{},time:{},basicVer:2})); },
-    {items:{tiger:{w:'tiger',reason:'wrong',stamps:0,due:'2999-01-01'},apple:{w:'apple',reason:'hint',stamps:2},car:{w:'car',reason:'textbook',stamps:1}},learned:{},tbSeen:[]});
+    {items:{tiger:{w:'tiger',reason:'wrong',stamps:0,due:'2999-01-01'},apple:{w:'apple',reason:'hint',stamps:2},car:{w:'car',reason:'wrong',stamps:1},ball:{w:'ball',reason:'textbook',stamps:0}},learned:{},tbSeen:['ball']});
   await p.goto(url);
 
+  // 0. 예전에 모인 '처음 맞힌 기본 어휘'(ball)는 지우지 않고 숨김: 복습 수·학습·수첩 화면에 안 나옴
+  ok((await NB()).items.ball&&(await NB()).items.ball.reason==='textbook','예전 "처음 맞힌 기본 어휘" 단어는 저장본에 그대로 남음');
   // 1. 첫 화면 복습하기: 수첩 단어 수, 누르면 모든 단어 학습(날짜 제한 없음)
   ok((await p.textContent('#rv .cnt'))==='3','첫 화면 "복습하기"에 수첩 단어 3개(날짜와 관계없이)');
   await p.click('#rv'); await p.waitForTimeout(300);
@@ -27,6 +29,7 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   // 2. 수첩 목록에서 체크박스로 고른 단어만 학습. 바로 다시 해도 도장(제한 없음) → 3번이면 외운 단어
   await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await p.waitForTimeout(200);
   const t=await p.textContent('#app');
+  ok(!t.includes('처음 맞힌 기본 어휘')&&!/\bball\b/.test(t),'수첩 화면: 숨긴 기본 어휘(ball) 안 보임');
   ok(t.includes('모은 단어 2개')&&t.includes('외운 단어 1개')&&t.includes('호랑이')&&!t.includes('다음 복습')&&t.includes('언제든'),'수첩 화면: 모은 단어 2개·외운 단어 1개·뜻, 복습 날짜 표시 없음, "언제든" 안내');
   const sel0=await H(()=>({dis:document.getElementById('studySel').disabled,n:document.getElementById('selN').textContent,cks:document.querySelectorAll('.nblist .nbck').length}));
   ok(sel0.dis&&sel0.n==='0'&&sel0.cks===2,'단어마다 체크박스, 아무것도 고르지 않으면 "선택한 단어 학습하기" 비활성');

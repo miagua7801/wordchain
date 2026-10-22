@@ -50,7 +50,7 @@ const {target,open}=require('./lib');
   const m=await p.textContent('#msg');
   ok(used&&m.includes('단어장 밖'),`level 3 단어 ${used} → "${m.slice(0,40)}"`);
 
-  // 5. 배지: 예전에 얻은 배지(tb10) 유지, 이름은 "기본 어휘 탐험가", 서로 다른 기본 어휘 30개면 tb30, 수첩 사유 "처음 맞힌 기본 어휘"
+  // 5. 배지: 예전에 얻은 배지(tb10) 유지, 이름은 "기본 어휘 탐험가", 서로 다른 기본 어휘 30개면 tb30, 처음 맞힌 기본 어휘는 수첩에 넣지 않음
   const core=await H(()=>[1,2].flatMap(l=>VOCAB_CORE[l].split(/[|\n]/).map(s=>s.trim().split(' ')[0])).filter(x=>/^[a-z]{3,}$/.test(x)&&window.__wordchain.inAll(x)));
   const seen=core.slice(0,29);
   await p.goto(url);
@@ -68,7 +68,7 @@ const {target,open}=require('./lib');
   const note=await p.$$eval('.badge-note',a=>a.map(e=>e.textContent).join(' / '));
   ok(note.includes('기본 어휘 탐험가 30'),`배지 알림: ${note}`);
   const nb=await H(()=>JSON.parse(localStorage.getItem('wordchain-notebook-v1')));
-  ok(nb.items[ans]&&nb.items[ans].reason==='textbook'&&nb.tbSeen.includes(ans),`처음 맞힌 기본 어휘 → 수첩(사유 키 textbook 그대로)`);
+  ok(ans&&!nb.items[ans]&&nb.tbSeen.includes(ans),`처음 맞힌 기본 어휘(${ans})는 수첩에 넣지 않음(배지용 기록만)`);
   await p.click('#back').catch(()=>{}); await p.waitForTimeout(300);
   await p.click('#bdBtn'); await p.waitForTimeout(200);
   const bs=await p.$$eval('.bdg.got',a=>a.map(e=>e.textContent).join(' | '));
@@ -76,7 +76,7 @@ const {target,open}=require('./lib');
   ok(bs.includes('기본 어휘 탐험가 10')&&bs.includes('기본 어휘 탐험가 30')&&!all.includes(TB),'배지 화면: 기본 어휘 탐험가 10·30 획득, 예전 이름 없음');
   await p.click('#back').catch(()=>{}); await p.waitForTimeout(200); await p.click('#nbBtn'); await p.waitForTimeout(200);
   const nt=await p.textContent('#app');
-  ok(nt.includes('처음 맞힌 기본 어휘')&&!nt.includes(TB),'수첩 화면: 사유 "처음 맞힌 기본 어휘", 예전 이름 없음');
+  ok(!nt.includes('처음 맞힌 기본 어휘')&&!nt.includes(TB),'수첩 화면: "처음 맞힌 기본 어휘" 단어 없음, 예전 이름 없음');
 
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);

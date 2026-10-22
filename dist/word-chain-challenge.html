@@ -969,16 +969,18 @@ function nbSave(){ try{ localStorage.setItem(NB_KEY,JSON.stringify(nb)); }catch(
 const dstr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>dstr(new Date());
 const NB_REASON={wrong:'틀렸을 때 예시',hint:'힌트로 본 단어',textbook:'처음 맞힌 기본 어휘'};
-// 단어 모으기: 틀린 단어의 정답 예시 / 힌트로 본 단어 / 처음 맞힌 기본 어휘(사유 키는 예전 그대로 textbook)
+// 단어 모으기: 틀린 단어의 정답 예시 / 힌트로 본 단어만. 처음 맞힌 기본 어휘(사유 키 textbook)는 더 모으지 않음 —
+// 예전에 모인 textbook 단어는 지우지 않고 수첩·복습·수첩 단어 보너스에서만 숨김(nbShown). 그 단어를 틀리거나 힌트로 보면 그 사유로 바뀌어 다시 보임
+const nbShown=it=>!!it&&it.reason!=='textbook';
 function nbAdd(w,reason){
   w=String(w).toLowerCase(); if(!DICT.has(w)||isBlocked(w)) return;
   const it=nb.items[w];
   if(nb.learned[w]){ if(reason!=='wrong') return; delete nb.learned[w]; }       // 외운 단어를 끝말잇기에서 다시 틀리면 수첩으로 되돌림
-  else if(it){ if(reason==='wrong'){ it.stamps=0; it.reason=reason; nbSave(); } return; }
+  else if(it){ if(reason==='wrong'){ it.stamps=0; it.reason=reason; nbSave(); } else if(it.reason==='textbook'){ it.reason=reason; nbSave(); } return; }
   nb.items[w]={w,reason,stamps:0}; nbSave();
 }
-// 학습할 단어: 수첩의 모든 단어(외운 단어 제외). 날짜·횟수 제한 없음
-const nbList=()=>Object.values(nb.items).filter(x=>DICT.has(x.w)&&!isBlocked(x.w));
+// 학습할 단어: 수첩의 보이는 단어(외운 단어·숨긴 기본 어휘 제외). 날짜·횟수 제한 없음
+const nbList=()=>Object.values(nb.items).filter(x=>nbShown(x)&&DICT.has(x.w)&&!isBlocked(x.w));
 // 맞히면 도장 +1(언제든, 몇 번이든), 도장이 다 차면 외운 단어로. 틀려도 도장은 그대로
 function nbStamp(w){
   const it=nb.items[w]; if(!it) return '';
@@ -1068,7 +1070,7 @@ function notebook(){
   <p class="nbguide">학습할 단어를 골라(체크) "선택한 단어 학습하기"를 누르거나, 모두 학습해요. 맞힐 때마다 도장 1개, ${SETTINGS.review.stampsToLearn}개를 모으면 '외운 단어'! 언제든, 몇 번이든 할 수 있어요.</p>
   ${items.length?`<div class="row" style="justify-content:flex-start;margin:0 0 6px"><button class="btn" id="study">✏️ 모두 학습하기 ${items.length}개</button></div>`:''}
   <section class="rules"><h2>모은 단어 ${items.length}개</h2>
-    <p class="note">틀렸을 때 나온 예시, 힌트로 본 단어, 처음 맞힌 기본 어휘가 모여요.</p>
+    <p class="note">틀렸을 때 나온 예시와 힌트로 본 단어가 모여요.</p>
     ${items.length?`<ul class="nblist">${items.map(row).join('')}</ul>
     <div class="nbbar" role="group" aria-label="고른 단어"><button class="linkbtn" id="selAll" type="button">전체 선택</button><button class="btn" id="studySel" type="button" disabled>선택한 단어 학습하기 <b id="selN">0</b>개 ▶</button></div>`:'<p class="note">아직 모은 단어가 없어요.</p>'}</section>
   <section class="rules"><h2>외운 단어 ${learned.length}개</h2>
@@ -1156,7 +1158,7 @@ try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist().c
 function lastBackup(){ try{ return (JSON.parse(localStorage.getItem(BACKUP_KEY))||{}).last||null; }catch(e){ return null; } }
 const daysSince=d=>{ const t=d?new Date(d+'T00:00:00').getTime():NaN; return isNaN(t)?Infinity:Math.floor((Date.now()-t)/864e5); };
 function needBackup(){ if(!STORAGE_OK) return false;
-  const any=Object.values(store.prog).some(p=>p&&p.cleared&&Object.keys(p.cleared).length)||Object.keys(nb.items).length||stars>0||badges.length;
+  const any=Object.values(store.prog).some(p=>p&&p.cleared&&Object.keys(p.cleared).length)||nbList().length||stars>0||badges.length;
   return !!any&&daysSince(lastBackup()||store.since)>=SETTINGS.backupReminderDays; }
 function exportData(){ if(track) store.prog[track]=save;
   return {app:'wordchain',schemaVersion:SCHEMA,saved:today(),data:{progress:store,notebook:nb,stars,badges}}; }
@@ -1175,7 +1177,7 @@ function checkBackup(text){ let d=null; try{ d=JSON.parse(text); }catch(e){ retu
   return d; }
 function backupSummary(d){ const x=d.data, P=x.progress.prog;
   const cl=Object.values(P).reduce((a,p)=>a+Object.keys((p&&p.cleared)||{}).length,0);
-  return `통과한 단계 ${cl}개 · 수첩 단어 ${Object.keys((x.notebook&&x.notebook.items)||{}).length}개 · 별 ${parseInt(x.stars,10)||0}개 · 배지 ${(x.badges||[]).length}개${d.saved?` (${esc(String(d.saved))}에 저장)`:''}`; }
+  return `통과한 단계 ${cl}개 · 수첩 단어 ${Object.values((x.notebook&&x.notebook.items)||{}).filter(nbShown).length}개 · 별 ${parseInt(x.stars,10)||0}개 · 배지 ${(x.badges||[]).length}개${d.saved?` (${esc(String(d.saved))}에 저장)`:''}`; }
 function applyBackup(d){ const x=JSON.parse(JSON.stringify(d.data));
   store=migrateStore(x.progress); nb=Object.assign({items:{},learned:{},tbSeen:[]},x.notebook||{}); badges=x.badges||[];
   try{ localStorage.setItem(KEY,JSON.stringify(store)); localStorage.setItem(NB_KEY,JSON.stringify(nb)); localStorage.setItem(BADGE_KEY,JSON.stringify(badges)); }catch(e){}
@@ -1270,7 +1272,7 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-22 10:40'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-22 13:18'; // build.py가 빌드 시각으로 바꿈
 // 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
 const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
 
@@ -2067,7 +2069,7 @@ function example(ch){ const c=startsWith(ch,G.pool); return c.length?pickCore(c)
 function success(o){
   G.locked=true; stopTimer(); G.turns++; G.rights++; const spoken=speak(o.w); G.used.add(o.w);
   const wasHidden=G.listen&&!G.revealed;   // 듣고 쓰기: 이번 답으로 컴퓨터 단어를 공개함
-  const inNb=!o.outside&&!!nb.items[o.w];   // 수첩 단어인지는 이번 정답으로 수첩에 모으기 전에 확인
+  const inNb=!o.outside&&nbShown(nb.items[o.w]);   // 수첩 단어인지는 이번 정답으로 수첩에 모으기 전에 확인
   adapt(true); if(G.clean) G.cleanRun++;
   G.combo++; G.bestCombo=Math.max(G.bestCombo,G.combo); const pts=scoreFor(o,inNb); G.score+=pts;
   save.bestScore=save.bestScore||{}; if(G.score>(save.bestScore[G.L.id]||0)){ save.bestScore[G.L.id]=G.score; persist(); }
@@ -2075,7 +2077,7 @@ function success(o){
   const sc=$app.querySelector('#score'), cb2=$app.querySelector('#combo');
   if(sc) sc.textContent=`${G.score}점`; if(cb2) cb2.textContent=G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:'';
   if(SETTINGS.combo.celebrate.includes(G.combo)) celebrate(G.combo);
-  if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbAdd(o.w,'textbook'); } G.chain.push({w:o.w,d:disp(o),me:true}); G.feed.push({w:o.w,d:disp(o),me:true}); G.streak++;
+  if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbSave(); } G.chain.push({w:o.w,d:disp(o),me:true}); G.feed.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
   drawStatus();
   if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); G.okNote=silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
