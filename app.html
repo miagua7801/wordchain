@@ -610,19 +610,20 @@ window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.t
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
+// star: 출제(컴퓨터 단어·완성할 단어·보기·힌트·예시)를 교육부 기본 어휘 별표 이 개수까지로 제한(1 = ★만, 2 = ★·★★, a/an 제외). 없으면 제한 없음
 const TRACKS={
   // 기초 1~3단계: 앱이 '다음에 올 단어'(컴퓨터 단어의 끝 글자로 시작)를 정하고 뜻·그림·소리를 보여 줌 → 학생은 그 철자를 완성. tMin·tMax: 다음 단어 글자 수
   basic:{name:'기초',tag:'Basic',icon:'🏕️',desc:'영어 단어가 아직 낯선 친구. 뜻·그림·소리를 보고 단어의 철자를 완성해 봐요.',levels:[
-    {id:1,name:'철자 고르기',desc:'다음 단어의 뜻·그림·소리를 보고, 철자가 맞는 것을 골라요.',mode:'spell',pool:1,cpu:1,goal:4,min:2,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
-    {id:2,name:'글자 블록 조립',desc:'섞인 글자 블록을 순서대로 눌러 단어를 완성해요. 키보드로 쳐도 돼요.',mode:'blocks',pool:1,cpu:1,goal:5,min:2,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
-    {id:3,name:'빈칸 채우기',desc:'비어 있는 글자를 채워 단어를 완성해요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:2,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
-    {id:4,name:'직접 쓰기',desc:'주관식: 2글자 이상 단어를 직접 써요. (me, us 같은 대명사도 OK)',mode:'type',pool:1,cpu:1,goal:6,min:2,cpuMin:3}
+    {id:1,name:'철자 고르기',desc:'다음 단어의 뜻·그림·소리를 보고, 철자가 맞는 것을 골라요.',mode:'spell',pool:1,cpu:1,goal:4,min:2,star:1,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
+    {id:2,name:'글자 블록 조립',desc:'섞인 글자 블록을 순서대로 눌러 단어를 완성해요. 키보드로 쳐도 돼요.',mode:'blocks',pool:1,cpu:1,goal:5,min:2,star:1,cpuMin:3,cpuMax:6,tMin:3,tMax:6},
+    {id:3,name:'빈칸 채우기',desc:'비어 있는 글자를 채워 단어를 완성해요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:2,star:1,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
+    {id:4,name:'직접 쓰기',desc:'주관식: 2글자 이상 단어를 직접 써요. (me, us 같은 대명사도 OK)',mode:'type',pool:1,cpu:1,goal:6,min:2,star:1,cpuMin:3}
   ]},
   normal:{name:'보통',tag:'Intermediate',icon:'⛵',desc:'기본 단어는 자신 있는 친구. 직접 쓰기와 스피드에 도전해요.',levels:[
-    {id:1,name:'빈칸 채우기',desc:'다음 단어의 뜻·소리를 보고 비어 있는 글자를 채워요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:3,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
-    {id:2,name:'직접 쓰기',desc:'주관식: 3글자 이상. 컴퓨터는 초등 수준 단어를 내요.',mode:'type',pool:1,cpu:1,goal:6,min:3,cpuMin:4,listenOpt:true},
-    {id:3,name:'직접 쓰기',desc:'주관식: 4글자 이상. 컴퓨터도 5글자 이상 중학교 단어를 내요.',mode:'type',pool:2,cpu:2,goal:7,min:4,cpuMin:5,listenOpt:true},
-    {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:8,min:4,cpuMin:5,time:30,listenOpt:true}
+    {id:1,name:'빈칸 채우기',desc:'다음 단어의 뜻·소리를 보고 비어 있는 글자를 채워요. 잘할수록 빈칸이 늘어나요.',mode:'blanks',pool:1,cpu:1,goal:5,min:3,star:1,cpuMin:3,cpuMax:7,tMin:4,tMax:8},
+    {id:2,name:'직접 쓰기',desc:'주관식: 3글자 이상. 컴퓨터는 초등 수준 단어를 내요.',mode:'type',pool:1,cpu:1,goal:6,min:3,star:1,cpuMin:4,listenOpt:true},
+    {id:3,name:'직접 쓰기',desc:'주관식: 4글자 이상. 컴퓨터도 5글자 이상 중학교 단어를 내요.',mode:'type',pool:2,cpu:2,goal:7,min:4,star:2,cpuMin:5,listenOpt:true},
+    {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:8,min:4,star:2,cpuMin:5,time:30,listenOpt:true}
   ]},
   hard:{name:'도전',tag:'Advanced',icon:'🌋',desc:'영어 단어를 많이 아는 친구. 긴 단어와 빠른 속도로 겨뤄요.',levels:[
     {id:1,name:'직접 쓰기',desc:'주관식: 4글자 이상 단어를 써요. 컴퓨터는 4글자 이상 단어를 내요.',mode:'type',pool:2,cpu:2,goal:6,min:4,cpuMin:4},
@@ -1329,8 +1330,8 @@ let G=null, timerId=null;
 function start(id){
   audioKeepAlive(soundOn);
   const L=LEVELS[id-1];
-  // 기초 수준은 교육부 기본 어휘(level 1 ★·level 2 ★★)만 출제(컴퓨터 단어·완성할 단어·보기·힌트·예시). 학생 답 인정은 그대로
-  const starred=x=>track!=='basic'||!!x.core;
+  // 별표 규칙(L.star): 교육부 기본 어휘 중 별표 L.star개까지만 출제(컴퓨터 단어·완성할 단어·보기·힌트·예시). a/an은 뺌. 학생 답 인정은 그대로
+  const starred=x=>!L.star||(!!x.core&&x.core<=L.star&&x.w!=='an');
   const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp&&starred(x));
   // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
   G={L,pool,cpuPool:byTier(L.cpu).filter(x=>starred(x)&&!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],lines:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],usedStored:0,buyQty:1,lives:SETTINGS.lives,t0:Date.now(),turns:0,rights:0,combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0,feed:[]};

@@ -30,6 +30,7 @@ const cpuWord=p=>p.$eval('.cpu .big',e=>e.textContent);
 async function skip(p){
   if(await p.$('#inp')){ await p.fill('#inp','zzzz'); await p.press('#inp','Enter'); }
   else if(await p.$('#bslots')) await p.evaluate(()=>{ const t=window.__wordchain.target(); document.querySelectorAll('#bslots .bin').forEach(b=>b.value=t[0]==='z'?'q':'z'); document.querySelector('#answer form').requestSubmit(); });   // 빈칸 채우기: 첫 글자를 틀리게
+  else if(await p.$('.blk')){ const r=(await p.evaluate(()=>window.__wordchain.target())).slice(1), s=[...r].sort().join(''); await p.keyboard.type(s!==r?s:[...s].reverse().join('')); await p.waitForTimeout(700); }   // 글자 블록: 순서를 틀리게
   else await p.click('.choice');
   await p.click('#ov1',{timeout:1500}).catch(()=>{});
 }
