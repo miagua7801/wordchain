@@ -115,6 +115,11 @@ const {target,open}=require('./lib');
   { const s=await open({viewport:{width:1280,height:800},student:true}); const q=s.p;
     await q.goto(url); await q.evaluate(()=>localStorage.clear()); await q.goto(url); await q.click('[data-t="basic"]'); await q.waitForTimeout(100);
     ok(!(await q.$('#teacher'))&&!!(await q.$('#reset')),'학생 화면: "선생님: 모든 단계 열기" 버튼 없음(기록 지우기는 그대로)');
+    // 기록 저장·불러오기 영역은 기본으로 숨김(SETTINGS.showBackup:false): 화면 코드는 있지만 안 보임, 다른 버튼·안내는 그대로
+    const bk=await q.evaluate(()=>{ const v=s=>{ const e=document.querySelector(s); return !!e&&e.getClientRects().length>0; };
+      return {has:!!document.querySelector('.backup #bkSave'),save:v('#bkSave'),load:v('#bkLoad'),msg:v('#bkMsg'),reset:v('#reset'),credits:v('#credits'),ver:v('#ver'),note:document.body.innerText.includes('진행 기록은 이 기기의 브라우저에 저장돼요.')}; });
+    ok(bk.has&&!bk.save&&!bk.load&&!bk.msg&&bk.reset&&bk.credits&&bk.ver&&bk.note,'학생 단계 맵: 기록 저장·불러오기 영역 숨김(코드는 있음), 기록 지우기·출처·버전·저장 문구는 보임 '+JSON.stringify(bk));
+    await q.click('#credits'); await q.waitForTimeout(150); ok(/SCOWL/.test(await q.textContent('body')),'  출처·저작권 창 열림'); await q.keyboard.press('Escape'); await q.waitForTimeout(150);
     for(let i=0;i<4;i++) await q.click('#ver'); ok(!(await q.$('#teacher')),'  버전 글자 4번으로는 안 보임');
     await q.click('#ver'); await q.waitForTimeout(100);
     ok(!!(await q.$('#teacher'))&&(await q.evaluate(()=>localStorage.getItem('wordchain-teacher')))==='1','버전 글자를 3초 안에 5번 누르면 선생님 버튼이 보임(이 기기에 저장)');
@@ -123,7 +128,7 @@ const {target,open}=require('./lib');
     await q.click('#teacherOff'); await q.waitForTimeout(100); ok(!(await q.$('#teacher')),'"선생님 모드 끄기" → 다시 숨김');
     await q.goto(url+'?teacher=1'); await q.click('[data-t="basic"]'); ok(!!(await q.$('#teacher')),'주소 ?teacher=1 로도 켜짐');
     await q.goto(url+'?teacher=0'); await q.click('[data-t="basic"]'); ok(!(await q.$('#teacher')),'?teacher=0 으로 끔');
-    if(s.errs.length) console.log('errors',s.errs); await s.b.close(); }
+    if(s.errs.length){ fail++; console.log('errors',s.errs); } await s.b.close(); }
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();

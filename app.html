@@ -493,6 +493,8 @@ const SETTINGS={
   badge:{fire:[5,10], longWord:7, core:[10,30], outside:5, comeback:5, review:10, ears:5},
   // 기록 파일: 마지막으로 저장한 뒤 이 날수가 지나면 단계 맵에 '기록을 저장해 둘까요?' 안내
   backupReminderDays:14,
+  // 단계 맵 아래 기록 저장·불러오기 영역(💾 저장하기·📂 불러오기·저장 안내): false면 학생 화면에서 숨김(기능과 저장 방식은 그대로), true면 보임
+  showBackup:false,
 };
 // 이 앱의 저작권 표시(저작자·연도·라이선스는 여기 한곳에서만 바꿈, 학생 화면에는 실명 대신 아이디). 법적 전문은 저장소의 LICENSE
 const OWNER={year:2026, name:'miagua7801', license:'CC BY-NC-ND 4.0', licenseKo:'저작자표시-비영리-변경금지'};
@@ -536,6 +538,10 @@ const NUMW=new Set(VOCAB_NUM.split(/[|\n]/).map(s=>s.trim().split(' ')[0]).filte
 [1,2].forEach(lv=>VOCAB_CORE[lv].split(/[|\n]/).map(s=>s.trim()).filter(Boolean).forEach(e=>{
   const sp=e.indexOf(' '), w=(sp<0?e:e.slice(0,sp)).toLowerCase(), d=DICT.get(w);
   if(d){ d.core=lv; d.tier=Math.min(d.tier,lv); } else if(sp>0) DICT.set(w,{w,ko:e.slice(sp+1).trim(),emoji:'',tier:lv,core:lv}); }));
+// x로 끝나는 학생 단어에 답할 컴퓨터 단어(VOCAB_X_REPLY): 출제 단어(ALL)에는 넣지 않음(xr)
+const X_REPLY=VOCAB_X_REPLY.split(/[|\n]/).map(s=>s.trim()).filter(Boolean).map(e=>{
+  const sp=e.indexOf(' '), w=e.slice(0,sp).toLowerCase(), d={w,ko:e.slice(sp+1).trim(),emoji:'',tier:1,xr:true};
+  DICT.set(w,d); return d; });
 // 기본 어휘를 더 자주(SETTINGS.coreWeight배)
 const CW=x=>x.core?SETTINGS.coreWeight:1;
 function pickCore(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,x)=>a+CW(x),0); let r=Math.random()*tot; for(const x of arr){ r-=CW(x); if(r<=0) return x; } return arr[arr.length-1]; }
@@ -559,7 +565,7 @@ function isBlocked(w,inVocab){
 }
 // 컴퓨터 출제·힌트·예시·보기·듣고 쓰기·복습에 쓰는 단어에서 금지어와 출제하지 않을 단어(SETTINGS.noAsk)를 모두 뺌
 const NO_ASK=new Set(SETTINGS.noAsk.map(w=>w.toLowerCase()));
-const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w)&&!NO_ASK.has(x.w));
+const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!x.xr);
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 단어 판정: 단어장 단어 / 단어장 밖 올바른 단어 / 틀린 단어 ----------
@@ -606,7 +612,7 @@ function suggest(w){
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={nextCpu:ch=>{ const c=G&&pickCpu(ch); return c?disp(c):null; },forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -914,7 +920,9 @@ function applyBackup(d){ const x=JSON.parse(JSON.stringify(d.data));
   setStars(parseInt(x.stars,10)||0);
   setTrack(TRACKS[track]?track:TRACKS[store.track]?store.track:'basic'); }
 // 단계 맵 아래: 💾 저장하기 · 📂 불러오기(파일 확인 → 요약 + '이 기록으로 바꾸기'를 한 번 더 눌러야 바뀜)
-function backupHTML(){ return `<div class="backup">${needBackup()?'<p class="bkhint">기록을 저장해 둘까요?</p>':''}
+// SETTINGS.showBackup이 false면 영역을 숨기기만 함(bindBackup이 버튼을 찾도록 화면 코드는 그대로). 자동 테스트는 window.__wordchainShowBackup으로 켬
+const showBackup=()=>SETTINGS.showBackup||!!window.__wordchainShowBackup;
+function backupHTML(){ return `<div class="backup"${showBackup()?'':' hidden'}>${needBackup()?'<p class="bkhint">기록을 저장해 둘까요?</p>':''}
     <div class="bkrow"><button class="back" id="bkSave">💾 내 기록 저장하기</button><button class="back" id="bkLoad">📂 기록 불러오기</button></div>
     <input type="file" id="bkFile" accept=".json,application/json" hidden><div class="bkmsg" id="bkMsg" aria-live="polite"></div></div>`; }
 function bindBackup(){ const m=$app.querySelector('#bkMsg'), f=$app.querySelector('#bkFile');
@@ -1338,8 +1346,9 @@ function start(id){
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
-// 컴퓨터가 낼 단어: 학생이 이어 갈 수 있는 끝 글자로 끝나는 단어
+// 컴퓨터가 낼 단어: 학생이 이어 갈 수 있는 끝 글자로 끝나는 단어. 학생 단어가 x로 끝나면 VOCAB_X_REPLY에서 무작위
 function pickCpu(firstCh){
+  if(firstCh==='x'){ const xs=X_REPLY.filter(x=>!G.used.has(x.w)); if(xs.length) return rnd(xs); }
   let cands=G.cpuPool.filter(x=>!G.used.has(x.w)&&(!firstCh||x.w[0]===firstCh)&&startsWith(last(x.w),G.pool).length>=(G.L.mode==='type'?3:1));
   if(!cands.length) return null;
   // 학생이 시작할 글자가 겹치지 않게: 최근 두 번 요구한 글자로 끝나는 단어는 피함 (없으면 허용)

@@ -6,6 +6,8 @@ const {target,open}=require('./lib');
 (async()=>{
   const url=target(process.argv[2]); let fail=0; const ok=(c,m)=>{ if(!c) fail++; console.log((c?'PASS ':'FAIL ')+m); };
   const {b,p,errs}=await open({student:true,acceptDownloads:true});
+  // 기록 저장·불러오기 영역은 기본으로 숨김(SETTINGS.showBackup:false) → 이 테스트는 켠 상태로 확인
+  await p.addInitScript(()=>{ window.__wordchainShowBackup=true; });
   const J=o=>JSON.stringify(o);
   // 기록을 심고 앱을 다시 엶
   async function seed(items){ await p.goto(url); await p.evaluate(it=>{ localStorage.clear(); for(const [k,v] of Object.entries(it)) localStorage.setItem(k,v); },items); await p.goto(url); }

@@ -36,6 +36,7 @@ description: 영어 끝말잇기 앱을 소리 없이(단어 읽기 음소거) �
 | `node tests/accept.js [주소] word1 word2 …` | 학생 답으로 인정되는지 | 단어 수에 비례 |
 | `node tests/variety.js [주소] [턴 수]` | 시작 글자가 최근 2번과 겹친 횟수, 글자 종류 | ~3분 |
 | `node tests/ime.js [주소]` | 한글 자판으로 칠 때: 화면 키보드식 조합은 끝난 뒤 영어로(빠짐·겹침 없음), 실제 키보드+한글 입력기는 영문 고정으로 바로 영어(빈칸 칸 포함) | ~20초 |
+| `node tests/xreply.js [주소]` | x로 끝나는 학생 단어(box·fox·wax …)에 컴퓨터가 `VOCAB_X_REPLY`(xylophone·xylitol·xylophonist) 중 무작위로 답함·뜻 표시·읽기, 다른 출제에는 안 씀, 학생 답으로는 인정 | ~15초 |
 | `node tests/speech.js [주소]` | 단어 읽기: 앞에 무음 여유(크롬북은 "dot"으로 읽혀 없음), 끊은 뒤 쉬었다 읽기, 학생 단어 다 읽은 뒤 컴퓨터 단어 (가짜 음성 엔진, 소리 없음) | ~10초 |
 
 - `[주소]`를 빼면 로컬 빌드(`dist/word-chain-challenge.html`), 주면 그 주소(예: `https://miagua7801.github.io/wordchain/`).

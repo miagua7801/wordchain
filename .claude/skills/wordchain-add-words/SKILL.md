@@ -16,6 +16,7 @@ description: 영어 끝말잇기 앱의 단어장(vocab.js)에 단어를 추가�
 | `[M]` VOCAB_M | 중학 수준, 직업어, 추상어 | 보통·도전에서 출제 |
 | `[WF_E]`/`[WF_M]` | 접미사로 만든 단어 | 같음 |
 | `[NUM]` VOCAB_NUM | 기수(one~thousand) | **학생 답으로만**, 컴퓨터는 안 냄(NUMW) |
+| VOCAB_X_REPLY | x로 끝나는 학생 단어에 컴퓨터가 답할 단어(x로 시작) | 그때만 무작위로 출제, 다른 출제엔 안 씀. vocab.js에서 직접 고침(add-words.js 대상 아님) |
 
 `VOCAB_CORE`(교육부 기본 어휘 level 1·2)·`VOCAB_CORE_ACCEPT`(학생 답으로만)는 `tools/make-core-vocab.py`가 만든다 — 직접 고치지 않는다. 기본 어휘의 새 뜻은 `data/new-meanings-review.tsv`를 고치고 스크립트를 다시 실행한다. `check`는 이 목록도 보여 준다.
 

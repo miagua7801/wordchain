@@ -197,6 +197,11 @@ eleven 11, 열하나|twelve 12, 열둘|thirteen 13, 열셋|fourteen 14, 열넷|f
 thirty 30, 서른|forty 40, 마흔|fifty 50, 쉰|sixty 60, 예순|seventy 70, 일흔|eighty 80, 여든|ninety 90, 아흔|hundred 100, 백|thousand 1000, 천
 `;
 
+// x로 끝나는 학생 단어(box, fox, six …)에 컴퓨터가 답할 단어 — 그때만 이 중 하나를 무작위로 냄(다른 출제·힌트·보기·예시에는 안 씀, 학생 답으로는 인정)
+const VOCAB_X_REPLY = `
+xylophone 실로폰|xylitol 설탕 대신 쓰는 천연 감미료|xylophonist 실로폰 연주자
+`;
+
 // 단어 만들기(접미사) — 괄호 안은 원래 단어 + 접미사. WF_E: 초등 수준, WF_M: 중학교 수준
 // 동사+er/r → 사람·도구, 명사+al → 형용사, 명사+y/ly → 형용사, 형용사+ly → 부사, 동사+ment → 명사, 형용사+ness → 명사
 const VOCAB_WF_E = `
