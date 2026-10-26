@@ -69,7 +69,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .iconbtn{width:44px;height:44px;flex:none;padding:0;display:grid;place-items:center;font-size:20px;line-height:1;background:var(--surface);border:2px solid var(--line);border-radius:12px}
 .iconbtn:hover{border-color:var(--accent)}
 
-/* ===== 첫 화면: 제목 · 기초/보통/도전 · 복습하기(작게) ===== */
+/* ===== 첫 화면: 제목 · 기초/보통/도전 · 단어 수첩(작게) ===== */
 .title{min-height:calc(100dvh - 90px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
 .title h1{font-size:clamp(34px,8vw,52px);line-height:1.1}
 .title .sub{margin:0;font-family:var(--f-word);font-weight:600;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
@@ -929,7 +929,7 @@ function bindBackup(){ const m=$app.querySelector('#bkMsg'), f=$app.querySelecto
     m.querySelector('#bkNo').onclick=()=>{ m.innerHTML=''; };
     m.querySelector('#bkYes').focus(); }; }
 
-// ---------- 첫 화면: 제목 · 기초/보통/도전 · 복습하기(작게) ----------
+// ---------- 첫 화면: 제목 · 기초/보통/도전 · 단어 수첩(작게) ----------
 function chooseTrack(){
   audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null; lvTheme(null);
   const due=nbList().length;
@@ -939,14 +939,13 @@ function chooseTrack(){
     <p class="sub">Word Chain Challenge</p>
     <div class="tracksel">${Object.entries(TRACKS).map(([k,T])=>{ const p=store.prog[k]||{};
       return `<button class="track" data-t="${k}" data-tc="${k}" aria-label="${T.name} 수준"><span class="ic" aria-hidden="true">${T.icon}</span><span class="nm">${T.name}</span><span class="pg" aria-hidden="true">${T.levels.map(L=>`<i class="${p.cleared&&p.cleared[L.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('')}</div>
-    <button class="rvsmall" id="rv">📒 복습하기${due?` <span class="cnt" aria-label="복습할 단어 ${due}개">${due}</span>`:''}</button>
+    <button class="rvsmall" id="nbBtn">📒 단어 수첩${due?` <span class="cnt" aria-label="학습할 단어 ${due}개">${due}</span>`:''}</button>
   </div>
   ${ownLine()}
   <div class="title-ver">버전 ${BUILD}</div>`;
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{ setTrack(b.dataset.t); home(); trackIntro(); });
-  // 수첩에 학습할 단어가 있으면 바로 학습(모든 단어), 없으면 단어 수첩
-  $app.querySelector('#rv').onclick=()=>due?startStudy():notebook();
+  $app.querySelector('#nbBtn').onclick=notebook;
 }
 
 // ---------- 규칙 창(롤플레잉 게임 대화창): 쪽마다 줄이 하나씩 나오고, 다음 ▶ 으로 넘김, SKIP으로 바로 닫음 ----------
@@ -1246,7 +1245,7 @@ function home(){
   $app.innerHTML=`
   <div class="mapbar"><button class="iconbtn" id="chg" aria-label="처음 화면으로(수준 바꾸기)">←</button><h2>${T.icon} ${T.name} 수준</h2><button class="iconbtn" id="rules" aria-label="수준 규칙 다시 보기">📜</button></div>
   <div class="trackbar"><span class="chip starchip">⭐ <b class="stars-n">${stars}</b></span><span class="chip" title="별로 산 힌트">💡 보관 힌트 ${storedHints()}/${SETTINGS.shop.maxStored}</span></div>
-  <div class="maptools"><button class="back" id="nbBtn">📒 단어 수첩</button><button class="back" id="bdBtn">🏅 배지</button>${nbList().length?`<button class="btn soft" id="rv">📒 복습하기 ${nbList().length}개</button>`:''}</div>
+  <div class="maptools"><button class="back" id="nbBtn">📒 단어 수첩</button><button class="back" id="bdBtn">🏅 배지</button></div>
   ${STORAGE_OK?'':'<p class="nostore" role="status">이 창에서는 기록이 저장되지 않아요. 일반 창으로 열어 주세요.</p>'}
   <div class="map" id="map" data-tc="${track}" style="--mh:${H}px">
     <svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">${roads}</svg>
@@ -1294,7 +1293,6 @@ function home(){
   $app.querySelector('#rules').onclick=trackIntro;
   $app.querySelector('#nbBtn').onclick=notebook;
   $app.querySelector('#bdBtn').onclick=badgeScreen;
-  $app.querySelector('#rv')?.addEventListener('click',()=>startStudy());
   confirmBtn('#reset','정말 지울까요? 한 번 더 누르세요',()=>{save=blank();persist();home();});
   if(teacherOn()){ confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
     $app.querySelector('#teacherOff').onclick=()=>{ setTeacher(false); home(); }; }

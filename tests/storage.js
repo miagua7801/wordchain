@@ -50,7 +50,7 @@ const {target,open}=require('./lib');
   for(let i=0;i<2;i++){ await p.goto(url); await toMap('basic'); }
   const after=await all();
   ok(J(JSON.parse(after['wordchain-v2']).prog)===J(cur.prog)&&after['wordchain-notebook-v1']===fresh['wordchain-notebook-v1']&&after['wordchain-stars-v1']==='7'&&after['wordchain-badges-v1']===fresh['wordchain-badges-v1'],'다시 열어도 진도·수첩·별·배지 그대로');
-  ok(await p.evaluate(()=>document.querySelector('.stars-n').textContent==='7'&&document.querySelectorAll('.map .node.cleared').length===2&&/2개/.test(document.querySelector('#rv')?.textContent||'')),'다시 연 단계 맵: 별 7 · 통과 2단계 · 복습할 단어 2개');
+  ok(await p.evaluate(()=>document.querySelector('.stars-n').textContent==='7'&&document.querySelectorAll('.map .node.cleared').length===2),'다시 연 단계 맵: 별 7 · 통과 2단계');
 
   // 4. 기록 파일로 저장 → 기록 지움 → 불러오기 → 그대로 돌아옴
   const [dl]=await Promise.all([p.waitForEvent('download'),p.click('#bkSave')]);

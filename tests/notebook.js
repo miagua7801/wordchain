@@ -1,5 +1,5 @@
 // 나의 단어 수첩: 날짜·횟수 제한 없이 맞힐 때마다 도장(3번 맞히면 외운 단어), 목록에서 단어를 눌러 학습, 두 번 틀리면 정답 → 연습하기(보고 따라 쓰기) → 다시 도전,
-// 첫 화면 복습하기, 수첩 화면·비우기, 단어 모으기. node tests/notebook.js [주소]
+// 첫 화면 단어 수첩(모두 학습하기), 단계 맵에 복습하기 없음, 수첩 화면·비우기, 단어 모으기. node tests/notebook.js [주소]
 const {target,open,startLevel,cpuWord}=require('./lib');
 (async()=>{
   const url=target(process.argv[2]);
@@ -16,18 +16,23 @@ const {target,open,startLevel,cpuWord}=require('./lib');
 
   // 0. 예전에 모인 '처음 맞힌 기본 어휘'(ball)는 지우지 않고 숨김: 복습 수·학습·수첩 화면에 안 나옴
   ok((await NB()).items.ball&&(await NB()).items.ball.reason==='textbook','예전 "처음 맞힌 기본 어휘" 단어는 저장본에 그대로 남음');
-  // 1. 첫 화면 복습하기: 수첩 단어 수, 누르면 모든 단어 학습(날짜 제한 없음)
-  ok((await p.textContent('#rv .cnt'))==='3','첫 화면 "복습하기"에 수첩 단어 3개(날짜와 관계없이)');
-  await p.click('#rv'); await p.waitForTimeout(300);
+  // 1. 첫 화면 단어 수첩: 수첩 단어 수, 누르면 단어 수첩 → "모두 학습하기"로 모든 단어 학습(날짜 제한 없음)
+  ok((await p.textContent('#nbBtn .cnt'))==='3'&&!(await p.$('#rv')),'첫 화면 "단어 수첩"에 수첩 단어 3개(날짜와 관계없이), 복습하기 버튼 없음');
+  await p.click('#nbBtn'); await p.waitForTimeout(200);
+  ok((await p.textContent('h2')).includes('단어 수첩')&&(await p.textContent('#study')).includes('3개'),'첫 화면 단어 수첩 → 수첩 화면(모두 학습하기 3개)');
+  await p.click('#study'); await p.waitForTimeout(300);
   const seen=[];
   for(let i=0;i<3;i++){ const w=await H(()=>window.__wordchain.review()); seen.push(w); await answer(w); await p.click('#next'); await p.waitForTimeout(150); }
   ok(seen.sort().join()==='apple,car,tiger'&&(await p.textContent('#app')).includes('3개 중 3개')&&(await p.textContent('#app')).includes('도장 3개'),'모든 단어(복습 날짜가 미래인 tiger도) 학습, 끝 화면 "3개 중 3개 · 도장 3개"');
   let nb=await NB();
   ok(nb.learned.apple&&!nb.items.apple&&nb.items.tiger.stamps===1&&nb.items.car.stamps===2,'맞힐 때마다 도장 +1: apple 도장 3개 → 외운 단어, tiger 0→1, car 1→2');
   await p.click('#done'); await p.waitForTimeout(200);
+  ok((await p.textContent('h2')).includes('단어 수첩'),'학습 끝 → 단어 수첩으로'); await p.click('#back'); await p.waitForTimeout(150);
 
   // 2. 수첩 목록에서 체크박스로 고른 단어만 학습. 바로 다시 해도 도장(제한 없음) → 3번이면 외운 단어
-  await p.click('[data-t="normal"]'); await p.click('#nbBtn'); await p.waitForTimeout(200);
+  await p.click('[data-t="normal"]'); await p.waitForTimeout(150);
+  ok(!(await p.$('#rv'))&&!(await p.textContent('.maptools')).includes('복습하기'),'단계 맵: 복습하기 버튼 없음(단어 수첩·배지만)');
+  await p.click('#nbBtn'); await p.waitForTimeout(200);
   const t=await p.textContent('#app');
   ok(!t.includes('처음 맞힌 기본 어휘')&&!/\bball\b/.test(t),'수첩 화면: 숨긴 기본 어휘(ball) 안 보임');
   ok(t.includes('모은 단어 2개')&&t.includes('외운 단어 1개')&&t.includes('호랑이')&&!t.includes('다음 복습')&&t.includes('언제든'),'수첩 화면: 모은 단어 2개·외운 단어 1개·뜻, 복습 날짜 표시 없음, "언제든" 안내');
@@ -79,8 +84,9 @@ const {target,open,startLevel,cpuWord}=require('./lib');
   // 5. 수첩 비우기, 단어 모으기
   await p.click('#nbclear'); await p.click('#nbclear'); await p.waitForTimeout(200);
   nb=await NB(); ok(!Object.keys(nb.items).length&&!Object.keys(nb.learned).length,'수첩 비우기(두 번 눌러 확인)');
-  await p.click('#back'); await p.waitForTimeout(150); await p.click('#chg'); await p.waitForTimeout(150); await p.click('#rv'); await p.waitForTimeout(150);
-  ok((await p.textContent('h2')).includes('단어 수첩'),'수첩이 비면 복습하기 → 단어 수첩');
+  await p.click('#back'); await p.waitForTimeout(150); await p.click('#chg'); await p.waitForTimeout(150);
+  ok(!(await p.$('#nbBtn .cnt')),'수첩이 비면 첫 화면 단어 수첩에 숫자 없음'); await p.click('#nbBtn'); await p.waitForTimeout(150);
+  ok((await p.textContent('h2')).includes('단어 수첩')&&!(await p.$('#study')),'빈 수첩: 모두 학습하기 없음');
   await startLevel(p,url,'normal',2); await p.waitForTimeout(300);
   const ch=(await cpuWord(p)).slice(-1); const bad=ch==='z'?'apple':'zebra';
   await p.fill('#inp',bad); await p.press('#inp','Enter'); await p.waitForTimeout(800);

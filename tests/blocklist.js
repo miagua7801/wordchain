@@ -59,7 +59,7 @@ const NORMAL='class grape assistant passage peacock scrape therapist shiitake co
   // 5. 복습에서 금지어 입력: 기록하지 않음
   await p.evaluate(()=>{ const d=new Date(); d.setDate(d.getDate()-1); const y=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     localStorage.setItem('wordchain-notebook-v1',JSON.stringify({items:{tiger:{w:'tiger',reason:'wrong',stamps:1,due:y}},learned:{},tbSeen:[]})); });
-  await p.goto(url); await p.click('#rv'); await p.waitForTimeout(300);
+  await p.goto(url); await p.click('#nbBtn'); await p.click('#study'); await p.waitForTimeout(300);
   const said1=await H(()=>window.__said.length);
   await p.fill('#inp',e0); await p.press('#inp','Enter'); await p.waitForTimeout(300);
   const nb=await H(()=>JSON.parse(localStorage.getItem('wordchain-notebook-v1')).items.tiger);

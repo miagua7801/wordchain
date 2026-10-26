@@ -1,4 +1,4 @@
-// 첫 화면·규칙 창·단계 맵·게임 화면 틀: 첫 화면은 제목·기초/보통/도전·작은 복습하기만, 수준 규칙 창(2쪽·SKIP·Enter·Esc), 단계 맵(이은 길·잠김·도착점),
+// 첫 화면·규칙 창·단계 맵·게임 화면 틀: 첫 화면은 제목·기초/보통/도전·작은 단어 수첩만, 수준 규칙 창(2쪽·SKIP·Enter·Esc), 단계 맵(이은 길·잠김·도착점),
 // 마우스를 올리면 말풍선 설명 + 다른 단계 흐리게, 손가락은 한 번 눌러 설명·두 번째에 시작, 단계 규칙 창(컴퓨터 한마디·하는 방법·목표·시간 조절),
 // 게임 화면(☰ 단계 맵 · "기초 1단계" · 소리 아이콘), 채팅(아래에서 밀어 올림) 위 가운데 문제 창, 정답 뒤 문제 창을 감춤. node tests/map.js [주소]
 const {target,open}=require('./lib');
@@ -10,11 +10,11 @@ const {target,open}=require('./lib');
 
   // 1. 첫 화면
   const tb=await H(()=>[...document.querySelectorAll('#app button')].map(b=>b.id||b.dataset.t));
-  ok(tb.join()==='basic,normal,hard,rv,credits'&&(await p.textContent('h1'))==='영어 끝말잇기 챌린지','첫 화면: 제목 + 기초·보통·도전 + 복습하기 + 아래 출처·저작권 — '+tb.join());
-  const sz=await H(()=>{ const r=e=>document.querySelector(e).getBoundingClientRect(); return {rv:r('#rv').height,t:r('[data-t=basic]').height}; });
-  ok(sz.rv<sz.t*0.6,`복습하기는 작게(${Math.round(sz.rv)}px < 수준 버튼 ${Math.round(sz.t)}px)`);
-  await p.click('#rv'); await p.waitForTimeout(150);
-  ok((await p.textContent('h2')).includes('단어 수첩'),'복습할 단어가 없으면 복습하기 → 단어 수첩'); await p.click('#back'); await p.waitForTimeout(150);
+  ok(tb.join()==='basic,normal,hard,nbBtn,credits'&&(await p.textContent('h1'))==='영어 끝말잇기 챌린지','첫 화면: 제목 + 기초·보통·도전 + 단어 수첩 + 아래 출처·저작권 — '+tb.join());
+  const sz=await H(()=>{ const r=e=>document.querySelector(e).getBoundingClientRect(); return {rv:r('#nbBtn').height,t:r('[data-t=basic]').height}; });
+  ok(sz.rv<sz.t*0.6,`단어 수첩은 작게(${Math.round(sz.rv)}px < 수준 버튼 ${Math.round(sz.t)}px)`);
+  await p.click('#nbBtn'); await p.waitForTimeout(150);
+  ok((await p.textContent('h2')).includes('단어 수첩'),'단어 수첩 버튼 → 단어 수첩'); await p.click('#back'); await p.waitForTimeout(150);
   ok(!!(await p.$('.tracksel')),'수첩에서 돌아가기 → 첫 화면');
 
   // 2. 수준 규칙 창: 2쪽, 줄이 차례로, 다음 ▶, SKIP
