@@ -1275,7 +1275,7 @@ function stageIntro(id){
 }
 
 // ---------- 도구 ----------
-const BUILD='2026-10-23 13:07'; // build.py가 빌드 시각으로 바꿈
+const BUILD='2026-10-26 10:45'; // build.py가 빌드 시각으로 바꿈
 // 영어 단어 목록(SCOWL/ESDB) 저작권 고지·허가문: build.py가 wordlist.js 머리 주석에서 읽어 넣음(영어 원문 그대로, 한곳에서만 관리)
 const SCOWL_NOTICE="Copyright 2000-2026 by Kevin Atkinson\nPermission to use, copy, modify, distribute, and sell any part of the English Speller Database (ESDB, previously known as SCOWLv2), or word lists created from it, is hereby granted without fee, provided that the above copyright notice appears in all copies and that both the above copyright notice and this notice appear in supporting documentation.  Kevin Atkinson makes no representations about the suitability of this database for any purpose.  It is provided \"as is\" without express or implied warranty.";
 
@@ -1431,6 +1431,8 @@ function audioKeepAlive(on){
     if(actx.state==='suspended') actx.resume();
   }catch(e){}
 }
+// 크롬북 음성은 소리 크기 0을 무시해 여유 '.'를 "dot"으로 읽음 → 크롬북에서는 여유 없이(스피커 깨우기는 audioKeepAlive가 맡음)
+const CROS=/\bCrOS\b/.test(navigator.userAgent);
 function speak(w,queue,rate){
   return new Promise(res=>{
     if(!soundOn||!window.speechSynthesis) return res();
@@ -1439,7 +1441,7 @@ function speak(w,queue,rate){
       pad.lang=u.lang='en-US'; pad.volume=0; u.rate=rate||(track==='basic'?SETTINGS.basicSpeech.rate:SPEECH_RATE);
       let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
       u.onend=fin; u.onerror=fin; setTimeout(fin,1500+w.length*250);
-      const go=()=>{ ss.speak(pad); ss.speak(u); };
+      const go=()=>{ if(!CROS) ss.speak(pad); ss.speak(u); };
       if(!queue&&(ss.speaking||ss.pending)){ ss.cancel(); setTimeout(go,200); } else go();
     }catch(e){ res(); }
   });

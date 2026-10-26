@@ -38,5 +38,11 @@ const {target}=require('./lib');
   const cEnd=L2.find(e=>e.ev==='end'&&e.text===cpuW), tSp=L2.find(e=>e.ev==='speak'&&e.text===tgt), cSp=L2.find(e=>e.ev==='speak'&&e.text===cpuW);
   ok(cSp&&cSp.rate<0.65,`기초 읽기 속도 ${cSp&&cSp.rate.toFixed(2)}배`);
   ok(cEnd&&tSp&&tSp.t-cEnd.t>=1400,`컴퓨터 단어(${cpuW})를 다 읽고 ${tSp&&cEnd?tSp.t-cEnd.t:'?'}ms 뒤 다음 단어(${tgt})를 읽음`);
+  // 크롬북: 소리 크기 0을 무시하므로 여유 '.'를 보내지 않음("dot"으로 읽힘)
+  const cros=await b.newPage({userAgent:'Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'});
+  await cros.addInitScript(()=>{ window.__wordchainNoIntro=true; window.__said=[]; Object.defineProperty(window,'speechSynthesis',{value:{speaking:false,pending:false,speak(u){ window.__said.push(u.text); setTimeout(()=>u.onend&&u.onend(),0); },cancel(){}}}); });
+  await cros.goto(url); await cros.click('[data-t="basic"]'); await cros.click('[data-lv="1"]'); await cros.waitForTimeout(2500);
+  const said=await cros.evaluate(()=>window.__said);
+  ok(said.length>0&&!said.includes('.'),`크롬북에서 단어만 읽음(${said.join(', ')})`);
   await b.close(); process.exit(fail?1:0);
 })();

@@ -1158,6 +1158,8 @@ function audioKeepAlive(on){
     if(actx.state==='suspended') actx.resume();
   }catch(e){}
 }
+// 크롬북 음성은 소리 크기 0을 무시해 여유 '.'를 "dot"으로 읽음 → 크롬북에서는 여유 없이(스피커 깨우기는 audioKeepAlive가 맡음)
+const CROS=/\bCrOS\b/.test(navigator.userAgent);
 function speak(w,queue,rate){
   return new Promise(res=>{
     if(!soundOn||!window.speechSynthesis) return res();
@@ -1166,7 +1168,7 @@ function speak(w,queue,rate){
       pad.lang=u.lang='en-US'; pad.volume=0; u.rate=rate||(track==='basic'?SETTINGS.basicSpeech.rate:SPEECH_RATE);
       let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
       u.onend=fin; u.onerror=fin; setTimeout(fin,1500+w.length*250);
-      const go=()=>{ ss.speak(pad); ss.speak(u); };
+      const go=()=>{ if(!CROS) ss.speak(pad); ss.speak(u); };
       if(!queue&&(ss.speaking||ss.pending)){ ss.cancel(); setTimeout(go,200); } else go();
     }catch(e){ res(); }
   });
