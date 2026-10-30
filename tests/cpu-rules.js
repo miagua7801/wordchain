@@ -16,6 +16,11 @@ const NUM=/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\w+t
   for(const w of ['spaghetti','kiss']){
     const sp=await p.evaluate(w=>[window.__wordchain.inAll(w),window.__wordchain.judge(w)],w);
     if(sp[0]||sp[1]!=='dict') fail++; console.log(`${w}: 출제 ${sp[0]?'됨(실패)':'안 함'}, 학생 답 판정 ${sp[1]}`); }
+  // 어려운 파생어(tools/make-core-vocab.py HARD_ONLY): 기초·보통에는 출제하지 않고 도전부터
+  const HARD_ONLY=['casual','clarify','classify','disclose','displace','embody','enclose','ensure','factual','formal','formation','informal','interact','literal','membership','notion','programmatic','racial','secondary','trial'];
+  for(const [t,lv,want] of [['basic',1,false],['basic',4,false],['normal',2,false],['normal',4,false],['hard',1,true],['hard',5,true]]){
+    await startLevel(p,url,t,lv); const o=await p.evaluate(()=>window.__wordchain.pools()), found=HARD_ONLY.filter(w=>o.pool.includes(w)||o.cpu.includes(w)), has=want?found.length===HARD_ONLY.length:found.length>0;
+    if(has!==want) fail++; console.log(`어려운 파생어 ${t} ${lv}: ${found.length}/${HARD_ONLY.length}개 출제${has===want?'':' (실패)'}`); }
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();

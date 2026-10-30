@@ -142,6 +142,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .rules ul{margin:0;padding-left:20px;display:grid;gap:4px}
 .foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:var(--muted)}
 .ver{font-size:12px;opacity:.8;white-space:nowrap}
+#ver{touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .linkbtn{background:none;border:none;padding:4px 2px;text-decoration:underline;color:var(--muted)}
 
 
@@ -612,7 +613,7 @@ function suggest(w){
 }
 const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
 // 자동 테스트용(읽기 전용)
-window.__wordchain={nextCpu:ch=>{ const c=G&&pickCpu(ch); return c?disp(c):null; },forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={pools:()=>G?{pool:G.pool.map(x=>x.w),cpu:G.cpuPool.map(x=>x.w)}:null,nextCpu:ch=>{ const c=G&&pickCpu(ch); return c?disp(c):null; },forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -950,7 +951,8 @@ function chooseTrack(){
     <button class="rvsmall" id="nbBtn">📒 단어 수첩${due?` <span class="cnt" aria-label="학습할 단어 ${due}개">${due}</span>`:''}</button>
   </div>
   ${ownLine()}
-  <div class="title-ver">버전 ${BUILD}</div>`;
+  <div class="title-ver"><span id="ver">버전 ${BUILD}</span>${teacherOn()?' · 선생님 모드 켜짐 (수준을 고르면 단계 맵 아래에 버튼이 있어요)':''}</div>`;
+  bindTeacherTap($app.querySelector('#ver'),chooseTrack);
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{ setTrack(b.dataset.t); home(); trackIntro(); });
   $app.querySelector('#nbBtn').onclick=notebook;
@@ -1231,11 +1233,13 @@ function silentNote(cw,f){
 }
 
 // ---------- 선생님 모드: 단계 맵 아래 '선생님: 모든 단계 열기' 버튼을 이 기기에서만 보이게(localStorage wordchain-teacher) ----------
-// 켜기: 단계 맵 아래 '버전' 글자를 3초 안에 5번 누르거나 주소 뒤에 ?teacher=1 · 끄기: '선생님 모드 끄기' 또는 ?teacher=0
+// 켜기: 첫 화면이나 단계 맵 아래 '버전' 글자를 3초 안에 5번 누르거나 주소 뒤에 ?teacher=1 · 끄기: '선생님 모드 끄기' 또는 ?teacher=0
 const TEACHER_KEY='wordchain-teacher';
 const teacherOn=()=>{ try{ return localStorage.getItem(TEACHER_KEY)==='1'; }catch(e){ return false; } };
 function setTeacher(on){ try{ on?localStorage.setItem(TEACHER_KEY,'1'):localStorage.removeItem(TEACHER_KEY); }catch(e){} }
 (()=>{ const m=/[?&]teacher=([01])/.exec(location.search); if(m) setTeacher(m[1]==='1'); })();
+// 버전 글자를 3초 안에 5번 누르면 선생님 모드를 켜고 그 화면을 다시 그림(학생 화면에는 선생님 버튼이 안 보임)
+function bindTeacherTap(el,redraw){ let taps=[]; el.onclick=()=>{ const n=Date.now(); taps=taps.filter(t=>n-t<3000).concat(n); if(taps.length>=5&&!teacherOn()){ setTeacher(true); redraw(); } }; }
 // ---------- 단계 맵: 단계를 이은 길. 마우스를 올리거나(키보드 초점) 손가락으로 한 번 누르면 말풍선 설명, 다른 단계는 흐리게 ----------
 // 마우스로 누르면 바로 규칙 창 → 시작. 손가락은 한 번 눌러 설명을 보고, 한 번 더(또는 말풍선의 ▶ 시작) 누르면 시작
 // 수준 이모지(모험): 기초 🏕️ 캠프(출발) · 보통 ⛵ 항해 · 도전 🌋 화산(정상) — 맵 장식도 그 지형으로
@@ -1304,8 +1308,7 @@ function home(){
   confirmBtn('#reset','정말 지울까요? 한 번 더 누르세요',()=>{save=blank();persist();home();});
   if(teacherOn()){ confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
     $app.querySelector('#teacherOff').onclick=()=>{ setTeacher(false); home(); }; }
-  // 선생님 모드 켜기: 아래 '버전' 글자를 3초 안에 5번 누름(학생 화면에는 선생님 버튼이 안 보임)
-  let taps=[]; $app.querySelector('#ver').onclick=()=>{ const n=Date.now(); taps=taps.filter(t=>n-t<3000).concat(n); if(taps.length>=5&&!teacherOn()){ setTeacher(true); home(); } };
+  bindTeacherTap($app.querySelector('#ver'),home);
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
   bindBackup();
 }

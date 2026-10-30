@@ -16,6 +16,9 @@ sys.path.insert(0, 'tools'); import blocklist as BL
 
 # 기본 어휘지만 컴퓨터가 내기에 알맞지 않은 단어(학생 답으로는 인정): 술·담배·폭력·성 관련, 표준 철자가 아닌 붙여 쓴 말
 NO_CPU = {'alcohol', 'beer', 'wine', 'pub', 'cigarette', 'gun', 'kill', 'hell', 'sex', 'breast', 'pregnant', 'livingroom'}
+# 괄호 안 파생어지만 앞 단어 level을 따르지 않는 단어: VOCAB_CORE에 넣지 않음(별표 규칙이 없는 도전 수준에서만 출제). 뜻은 VOCAB_M에
+HARD_ONLY = {'casual', 'clarify', 'classify', 'disclose', 'displace', 'embody', 'enclose', 'ensure', 'factual', 'formal', 'formation',
+             'informal', 'interact', 'literal', 'membership', 'notion', 'programmatic', 'racial', 'secondary', 'trial'}
 OLD = ['VOCAB_NUM', 'VOCAB_E', 'VOCAB_M', 'VOCAB_TB', 'VOCAB_WF_E', 'VOCAB_WF_M']
 
 src = open('vocab.js', encoding='utf-8').read()
@@ -50,6 +53,7 @@ for e in cur:
     for w, kind in [(e['word'], 'head')] + [(f, 'form') for f in der] + [(f, 'var') for f in var]:
         if not re.fullmatch('[a-z]+', w): continue
         if BL.blocked(w, block): blocked.append(w); continue
+        if w in HARD_ONLY: continue
         lv = e['level']
         to_core = lv < 3 and kind != 'var' and w not in NO_CPU
         if lv < 3 and w in NO_CPU: nocpu.append(w)

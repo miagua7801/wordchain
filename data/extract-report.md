@@ -67,8 +67,8 @@
 
 ## 단어장 반영 (tools/make-core-vocab.py)
 
-- VOCAB_CORE 2119개 — level 1: 840, level 2: 1279 (괄호 안 파생어 포함)
-  - 기존 단어장에 있어 그 뜻을 씀: 1460개 / 새로 뜻을 씀: 659개 (level 1: 77, level 2: 582) → `data/new-meanings-review.tsv`
+- VOCAB_CORE 2099개 — level 1: 820, level 2: 1279 (괄호 안 파생어 포함)
+  - 기존 단어장에 있어 그 뜻을 씀: 1458개 / 새로 뜻을 씀: 641개 (level 1: 59, level 2: 582) → `data/new-meanings-review.tsv`
 - VOCAB_CORE_ACCEPT(학생 답으로만) 973개 — 기존 단어장에 없는 level 3·다른 철자·출제 제외 단어
 - 금지어에 걸려 뺀 단어: 없음
 - 기본 어휘지만 출제에서 뺀 단어(학생 답으로는 인정): alcohol, beer, breast, cigarette, gun, hell, kill, livingroom, pregnant, pub, sex, wine

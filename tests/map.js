@@ -128,6 +128,19 @@ const {target,open}=require('./lib');
     await q.click('#teacherOff'); await q.waitForTimeout(100); ok(!(await q.$('#teacher')),'"선생님 모드 끄기" → 다시 숨김');
     await q.goto(url+'?teacher=1'); await q.click('[data-t="basic"]'); ok(!!(await q.$('#teacher')),'주소 ?teacher=1 로도 켜짐');
     await q.goto(url+'?teacher=0'); await q.click('[data-t="basic"]'); ok(!(await q.$('#teacher')),'?teacher=0 으로 끔');
+    // 첫 화면의 버전 글자로도 켜짐(화면에 켜졌다고 보임)
+    await q.goto(url); ok(!/선생님 모드/.test(await q.textContent('.title-ver')),'첫 화면: 처음에는 선생님 모드 표시 없음');
+    for(let i=0;i<4;i++) await q.click('#ver'); ok(!/선생님 모드/.test(await q.textContent('.title-ver')),'  첫 화면 버전 글자 4번으로는 안 켜짐');
+    await q.click('#ver'); await q.waitForTimeout(100); ok(/선생님 모드 켜짐/.test(await q.textContent('.title-ver')),'  첫 화면 버전 글자 5번 → "선생님 모드 켜짐" 표시');
+    await q.click('[data-t="basic"]'); ok(!!(await q.$('#teacher')),'  단계 맵에 선생님 버튼이 보임');
+    await q.goto(url+'?teacher=0');
+    if(s.errs.length){ fail++; console.log('errors',s.errs); } await s.b.close(); }
+  // 손가락 탭(휴대폰·태블릿): 첫 화면·단계 맵 버전 글자 모두 5번 빠르게 탭하면 켜짐
+  { const s=await open({viewport:{width:375,height:700},student:true,hasTouch:true}); const q=s.p;
+    await q.goto(url); await q.evaluate(()=>localStorage.clear()); await q.goto(url);
+    for(let i=0;i<5;i++) await q.tap('#ver'); await q.waitForTimeout(100); ok(/선생님 모드 켜짐/.test(await q.textContent('.title-ver')),'손가락: 첫 화면 버전 글자 5번 탭');
+    await q.evaluate(()=>localStorage.removeItem('wordchain-teacher')); await q.goto(url); await q.click('[data-t="basic"]'); await q.waitForTimeout(100);
+    for(let i=0;i<5;i++) await q.tap('#ver'); await q.waitForTimeout(100); ok(!!(await q.$('#teacher')),'손가락: 단계 맵 버전 글자 5번 탭');
     if(s.errs.length){ fail++; console.log('errors',s.errs); } await s.b.close(); }
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
