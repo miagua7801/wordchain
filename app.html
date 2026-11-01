@@ -471,8 +471,9 @@ const SETTINGS={
   // 건너뛰기 도전: 기초 1단계를 처음 할 때 힌트·실수 없이 이만큼 연속 성공하면 '3단계로 바로 가기'(단계 목표보다 크면 목표 수로)
   skipStreak:5,
   // 듣고 쓰기: 다시 듣기 횟수(보통 2~4단계 토글 / 도전 5단계 듣기 챌린지)
+  // cardHold: 소리 잇기에서 맞힌 뒤 소리 카드를 읽을 시간(ms)
   // revealHold: 듣고 쓰기(보통 토글)에서 답을 낸 뒤 공개한 컴퓨터 단어를 보여 주는 여유(ms), challengeRevealHold: 도전 듣기 챌린지에서의 여유(ms), slowRate: 힌트로 천천히 들려줄 때 속도
-  listen:{normalReplays:2, hardReplays:1, revealHold:3000, challengeRevealHold:2500, slowRate:0.45},
+  listen:{normalReplays:2, hardReplays:1, revealHold:3000, challengeRevealHold:2500, cardHold:5000, slowRate:0.45},
   // 기초 수준 읽기: 속도(1이 보통, 다른 수준은 0.7), 컴퓨터 단어를 다 읽고 다음 단어(학생이 완성할 단어)를 읽기까지 쉬는 시간(ms)
   basicSpeech:{rate:0.6, targetGap:1500},
   // 출제하지 않을 단어(컴퓨터 단어·완성할 단어·보기·힌트·예시에서 뺌). 학생이 답으로 쓰면 그대로 인정
@@ -1500,7 +1501,7 @@ function feedDivider(){ if(G.feed.length&&!G.feed[G.feed.length-1].div) G.feed.p
 function archiveChain(){ const seg=G.chain.slice(); if(seg.length&&!seg[seg.length-1].me) seg.pop(); if(seg.some(x=>x.me)) G.lines.push(seg); G.chain=[]; }
 function setCpu(c){
   G.listen=listenOn(G.L); G.revealed=false; G.replays=G.L.listen==='force'?SETTINGS.listen.hardReplays:SETTINGS.listen.normalReplays;
-  if(G.L.sound){ const k=endS(c.w)[0]; if(k==='TH') G.sawTH=true; G.askedS.push(k); G.card=G.cardSeen.has(k)?'':k; G.cardSeen.add(k); }
+  if(G.L.sound){ const k=endS(c.w)[0]; if(k==='TH') G.sawTH=true; G.askedS.push(k); G.card=G.cardSeen.has(k)?'':k; G.cardOn=false; G.cardSeen.add(k); }
   G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.feed.push({w:c.w,d:disp(c),me:false,cpu:c}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent=''; G.okNote=''; G.turnHint=false; G.myWord='';
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   if(GUIDED(G.L.mode)){ G.target=chooseTarget(last(c.w)); prepGuided(); }
@@ -1854,7 +1855,7 @@ function render(){
     <button class="speak" id="say">🔊 듣기</button>
   </div>
   <div class="ask">${L.sound?soundAsk():`<b>${ch}</b>로 시작하는 단어${GUIDED(L.mode)?'를 완성해요':'는?'}`}</div>`}
-  ${L.sound&&G.card?soundCardHTML(G.card):''}
+  ${G.cardOn?soundCardHTML(G.card):''}
   ${GUIDED(L.mode)?targetHTML():''}
   <div id="answer"></div>
   <div class="qfoot">${hintBtnHTML()}</div>
@@ -1946,14 +1947,16 @@ function success(o){
   if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbSave(); } G.chain.push({w:o.w,d:disp(o),me:true}); G.feed.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
   drawStatus();
-  if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); G.okNote=G.L.sound?'':silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
+  // 소리 카드는 답을 낸 뒤에 보여 줌(틀리면 fail의 창에)
+  G.cardOn=!!(G.L.sound&&G.card);
+  if(G.cardOn||(G.listen&&!G.revealed)){ G.revealed=true; G.myWord=disp(o); G.okNote=G.L.sound?'':silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
   msg((o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`)+(inNb?' 📒 수첩 단어!':'')+` (+${pts}점)`,'good');
   const g=G, P=SETTINGS.pace[track]||SETTINGS.pace.basic;
-  const hold=wasHidden?(G.L.listen==='force'?SETTINGS.listen.challengeRevealHold:SETTINGS.listen.revealHold):0;   // 듣고 쓰기로 공개한 컴퓨터 단어를 보여 주는 여유
+  const hold=G.cardOn?SETTINGS.listen.cardHold:wasHidden?(G.L.listen==='force'?SETTINGS.listen.challengeRevealHold:SETTINGS.listen.revealHold):0;   // 듣고 쓰기로 공개한 컴퓨터 단어를 보여 주는 여유
   // 잠깐 뒤 문제 창을 감추고 내 말풍선이 채팅에 올라오게(듣고 쓰기는 공개한 컴퓨터 단어를 보여 줘야 하므로 그대로)
-  if(!wasHidden&&!phoneUI()) setTimeout(()=>{ if(G===g&&G.locked&&!REST){ away(true); syncFeed(); } },AWAY_MS);
+  if(!wasHidden&&!G.cardOn&&!phoneUI()) setTimeout(()=>{ if(G===g&&G.locked&&!REST){ away(true); syncFeed(); } },AWAY_MS);
   // 마지막 정답: 통과는 바로 기록하고, 통과 화면은 잠시 뒤에. 듣고 쓰기면 다른 문제처럼 학생 단어를 다 읽고 쉰 뒤 공개 여유까지 보여 줌(그사이 다른 화면으로 가면 통과 화면은 띄우지 않음)
-  if(G.streak>=G.L.goal){ recordPass(); (wasHidden?spoken.then(()=>wait((soundOn?P.after:0)+hold)):wait(AWAY_MS+500)).then(()=>{ if(G===g&&$app.querySelector('#hintArea')) startRest(); }); return; }
+  if(G.streak>=G.L.goal){ recordPass(); (wasHidden||G.cardOn?spoken.then(()=>wait((soundOn?P.after:0)+hold)):wait(AWAY_MS+500)).then(()=>{ if(G===g&&$app.querySelector('#hintArea')) startRest(); }); return; }
   // 학생 단어를 다 읽고 쉰 뒤에 컴퓨터 단어로(SETTINGS.pace: 모든 수준 1초·최소 2초)
   Promise.all([spoken.then(()=>wait((soundOn?P.after:0)+hold)),wait(P.gap)]).then(()=>{ if(G!==g) return;
     // 소리 잇기: 학생 단어의 끝소리로 시작
@@ -1969,7 +1972,7 @@ function fail(why,ex){
   let revealHTML='';
   if(G.listen&&!G.revealed){ G.revealed=true; render(); revealHTML=`<p>🎧 컴퓨터 단어는 <span class="ex">${esc(disp(G.cur))}</span> (${esc(plainKo(G.cur.ko))})였어요.</p>${G.silent?`<p class="snote miss" id="missNote">💡 ${esc(G.silent)}</p>`:''}`; }
   const exHTML=ex?`<p>이런 단어가 있어요: <span class="ex">${esc(disp(ex))}</span> (${esc(ex.ko)}) ${ex.emoji||''}</p>`:'';
-  const gf=G; setTimeout(()=>G===gf&&toast('😵','아쉬워요!',`<p>${why}</p>${revealHTML}${exHTML}${r.text}`,r.label,r.next),450);
+  const gf=G; setTimeout(()=>G===gf&&toast('😵','아쉬워요!',`<p>${why}</p>${G.L.sound&&G.card?soundCardHTML(G.card):''}${revealHTML}${exHTML}${r.text}`,r.label,r.next),450);
 }
 // 단계 통과 기록(진도·배지·별). 통과 화면(startRest)은 success()에서 잠시 뒤에 띄움
 function recordPass(){

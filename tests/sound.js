@@ -33,6 +33,11 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
   await note('zzqxv','다른 단어를 입력해 보세요','(학생) 사전에 없는 단어');
   // 학생 답은 발음 중 하나만 맞아도 정답: with는 /ð/·/θ/ 둘 다
   { const s=await p.evaluate(()=>window.__wordchain.sound.first('either')); const o=await play(p,'kite','tea'); ok(o.r==='i','(학생) tea → kite 뒤에서도 모음 끝 안내'); const a=await p.evaluate(()=>window.__wordchain.sound.end('with')); ok(a.includes('TH')&&a.includes('DH'),'with의 끝소리 두 가지 '+a); const c=await play(p,'with','this'), d=await play(p,'with','think'); ok(c.r==='o'&&d.r==='o','with 뒤 this·think 둘 다 정답(컴퓨터 단어가 여러 발음이면 어느 쪽이든)'); }
+  // 소리 카드: 맞힌 뒤에 보이고, 같은 소리는 다시 안 나옴. 카드를 읽을 시간 뒤 다음 단어
+  { await p.evaluate(()=>window.__wordchain.again()); await p.waitForSelector('#inp'); await p.evaluate(()=>window.__wordchain.forceCpu('book')); await p.waitForSelector('#inp'); ok(!(await p.$('#scard')),'소리 카드: 답을 내기 전에는 없음');
+    await p.fill('#inp','kite'); await p.press('#inp','Enter'); await p.waitForSelector('#qm #scard'); const c1=await p.textContent('#qm #scard'); ok(c1.includes('/k/ k 소리')&&c1.includes('stomach, headache'),'  맞히면 소리 카드 — '+c1.slice(0,24));
+    await p.waitForTimeout(3000); ok(!!(await p.$('#qm #scard')),'  3초 뒤에도 카드를 읽을 수 있음');
+    await p.waitForFunction(()=>window.__wordchain.cpu()!=='book',null,{timeout:12000}); ok(!(await p.$('#scard'))&&!!(await p.$('#inp')),'  다음 단어에서는 다시 답 전이라 카드 없음'); }
   // 컴퓨터는 학생 단어의 끝소리로 시작하는 단어로 답함
   for(const [a,w] of [['book','kite'],['nice','sun'],['laugh','phone']]){ const o=await play(p,a,w); await p.waitForFunction(w0=>{ const c=window.__wordchain.cpu(); return c&&c!==w0; },a,{timeout:9000}); const c=await p.evaluate(()=>window.__wordchain.cpu()), m=await p.evaluate(([c,w])=>[window.__wordchain.sound.first(c),window.__wordchain.sound.end(w)],[c,w]); ok(o.r==='o'&&m[0].some(x=>m[1].includes(x)),`컴퓨터 답: ${w} 뒤에 ${c} (${m[1]} → ${m[0]})`); }
   // 출제 범위
@@ -44,7 +49,10 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
   // 맛보기: 끝소리 범위, 5문제, /θ/ 보장, 배지 1회, 틀려도 끝까지
   await p.goto(url); await p.evaluate(()=>{ localStorage.removeItem('wordchain-badges-v1'); localStorage.setItem('wordchain-teacher','1'); });
   for(let round=0;round<6;round++){ await startSnd(p,url,'taste');
-    if(!round){ const te=await end(await p.evaluate(()=>window.__wordchain.sound.cpu())); ok(te.join()==='CH,DH,F,SH,TH','맛보기 끝소리 5가지 '+te); ok(/문제 1 \/ 5/.test(await p.textContent('#gstat')),'상태 줄: 문제 1 / 5'); ok(!!(await p.$('#scard')),'첫 문제: 소리 카드 표시 — '+(await p.textContent('#scard')).slice(0,30)); ok(!/\(도전\+에서만/.test(await p.textContent('#scard')),'카드에 "(도전+에서만 표시)" 글자 없음'); }
+    if(!round){ const te=await end(await p.evaluate(()=>window.__wordchain.sound.cpu())); ok(te.join()==='CH,DH,F,SH,TH','맛보기 끝소리 5가지 '+te); ok(/문제 1 \/ 5/.test(await p.textContent('#gstat')),'상태 줄: 문제 1 / 5'); ok(!(await p.$('#scard')),'첫 문제: 답을 내기 전에는 소리 카드 없음');
+      await p.evaluate(()=>window.__wordchain.forceCpu('math')); await p.waitForSelector('#inp'); ok(!(await p.$('#scard')),'  컴퓨터 단어가 바뀌어도 답 전에는 없음');
+      await p.fill('#inp','zebra'); await p.press('#inp','Enter'); await p.waitForTimeout(100); ok(!(await p.$('#scard')),'  모음 끝 안내(답으로 안 침) 때도 없음');
+      await p.fill('#inp','this'); await p.press('#inp','Enter'); await p.waitForSelector('.overlay #scard'); const cd=await p.textContent('.overlay #scard'); ok(cd.includes('떨리지 않는 th')&&!/\(도전\+에서만/.test(cd),'  틀리면 오답 창에 소리 카드 — '+cd.slice(0,24)); await p.click('#ov1'); await p.waitForSelector('#inp'); await startSnd(p,url,'taste'); }
     for(let q=0;q<5;q++){ await p.waitForFunction(()=>document.querySelector('#inp')||document.querySelector('.overlay')); const o=await p.$('.overlay'); if(o){ await p.click('#ov1'); await p.waitForSelector('#inp'); }
       if(q<4||round){ await p.fill('#inp','zebra_x'.replace('_x','')); await p.press('#inp','Enter'); await p.waitForTimeout(80); }
       if(await p.evaluate(()=>{ const m=document.querySelector('#msg'); return !!m&&/모음/.test(m.textContent); })){ await p.fill('#inp','zip'); await p.press('#inp','Enter'); }
