@@ -24,6 +24,7 @@
   --lv-basic:#59BD93; --lv-basic-ink:#0E3324; --lv-basic-bg:#E7F6EF;
   --lv-normal:#5B67F0; --lv-normal-ink:#FFFFFF; --lv-normal-bg:#ECEEFF;
   --lv-hard:#F69B63; --lv-hard-ink:#3D1C06; --lv-hard-bg:#FFEFE4;
+  --lv-sound:#CDB8F7; --lv-sound-ink:#2A1657; --lv-sound-bg:#F3EDFF; --cloud-shadow:drop-shadow(0 4px 0 #1C1F3A);
   --f-display:"Jua","Noto Sans KR",system-ui,sans-serif;
   --f-word:"Lexend","Noto Sans KR",system-ui,sans-serif;
   --f-body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
@@ -41,6 +42,7 @@
   --lv-basic:#59BD93; --lv-basic-ink:#0B2A1D; --lv-basic-bg:#1E2450;
   --lv-normal:#B7BEF5; --lv-normal-ink:#1E2450; --lv-normal-bg:#1E2450;
   --lv-hard:#F69B63; --lv-hard-ink:#2B1203; --lv-hard-bg:#1E2450;
+  --lv-sound:#CDB8F7; --lv-sound-ink:#2A1657; --lv-sound-bg:#1E2450; --cloud-shadow:drop-shadow(0 0 8px rgba(205,184,247,.55));
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#1E2450; --surface:#2A3268; --surface-2:#343E7B; --ink:#FBFBFB; --muted:#C2C8E0; --ink-2:#DDE1F2;
@@ -54,6 +56,7 @@
   --lv-basic:#59BD93; --lv-basic-ink:#0B2A1D; --lv-basic-bg:#1E2450;
   --lv-normal:#B7BEF5; --lv-normal-ink:#1E2450; --lv-normal-bg:#1E2450;
   --lv-hard:#F69B63; --lv-hard-ink:#2B1203; --lv-hard-bg:#1E2450;
+  --lv-sound:#CDB8F7; --lv-sound-ink:#2A1657; --lv-sound-bg:#1E2450; --cloud-shadow:drop-shadow(0 0 8px rgba(205,184,247,.55));
   color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -65,7 +68,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--key);outline-of
 h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
 .word{font-family:var(--f-word)}
 /* 수준별 색: 기초 초록 · 보통 청록 · 도전 주황 (맵의 길·단계 원, 첫 화면 버튼) */
-[data-tc="basic"]{--tc:var(--lv-basic);--tc-ink:var(--lv-basic-ink);--tc-bg:var(--lv-basic-bg)} [data-tc="normal"]{--tc:var(--lv-normal);--tc-ink:var(--lv-normal-ink);--tc-bg:var(--lv-normal-bg)} [data-tc="hard"],[data-tc="taste"],[data-tc="plus"]{--tc:var(--lv-hard);--tc-ink:var(--lv-hard-ink);--tc-bg:var(--lv-hard-bg)}
+[data-tc="basic"]{--tc:var(--lv-basic);--tc-ink:var(--lv-basic-ink);--tc-bg:var(--lv-basic-bg)} [data-tc="normal"]{--tc:var(--lv-normal);--tc-ink:var(--lv-normal-ink);--tc-bg:var(--lv-normal-bg)} [data-tc="hard"]{--tc:var(--lv-hard);--tc-ink:var(--lv-hard-ink);--tc-bg:var(--lv-hard-bg)} [data-tc="taste"],[data-tc="plus"]{--tc:var(--lv-sound);--tc-ink:var(--lv-sound-ink);--tc-bg:var(--lv-sound-bg)}
 .iconbtn{width:44px;height:44px;flex:none;padding:0;display:grid;place-items:center;font-size:20px;line-height:1;background:var(--surface);border:2px solid var(--line);border-radius:12px}
 .iconbtn:hover{border-color:var(--accent)}
 
@@ -150,10 +153,32 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .gscreen{display:flex;flex-direction:column;min-height:calc(100dvh - 60px)}
 .ghead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ghead h2{flex:1;min-width:0;text-align:center;font-size:24px}
-.sndsel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:min(100%,340px);margin:16px auto 0}
-.sbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:16px;border:2px solid var(--outline);background:var(--surface);color:var(--ink);font-weight:700;font-size:15px;line-height:1.3;word-break:keep-all}
-.sbtn:hover:not(:disabled){border-color:var(--accent)}.sbtn:disabled{opacity:.6;cursor:not-allowed}
-.sbtn small{font-weight:500;font-size:12px;color:var(--muted)}.sbtn .lk{color:var(--ink-2)}
+.mapwrap{display:grid;max-width:520px;margin:12px auto 0}.mapwrap>*{grid-area:1/1}.mapwrap .map{width:100%;margin:0}
+/* 맛보기: 단계 영역 오른쪽에서 스크롤을 살짝 늦게 따라오며 떠다니는 구름(늦게 따라오기는 followTry). 위아래와 좌우를 다른 주기로 움직여 되풀이가 눈에 띄지 않게 */
+.trypin{position:sticky;top:42vh;align-self:start;height:0;margin-top:96px;z-index:4;display:flex;justify-content:flex-end;padding-right:4px;pointer-events:none;transition:opacity .2s}
+.mapwrap:has(.map.focus) .trypin{opacity:0;visibility:hidden}
+.trylag{display:block;flex:none}
+.trybtn{position:relative;display:grid;place-items:center;width:80px;height:56px;padding:6px 0 0;background:none;border:0;border-radius:18px;color:var(--lv-sound-ink);font-family:var(--f-display);font-size:21px;line-height:1;pointer-events:auto;touch-action:manipulation;animation:tryFloat 4.3s ease-in-out infinite,tryDrift 6.7s ease-in-out infinite}
+.trybtn .cloud{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:var(--cloud-shadow)}
+.trybtn .cloud path{fill:var(--lv-sound);stroke:var(--outline);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.trybtn b{position:relative;font-weight:400}
+/* 움직이는 버튼을 누르기 쉽게: 마우스를 올리거나 초점이 가면 멈춤 */
+.trybtn:hover,.trybtn:focus-visible{animation-play-state:paused}
+.trybtn:hover{filter:brightness(1.08)}.trybtn:active{filter:brightness(.92)}.trybtn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+@media (max-width:360px){.trybtn{width:68px;height:48px;font-size:18px}}
+@keyframes tryFloat{0%,100%{translate:0 0}35%{translate:0 -13px}70%{translate:0 7px}}
+@keyframes tryDrift{0%,100%{transform:translateX(0) rotate(-3deg)}50%{transform:translateX(-6px) rotate(3deg)}}
+/* 도전+: 도전 수준을 모두 통과하면 나타남. 오락실 화면처럼 네온 테두리와 PRESS START가 함께 밝아졌다 어두워짐 */
+.sndsel{width:min(100%,520px);margin:16px auto 0}
+.arcade{--neon:#B79CFF;display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border-radius:20px;border:2px solid var(--neon);background:#1C1F3A;color:#fff;box-shadow:var(--chunk5);font-family:var(--f-display);font-size:20px;line-height:1.25;text-align:left;word-break:keep-all;touch-action:manipulation;transition:transform .12s;animation:arcadeIn .8s ease-out both,arcadeGlow 1.8s ease-in-out .8s infinite}
+.arcade:hover{transform:translateY(-2px)}.arcade:active{transform:translateY(3px)}
+.arcade:focus-visible{outline:3px solid var(--neon);outline-offset:3px}
+.arcade .ic{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:50%;background:#fff;font-size:22px;line-height:1}
+.arcade .nm{flex:1;min-width:0}.arcade small{display:block;margin-top:2px;font-family:var(--f-body);font-weight:500;font-size:13px;color:#D9D0F5}
+.arcade .press{flex:none;width:58px;font-family:var(--f-word);font-size:12px;font-weight:700;line-height:1.3;text-align:center;color:var(--neon);animation:arcadeFade 1.8s ease-in-out .8s infinite}
+@keyframes arcadeIn{from{opacity:0}to{opacity:1}}
+@keyframes arcadeFade{0%,100%{opacity:1}50%{opacity:.12}}
+@keyframes arcadeGlow{0%,100%{box-shadow:var(--chunk5),0 0 18px var(--neon)}50%{box-shadow:var(--chunk5),0 0 2px var(--neon)}}
 .scard{text-align:left;margin:0 0 8px;padding:6px 10px;font-size:13px;line-height:1.45;word-break:keep-all;max-height:30vh;overflow:auto}.scard b{display:block;font-size:14px}
 .rulesbtn{flex:none;font-size:13px;white-space:nowrap;touch-action:manipulation}
 .hrules{text-align:left;word-break:keep-all;max-height:min(60vh,460px);overflow:auto;font-size:14px;line-height:1.5}
@@ -1026,14 +1051,27 @@ function bindBackup(){ const m=$app.querySelector('#bkMsg'), f=$app.querySelecto
     m.querySelector('#bkYes').focus(); }; }
 
 // ---------- 첫 화면: 제목 · 기초/보통/도전 · 단어 수첩(작게) ----------
-// 소리 잇기 버튼(첫 화면·단계 맵): 맛보기는 보통 이상에 들어간 적이 있으면, 도전+는 도전 수준을 모두 통과하면 열림(선생님 모드는 모두 열림)
-// 도전+가 열리고 소리 탐험가 배지까지 받으면 맛보기 버튼은 감춤
-const tasteOpen=()=>teacherOn()||!!store.prog.normal||!!store.prog.hard;
+// 소리 잇기 입구(단계 맵): 맛보기는 보통·도전에서 떠다니는 "try?" 구름, 도전+는 도전 수준을 모두 통과해야 맵 아래에 나타남(선생님 모드는 바로)
+// 도전+가 열리고 소리 탐험가 배지까지 받으면 맛보기는 감춤
 const plusOpen=()=>{ const p=store.prog.hard; return teacherOn()||(!!p&&TRACKS.hard.levels.every(L=>p.cleared&&p.cleared[L.id])); };
-const SOUND_BTNS=[['taste','church → cheese','🔒 보통 단계부터',tasteOpen],['plus','laugh → phone','🔒 도전 단계를 통과하면 열려요',plusOpen]];
-function soundBtnsHTML(){ const hideTaste=!teacherOn()&&plusOpen()&&hasBadge('master-taste');
-  return `<div class="sndsel">${SOUND_BTNS.filter(([k])=>!(k==='taste'&&hideTaste)).map(([k,ex,lock,open])=>`<button class="sbtn" data-snd="${k}" ${open()?'':'disabled'}>🔊 ${esc(TRACKS[k].name)}<small lang="en">${esc(ex)}</small>${open()?'':`<small class="lk">${esc(lock)}</small>`}</button>`).join('')}</div>`; }
-function bindSoundBtns(){ $app.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{ const k=b.dataset.snd; setTrack(k); if(window.__wordchainNoIntro) start(1); else showSoundIntro(k,()=>start(1)); }); }
+let soundFrom=null;   // 소리 잇기를 누른 단계 맵의 수준(게임에서 나오면 그 맵으로)
+const tryHTML=()=>(track==='normal'||track==='hard')&&(teacherOn()||!plusOpen()||!hasBadge('master-taste'))?`<div class="trypin"><span class="trylag"><button class="trybtn" data-snd="taste" aria-label="${esc(TRACKS.taste.name)}" lang="en"><svg class="cloud" viewBox="0 0 88 60" preserveAspectRatio="none" aria-hidden="true"><path d="M22 54C10 54 3 46 3 36C3 27 10 20 19 20C21 10 30 4 40 4C49 4 57 9 60 17C62 16 64 16 66 16C76 16 85 24 85 35C85 46 77 54 67 54Z"/></svg><b>try?</b></button></span></div>`:'';
+const plusHTML=()=>track==='hard'&&plusOpen()?`<div class="sndsel"><button class="arcade" data-snd="plus"><span class="ic" aria-hidden="true">🔊</span><span class="nm">${esc(TRACKS.plus.name)}<small lang="en">laugh → phone</small></span><span class="press" lang="en" aria-hidden="true">PRESS START</span></button></div>`:'';
+// try? 구름이 스크롤을 살짝 늦게 따라옴: 제자리(.trypin)와의 차이를 매 프레임 10%씩 줄임(화면 주사율에 따라 약간 달라짐). 동작 줄이기 설정이면 바로 따라옴
+let tryLagOff=null;
+function followTry(){ if(tryLagOff) tryLagOff(); tryLagOff=null;
+  const pin=$app.querySelector('.trypin'), el=pin&&pin.firstElementChild; if(!pin||calm()) return;
+  let shown=pin.getBoundingClientRect().top, lastY=scrollY, raf=0;
+  const tick=()=>{ raf=0; if(!pin.isConnected){ off(); return; }
+    // 스크롤한 만큼 페이지와 함께 밀렸다가(제자리는 고정돼 그대로) 제자리로 돌아옴
+    shown-=scrollY-lastY; lastY=scrollY;
+    const want=pin.getBoundingClientRect().top; shown+=(want-shown)*.1; let d=shown-want;
+    if(Math.abs(d)<.5){ shown=want; d=0; } else if(Math.abs(d)>140){ d=Math.sign(d)*140; shown=want+d; }
+    el.style.transform=d?`translateY(${d}px)`:''; if(d) raf=requestAnimationFrame(tick); };
+  const onScroll=()=>{ if(!raf) raf=requestAnimationFrame(tick); };
+  const off=()=>{ removeEventListener('scroll',onScroll); cancelAnimationFrame(raf); };
+  addEventListener('scroll',onScroll,{passive:true}); tryLagOff=off; }
+function bindSoundBtns(){ followTry(); $app.querySelectorAll('[data-snd]').forEach(b=>b.onclick=()=>{ const k=b.dataset.snd; soundFrom=track; setTrack(k); if(window.__wordchainNoIntro) start(1); else showSoundIntro(k,()=>start(1)); }); }
 function chooseTrack(){
   audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null; lvTheme(null);
   const due=nbList().length;
@@ -1043,14 +1081,12 @@ function chooseTrack(){
     <p class="sub">Word Chain Challenge</p>
     <div class="tracksel">${Object.entries(TRACKS).filter(([,T])=>!T.sound).map(([k,T])=>{ const p=store.prog[k]||{};
       return `<button class="track" data-t="${k}" data-tc="${k}" aria-label="${T.name} 수준"><span class="ic" aria-hidden="true">${T.icon}</span><span class="nm">${T.name}</span><span class="pg" aria-hidden="true">${T.levels.map(L=>`<i class="${p.cleared&&p.cleared[L.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('')}</div>
-    ${soundBtnsHTML()}
     <button class="rvsmall" id="nbBtn">📒 단어 수첩${due?` <span class="cnt" aria-label="학습할 단어 ${due}개">${due}</span>`:''}</button>
   </div>
   ${ownLine()}
   <div class="title-ver"><span id="ver">버전 ${BUILD}</span>${teacherOn()?' · 선생님 모드 켜짐 (수준을 고르면 단계 맵 아래에 버튼이 있어요)':''}</div>`;
   bindTeacherTap($app.querySelector('#ver'),chooseTrack);
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
-  bindSoundBtns();
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{ setTrack(b.dataset.t); home(); trackIntro(); });
   $app.querySelector('#nbBtn').onclick=notebook;
 }
@@ -1351,7 +1387,7 @@ function bindTeacherTap(el,redraw){ let taps=[]; el.onclick=()=>{ const n=Date.n
 // 수준 이모지(모험): 기초 🏕️ 캠프(출발) · 보통 ⛵ 항해 · 도전 🌋 화산(정상) — 맵 장식도 그 지형으로
 const MAP_DECO={basic:['🌲','🍄','⛺','🌼'],normal:['🌊','🐚','🐟','☁️'],hard:['🌋','🪨','🦅','⚡']};
 function home(){
-  if(TRACKS[track]?.sound){ audioKeepAlive(false); if(G&&!G.locked) bankStars(); stopTimer(); offKeys(); REST=null; chooseTrack(); return; }
+  if(TRACKS[track]?.sound) setTrack(soundFrom||'normal');
   audioKeepAlive(false); if(G&&!G.locked) bankStars();
   stopTimer(); offKeys(); origin='map'; REST=null; lvTheme(track);
   const T=TRACKS[track], n=LEVELS.length, GAP=150, TOP=86, X=[30,70,32,68,36];
@@ -1366,14 +1402,14 @@ function home(){
   <div class="trackbar"><span class="chip starchip">⭐ <b class="stars-n">${stars}</b></span><span class="chip" title="별로 산 힌트">💡 보관 힌트 ${storedHints()}/${SETTINGS.shop.maxStored}</span></div>
   <div class="maptools"><button class="back" id="nbBtn">📒 단어 수첩</button><button class="back" id="bdBtn">🏅 배지</button></div>
   ${STORAGE_OK?'':'<p class="nostore" role="status">이 창에서는 기록이 저장되지 않아요. 일반 창으로 열어 주세요.</p>'}
-  <div class="map" id="map" data-tc="${track}" style="--mh:${H}px">
+  <div class="mapwrap">${tryHTML()}<div class="map" id="map" data-tc="${track}" style="--mh:${H}px">
     <svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">${roads}</svg>
     ${dpos.filter(p=>p[1]<H-30).map((p,i)=>`<span class="deco" style="--x:${p[0]}%;--y:${p[1]}px" aria-hidden="true">${deco[i%deco.length]||''}</span>`).join('')}
     ${LEVELS.map((L,i)=>{ const open=L.id<=save.unlocked, cleared=!!save.cleared[L.id];
       return `<button class="node lv${cleared?' cleared':''}${open?'':' locked'}${L===cur?' cur':''}" data-lv="${L.id}" style="--x:${pts[i].x}%;--y:${pts[i].y}px" aria-label="${L.id}단계 ${esc(L.name)}${cleared?' (통과)':open?'':' (잠김)'}">${open?L.id:'🔒'}${cleared?'<span class="ck" aria-hidden="true">✔</span>':''}<span class="nl">${esc(L.name)}</span></button>`; }).join('')}
     <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">👑</span>
-  </div>
-  ${soundBtnsHTML()}
+  </div></div>
+  ${plusHTML()}
   ${backupHTML()}
   <div class="foot">
     <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span></span>

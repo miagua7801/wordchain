@@ -6,7 +6,7 @@ const T=[['church','cheese','o','o'],['church','cheetah','i','i'],['church','cho
   ['book','kite','-','o'],['book','city','-','i'],['book','know','-','i'],['book','queen','-','o'],['music','chorus','-','o'],['stomach','kite','-','o'],['stomach','chair','-','x'],['headache','cat','-','o'],['headache','chorus','-','o'],['nice','city','-','i'],['nice','circle','-','o'],
   ['bridge','giant','-','o'],['bridge','jump','-','o'],['bridge','get','-','x'],['rain','knife','-','o'],['sign','night','-','o']];
 const WHY={'math this':"math는 /θ/ 떨리지 않는 th로 끝나요. this는 /ð/ 떨리는 th로 시작해서 이어질 수 없어요.",'bridge get':"bridge는 /dʒ/ j '쥐' 소리로 끝나요. get은 /g/ g '그' 소리로 시작해서 이어질 수 없어요.",'church chorus':"church는 /tʃ/ ch '취' 소리로 끝나요. chorus는 /k/ k 소리로 시작해서 이어질 수 없어요.",'nice sure':"nice는 /s/ s 소리로 끝나요. sure는 /ʃ/ sh '쉬' 소리로 시작해서 이어질 수 없어요."};
-const startSnd=async(p,url,k)=>{ await p.goto(url); await p.click(`[data-snd="${k}"]`); await p.waitForSelector('#inp'); };
+const startSnd=async(p,url,k)=>{ await p.goto(url); await p.click(k==='plus'?'[data-t="hard"]':'[data-t="normal"]'); await p.click(`[data-snd="${k}"]`,{force:true}); await p.waitForSelector('#inp'); };
 // 컴퓨터 단어를 정해 학생 단어를 넣고 결과를 돌려줌. o 정답, x 오답(설명), i 안내(그대로 다시 입력)
 async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); await p.waitForSelector('#inp'); const set=await p.evaluate(a=>window.__wordchain.forceCpu(a),a); await p.waitForSelector('#inp');
   const r0=(await p.evaluate(()=>window.__wordchain.state())).rights; await p.fill('#inp',w); await p.press('#inp','Enter'); await p.waitForTimeout(650);
@@ -50,9 +50,11 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
   await p.goto(url); await p.evaluate(()=>{ localStorage.removeItem('wordchain-badges-v1'); localStorage.setItem('wordchain-teacher','1'); });
   for(let round=0;round<6;round++){ await startSnd(p,url,'taste');
     if(!round){ const te=await end(await p.evaluate(()=>window.__wordchain.sound.cpu())); ok(te.join()==='CH,DH,F,SH,TH','맛보기 끝소리 5가지 '+te); ok(/문제 1 \/ 5/.test(await p.textContent('#gstat')),'상태 줄: 문제 1 / 5'); ok(!(await p.$('#scard')),'첫 문제: 답을 내기 전에는 소리 카드 없음');
-      await p.evaluate(()=>window.__wordchain.forceCpu('math')); await p.waitForSelector('#inp'); ok(!(await p.$('#scard')),'  컴퓨터 단어가 바뀌어도 답 전에는 없음');
+      // 첫 문제가 이미 /θ/였으면 math는 처음 만난 소리가 아니라 카드가 없으므로 fish로
+      const fw=(await p.evaluate(()=>window.__wordchain.sound.asked()[0]))==='TH'?'fish':'math';
+      await p.evaluate(w=>window.__wordchain.forceCpu(w),fw); await p.waitForSelector('#inp'); ok(!(await p.$('#scard')),'  컴퓨터 단어가 바뀌어도 답 전에는 없음');
       await p.fill('#inp','zebra'); await p.press('#inp','Enter'); await p.waitForTimeout(100); ok(!(await p.$('#scard')),'  모음 끝 안내(답으로 안 침) 때도 없음');
-      await p.fill('#inp','this'); await p.press('#inp','Enter'); await p.waitForSelector('.overlay #scard'); const cd=await p.textContent('.overlay #scard'); ok(cd.includes('떨리지 않는 th')&&!/\(도전\+에서만/.test(cd),'  틀리면 오답 창에 소리 카드 — '+cd.slice(0,24)); await p.click('#ov1'); await p.waitForSelector('#inp'); await startSnd(p,url,'taste'); }
+      await p.fill('#inp','this'); await p.press('#inp','Enter'); await p.waitForSelector('.overlay #scard'); const cd=await p.textContent('.overlay #scard'); ok(cd.includes(fw==='math'?'떨리지 않는 th':"sh '쉬' 소리")&&!/\(도전\+에서만/.test(cd),'  틀리면 오답 창에 소리 카드 — '+cd.slice(0,24)); await p.click('#ov1'); await p.waitForSelector('#inp'); await startSnd(p,url,'taste'); }
     for(let q=0;q<5;q++){ await p.waitForFunction(()=>document.querySelector('#inp')||document.querySelector('.overlay')); const o=await p.$('.overlay'); if(o){ await p.click('#ov1'); await p.waitForSelector('#inp'); }
       if(q<4||round){ await p.fill('#inp','zebra_x'.replace('_x','')); await p.press('#inp','Enter'); await p.waitForTimeout(80); }
       if(await p.evaluate(()=>{ const m=document.querySelector('#msg'); return !!m&&/모음/.test(m.textContent); })){ await p.fill('#inp','zip'); await p.press('#inp','Enter'); }
@@ -68,14 +70,23 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
   if(errs.length){ fail++; console.log('errors',errs); } await b.close();
   // 잠금: 학생 화면
   { const s=await open({viewport:{width:375,height:760},student:true,intro:true}); const q=s.p; await q.goto(url); await q.evaluate(()=>localStorage.clear()); await q.goto(url);
-    const st=()=>q.evaluate(()=>[...document.querySelectorAll('.sbtn')].map(b=>[b.dataset.snd,b.disabled,b.textContent]));
-    let a=await st(); ok(a.length===2&&a[0][1]&&/보통 단계부터/.test(a[0][2])&&a[1][1]&&/도전 단계를 통과하면/.test(a[1][2]),'처음: 두 버튼 모두 잠김(조건 표시)');
-    ok(a[0][2].includes('church → cheese')&&a[1][2].includes('laugh → phone')&&a.every(x=>x[2].includes('🔊')),'버튼: 🔊 + 이름 + 예시');
-    await q.click('[data-t="normal"]'); await q.waitForTimeout(100); for(let i=0;i<6&&await q.$('#rpgNext');i++){ await q.click('#rpgNext'); await q.waitForTimeout(60); }
-    a=await st(); ok(a.length===2&&!a[0][1]&&a[1][1],'보통에 들어가면 맛보기 열림, 단계 맵에도 버튼');
-    await q.evaluate(()=>{ const k='wordchain-v2', s=JSON.parse(localStorage.getItem(k)); s.prog.hard={unlocked:5,best:{},cleared:{1:true,2:true,3:true,4:true,5:true}}; localStorage.setItem(k,JSON.stringify(s)); }); await q.goto(url);
-    a=await st(); ok(a.length===2&&!a[0][1]&&!a[1][1],'도전 통과: 도전+ 열림, 배지 없으면 맛보기도 계속 보임');
-    await q.evaluate(()=>localStorage.setItem('wordchain-badges-v1',JSON.stringify([{id:'master-taste',date:'2026-11-01'}]))); await q.goto(url);
+    const st=()=>q.evaluate(()=>[...document.querySelectorAll('[data-snd]')].map(b=>[b.dataset.snd,b.className,b.textContent]));
+    const toMap=async t=>{ await q.goto(url); await q.click(`[data-t="${t}"]`); await q.waitForTimeout(100); for(let i=0;i<6&&await q.$('#rpgNext');i++){ await q.click('#rpgNext'); await q.waitForTimeout(60); } };
+    let a=await st(); ok(a.length===0,'첫 화면: 소리 잇기 버튼 없음');
+    await toMap('basic'); a=await st(); ok(a.length===0,'기초 단계 맵: 소리 잇기 버튼 없음');
+    await toMap('normal'); a=await st(); ok(a.length===1&&a[0][0]==='taste'&&a[0][2]==='try?','보통 단계 맵: "try?" 버튼만, 도전+ 없음');
+    const fl=await q.evaluate(async()=>{ const b=document.querySelector('.trybtn'), lag=document.querySelector('.trylag'), s=getComputedStyle(b); const y0=b.getBoundingClientRect().top+scrollY; scrollTo(0,500); await new Promise(r=>setTimeout(r,80)); const during=lag.style.transform; await new Promise(r=>setTimeout(r,1000)); const r=b.getBoundingClientRect(), mm=document.querySelector('#map').getBoundingClientRect(), o={cloud:!!b.querySelector('svg.cloud path'),anim:s.animationName,during,after:lag.style.transform,inView:r.top>=0&&r.bottom<=innerHeight,moved:Math.abs(r.top+scrollY-y0)>100,right:r.right<=mm.right+8&&r.left>mm.left+mm.width/2,w:r.width,h:r.height}; scrollTo(0,0); return o; });
+    ok(fl.cloud&&fl.anim.includes('tryFloat')&&fl.inView&&fl.moved&&fl.right&&fl.w>=44&&fl.h>=44,'try?: 구름 모양, 떠다니는 움직임, 스크롤을 따라옴, 단계 영역 오른쪽, 누르기 충분한 크기 '+JSON.stringify(fl));
+    ok(/translateY/.test(fl.during)&&fl.after==='','try?: 스크롤 직후에는 뒤처졌다가 제자리로 따라옴 '+fl.during);
+    await q.screenshot({path:require('path').join(process.env.SHOTDIR||require('os').tmpdir(),'sound-normal-map.png')});
+    await q.click('[data-snd="taste"]',{force:true}); await q.waitForSelector('.hrules'); ok((await q.textContent('.hrules')).includes('5문제')&&!(await q.$('#gscreen')),'try?: 설명 창을 띄우고 확인 전에는 시작 안 함'); await q.click('#ov1'); await q.waitForSelector('#back'); await q.click('#back'); await q.waitForSelector('#map'); ok((await q.textContent('.mapbar h2')).includes('보통'),'게임에서 나오면 들어온 보통 단계 맵으로');
+    await toMap('hard'); a=await st(); ok(a.length===1&&a[0][0]==='taste','도전 단계 맵(아직 통과 전): try?만, 도전+ 없음');
+    await q.evaluate(()=>{ const k='wordchain-v2', s=JSON.parse(localStorage.getItem(k)); s.prog.hard={unlocked:5,best:{},cleared:{1:true,2:true,3:true,4:true}}; localStorage.setItem(k,JSON.stringify(s)); }); await toMap('hard'); a=await st(); ok(a.length===1,'도전 4단계까지 통과: 아직 도전+ 없음');
+    await q.evaluate(()=>{ const k='wordchain-v2', s=JSON.parse(localStorage.getItem(k)); s.prog.hard.cleared[5]=true; localStorage.setItem(k,JSON.stringify(s)); });
+    await toMap('hard'); a=await st(); ok(a.length===2&&a[1][0]==='plus'&&a[1][2].includes('laugh → phone')&&a[1][2].includes('🔊'),'마지막 단계까지 통과: 도전+ 나타남, 배지 없으면 try?도 계속 보임');
+    const ar=await q.evaluate(()=>{ const b=document.querySelector('.arcade'), p=b.querySelector('.press'); return [getComputedStyle(b).animationName,getComputedStyle(p).animationName,document.documentElement.scrollWidth]; }); ok(ar[0].includes('arcadeGlow')&&ar[1]==='arcadeFade'&&ar[2]<=375,'도전+: 페이드 인·아웃으로 끌어당김, 가로 넘침 없음 '+ar);
+    await q.evaluate(()=>document.querySelector('.arcade').scrollIntoView({block:'center'})); await q.waitForTimeout(900); await q.screenshot({path:require('path').join(process.env.SHOTDIR||require('os').tmpdir(),'sound-hard-map.png')});
+    await q.evaluate(()=>localStorage.setItem('wordchain-badges-v1',JSON.stringify([{id:'master-taste',date:'2026-11-01'}]))); await toMap('hard');
     a=await st(); ok(a.length===1&&a[0][0]==='plus','맛보기 배지까지 받으면 도전+만 보임');
     await q.screenshot({path:require('path').join(process.env.SHOTDIR||require('os').tmpdir(),'sound-title.png')});
     await q.click('[data-snd="plus"]'); await q.waitForSelector('.hrules'); ok((await q.textContent('.hrules')).includes('jump, giant')&&(await q.textContent('#ov1')).includes('확인했어요')&&!(await q.$('#gscreen')),'도전+ 시작 안내: "확인했어요" 전에는 시작 안 함');
