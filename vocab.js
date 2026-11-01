@@ -198,6 +198,10 @@ thirty 30, 서른|forty 40, 마흔|fifty 50, 쉰|sixty 60, 예순|seventy 70, �
 `;
 
 // x로 끝나는 학생 단어(box, fox, six …)에 컴퓨터가 답할 단어 — 그때만 이 중 하나를 무작위로 냄(다른 출제·힌트·보기·예시에는 안 씀, 학생 답으로는 인정)
+// 소리 잇기에서만 컴퓨터가 내는 단어(다른 수준의 출제에는 쓰지 않음, 학생 답 인정은 그대로)
+const VOCAB_SOUND = `
+ache 아픔|toothache 치통|stomachache 복통|chef 요리사|bathe 목욕시키다|breathe 숨 쉬다|clothe 옷을 입히다|soothe 달래다|sunbathe 일광욕하다|seethe 부글거리다|teethe 이가 나다|loathe 몹시 싫어하다|sheath 칼집|wreath 화환|moth 나방|cloth 천|tenth 열 번째의|ninth 아홉 번째의|fifth 다섯 번째의|south 남쪽|north 북쪽|health 건강|wealth 부|growth 성장|length 길이|strength 힘|depth 깊이|width 너비|faith 믿음|booth 부스|tooth 이|truth 진실|youth 젊음|death 죽음|birth 탄생|earth 지구|month 달|path 길|bath 목욕|math 수학|dish 접시|wish 소원|brush 붓|crash 충돌|flash 번쩍임|rush 서두르다|trash 쓰레기|wash 씻다|push 밀다|fresh 신선한|finish 끝내다|english 영어|cough 기침|rough 거친|tough 힘든|enough 충분한|laugh 웃다|graph 그래프|photograph 사진|chief 우두머리|leaf 잎|safe 안전한|life 삶|wife 아내|knife 칼|roof 지붕|proof 증거|thief 도둑|shelf 선반|brief 짧은|belief 믿음|beach 해변|peach 복숭아|teach 가르치다|reach 도달하다|lunch 점심|bench 벤치|catch 잡다|watch 보다|match 경기|kitchen 부엌|rich 부유한|much 많은|such 그러한|touch 만지다|march 행진|search 찾다|french 프랑스어
+`;
 const VOCAB_X_REPLY = `
 xylophone 실로폰|xylitol 설탕 대신 쓰는 천연 감미료|xylophonist 실로폰 연주자
 `;

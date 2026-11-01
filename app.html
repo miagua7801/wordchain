@@ -65,7 +65,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--key);outline-of
 h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
 .word{font-family:var(--f-word)}
 /* 수준별 색: 기초 초록 · 보통 청록 · 도전 주황 (맵의 길·단계 원, 첫 화면 버튼) */
-[data-tc="basic"]{--tc:var(--lv-basic);--tc-ink:var(--lv-basic-ink);--tc-bg:var(--lv-basic-bg)} [data-tc="normal"]{--tc:var(--lv-normal);--tc-ink:var(--lv-normal-ink);--tc-bg:var(--lv-normal-bg)} [data-tc="hard"]{--tc:var(--lv-hard);--tc-ink:var(--lv-hard-ink);--tc-bg:var(--lv-hard-bg)}
+[data-tc="basic"]{--tc:var(--lv-basic);--tc-ink:var(--lv-basic-ink);--tc-bg:var(--lv-basic-bg)} [data-tc="normal"]{--tc:var(--lv-normal);--tc-ink:var(--lv-normal-ink);--tc-bg:var(--lv-normal-bg)} [data-tc="hard"],[data-tc="taste"],[data-tc="plus"]{--tc:var(--lv-hard);--tc-ink:var(--lv-hard-ink);--tc-bg:var(--lv-hard-bg)}
 .iconbtn{width:44px;height:44px;flex:none;padding:0;display:grid;place-items:center;font-size:20px;line-height:1;background:var(--surface);border:2px solid var(--line);border-radius:12px}
 .iconbtn:hover{border-color:var(--accent)}
 
@@ -150,6 +150,15 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .gscreen{display:flex;flex-direction:column;min-height:calc(100dvh - 60px)}
 .ghead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ghead h2{flex:1;min-width:0;text-align:center;font-size:24px}
+.sndsel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:min(100%,340px);margin:16px auto 0}
+.sbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:16px;border:2px solid var(--outline);background:var(--surface);color:var(--ink);font-weight:700;font-size:15px;line-height:1.3;word-break:keep-all}
+.sbtn:hover:not(:disabled){border-color:var(--accent)}.sbtn:disabled{opacity:.6;cursor:not-allowed}
+.sbtn small{font-weight:500;font-size:12px;color:var(--muted)}.sbtn .lk{color:var(--ink-2)}
+.scard{text-align:left;margin:0 0 8px;padding:6px 10px;font-size:13px;line-height:1.45;word-break:keep-all;max-height:30vh;overflow:auto}.scard b{display:block;font-size:14px}
+.rulesbtn{flex:none;font-size:13px;white-space:nowrap;touch-action:manipulation}
+.hrules{text-align:left;word-break:keep-all;max-height:min(60vh,460px);overflow:auto;font-size:14px;line-height:1.5}
+.card .hrules p{margin:4px 0 10px}.hrules h4{margin:12px 0 4px;font-size:15px}.hrules h4 small{font-weight:400;font-size:12px}
+.hrules ul{margin:0;padding:0;list-style:none}.hrules li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 10px;padding:3px 0;border-bottom:1px solid var(--line)}
 .gscreen .status{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding:8px 14px;margin:0;background:var(--hud);color:var(--hud-ink);border-color:transparent}
 .gscreen .status .label,.gscreen .status .score,.gscreen .status .diff{color:inherit}.gscreen .status .combo{color:var(--link)}
 .gscreen .status .dot{background:rgba(255,255,255,.16);border-color:transparent}.gscreen .status .dot.on{background:var(--tc,var(--good));border-color:var(--tc,var(--good))}
@@ -543,6 +552,9 @@ const NUMW=new Set(VOCAB_NUM.split(/[|\n]/).map(s=>s.trim().split(' ')[0]).filte
 const X_REPLY=VOCAB_X_REPLY.split(/[|\n]/).map(s=>s.trim()).filter(Boolean).map(e=>{
   const sp=e.indexOf(' '), w=e.slice(0,sp).toLowerCase(), d={w,ko:e.slice(sp+1).trim(),emoji:'',tier:1,xr:true};
   DICT.set(w,d); return d; });
+// 소리 잇기에서만 컴퓨터가 내는 단어(VOCAB_SOUND): 단어장에 없으면 뜻만 넣고 출제 단어(ALL)에는 넣지 않음(snd)
+const SOUND_ONLY=new Set();
+VOCAB_SOUND.split(/[|\n]/).map(s=>s.trim()).filter(Boolean).forEach(e=>{ const sp=e.indexOf(' '), w=e.slice(0,sp).toLowerCase(); SOUND_ONLY.add(w); if(!DICT.has(w)) DICT.set(w,{w,ko:e.slice(sp+1).trim(),emoji:'',tier:2,snd:true}); });
 // 기본 어휘를 더 자주(SETTINGS.coreWeight배)
 const CW=x=>x.core?SETTINGS.coreWeight:1;
 function pickCore(arr){ if(!arr.length) return undefined; const tot=arr.reduce((a,x)=>a+CW(x),0); let r=Math.random()*tot; for(const x of arr){ r-=CW(x); if(r<=0) return x; } return arr[arr.length-1]; }
@@ -566,7 +578,7 @@ function isBlocked(w,inVocab){
 }
 // 컴퓨터 출제·힌트·예시·보기·듣고 쓰기·복습에 쓰는 단어에서 금지어와 출제하지 않을 단어(SETTINGS.noAsk)를 모두 뺌
 const NO_ASK=new Set(SETTINGS.noAsk.map(w=>w.toLowerCase()));
-const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!x.xr);
+const ALL=[...DICT.values()].filter(x=>/^[a-z]{2,}$/.test(x.w)&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!x.xr&&!x.snd);
 const byTier = t => ALL.filter(x=>x.tier<=t);
 
 // ---------- 단어 판정: 단어장 단어 / 단어장 밖 올바른 단어 / 틀린 단어 ----------
@@ -607,13 +619,82 @@ function editDist(a,b,max){
 }
 // 틀린 단어와 비슷한(같은 첫 글자, 글자 차이 1~2) 단어장 단어
 function suggest(w){
-  return ALL.filter(x=>x.w[0]===w[0]&&!x.cmp&&x.w!==w).map(x=>({x,d:editDist(w,x.w,SETTINGS.suggestDist)}))
+  return ALL.filter(x=>x.w[0]===w[0]&&!x.cmp&&x.w!==w&&!formKind(x.w)).map(x=>({x,d:editDist(w,x.w,SETTINGS.suggestDist)}))
     .filter(o=>o.d<=SETTINGS.suggestDist).sort((a,b)=>a.d-b.d||CW(b.x)-CW(a.x)||Math.abs(a.x.w.length-w.length)-Math.abs(b.x.w.length-w.length))
     .slice(0,SETTINGS.suggestMax).map(o=>disp(o.x));
 }
-const judge=w=>DICT.has(w)?'dict':isEnglish(w)?'english':'wrong';
+// VOCAB_SOUND로만 들어온 단어(snd)는 다른 수준에서는 단어장 단어로 치지 않음(기존 판정 그대로)
+const judge=w=>DICT.has(w)&&!DICT.get(w).snd?'dict':isEnglish(w)?'english':'wrong';
+// ---------- 도전 수준: 규칙 변화형은 막고 불규칙 변화형은 인정 ----------
+// 판정 순서: 허용 목록(allowed-words.txt) → 변화형 목록(data/inflections.tsv, tools/make-inflections.py) → 기존 판정. 끝 글자만으로 판정하지 않음
+// INFLECT: 빌드 때 넣는 변화형(v 동사·n 명사·a 형용사/부사). ALLOWED_WORDS: 빌드 때 넣는 허용 목록, 웹에서는 allowed-words.txt를 읽어 바꿈(교사가 이 파일만 고치면 반영)
+const FORM_KIND=new Map(); Object.entries(INFLECT).forEach(([k,s])=>s.split('|').filter(Boolean).forEach(w=>FORM_KIND.set(w,k)));
+let ALLOWED=new Set(ALLOWED_WORDS.split('|').filter(Boolean));
+if(/^https?:$/.test(location.protocol)) fetch('allowed-words.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{ if(t!=null) ALLOWED=new Set(t.split(/\r?\n/).map(s=>s.trim().toLowerCase()).filter(w=>/^[a-z]+$/.test(w))); }).catch(()=>{});
+const formRuleOn=()=>track==='hard'||!!TRACKS[track]?.sound;
+// 도전 수준에서 쓸 수 없는 변화형이면 종류(v·n·a), 아니면 ''. 단어 목록에 없는 '단어장 단어 + 변화 어미'(goed 등)도 막음
+const formKind=w=>{ if(!formRuleOn()||ALLOWED.has(w)) return ''; return FORM_KIND.get(w)||(!DICT.has(w)&&!WORDS.has(w)&&isInflection(w)?'v':''); };
+const FORM_BASE={v:'원형',n:'단수형',a:'원급'};
+const josa=w=>/(l|m|n|ng|k|ck|p|[aeiou]t)$/.test(w)?'은':'는';
+const formMsg=(w,k)=>`${w}${josa(w)} 쓸 수 없어요. ${FORM_BASE[k]}으로 입력해 보세요.`;
+// ---------- 소리 잇기: 끝 글자가 아니라 끝소리로 잇기(맛보기·도전+). 철자가 아니라 발음 사전(CMU)으로 판정 ----------
+// SOUND_PRON: {"첫소리 끝소리":"단어|단어"}, SOUND_CPU: 출제 후보(발음이 하나뿐인 단어장 단어), SOUND_GUIDE: 문구(sound-guide.txt). 웹에서는 앱이 이 파일을 다시 읽음(교사가 이 파일만 고치면 반영)
+const PRON=new Map(); Object.entries(SOUND_PRON).forEach(([k,ws])=>{ const [f,l]=k.split(' '); ws.split('|').forEach(w=>{ if(!PRON.has(w)) PRON.set(w,[]); PRON.get(w).push([f,l]); }); });
+const VOWEL_SOUNDS=new Set('AA AE AH AO AW AY EH ER EY IH IY OW OY UH UW'.split(' '));
+const IPA={AA:'ɑ',AE:'æ',AH:'ʌ',AO:'ɔ',AW:'aʊ',AY:'aɪ',EH:'ɛ',ER:'ɝ',EY:'eɪ',IH:'ɪ',IY:'i',OW:'oʊ',OY:'ɔɪ',UH:'ʊ',UW:'u',B:'b',CH:'tʃ',D:'d',DH:'ð',F:'f',G:'g',HH:'h',JH:'dʒ',K:'k',L:'l',M:'m',N:'n',NG:'ŋ',P:'p',R:'r',S:'s',SH:'ʃ',T:'t',TH:'θ',V:'v',W:'w',Y:'j',Z:'z',ZH:'ʒ'};
+const SOUND_TARGET={taste:['CH','SH','TH','DH','F'],plus:['CH','SH','TH','DH','F','K','S','JH','N']};
+function parseGuide(t){ const g={}; let sec=null; t.split(/\r?\n/).forEach(l=>{ l=l.trim(); if(!l||l[0]==='#') return; const m=/^\[(.+)\]$/.exec(l); if(m){ sec=m[1]; g[sec]=[]; } else if(sec) g[sec].push(l); }); return g; }
+let GUIDE=parseGuide(SOUND_GUIDE);
+if(/^https?:$/.test(location.protocol)) fetch('sound-guide.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{ if(t&&/\[소리 이름\]/.test(t)) GUIDE=parseGuide(t); }).catch(()=>{});
+const gv=(sec,key)=>{ const l=(GUIDE[sec]||[]).find(x=>x.startsWith(key+'=')); return l?l.slice(key.length+1):''; };
+const firstS=w=>[...new Set((PRON.get(w)||[]).map(x=>x[0]))];
+const endS=w=>[...new Set((PRON.get(w)||[]).map(x=>x[1]))];
+const endCons=w=>endS(w).filter(x=>!VOWEL_SOUNDS.has(x));
+const soundName=(k,w)=>gv('소리 이름',k)||`/${IPA[k]||k}/ ${w?w[0]:''} 소리`;
+// 오답 설명: sound-guide.txt [오답 설명]의 자리에 단어와 소리 이름을 넣음
+function soundWhy(a,w){ const need=endS(a), e=need[0], f=firstS(w)[0];
+  return (GUIDE['오답 설명']||[''])[0].replace('{앞단어}',a).replace('{앞조사}',josa(a)).replace('{끝소리}',soundName(e,a)).replace('{학생단어}',w).replace('{학생조사}',josa(w)).replace('{첫소리}',soundName(f,w)); }
+// 줄 끝 (도전+에서만 표시)는 도전+에서만 보이고 표시는 뗌
+const GUIDE_PLUS=' (도전+에서만 표시)';
+const guideLines=(sec,mode)=>(GUIDE[sec]||[]).filter(l=>mode==='plus'||!l.endsWith(GUIDE_PLUS.trim())).map(l=>l.replace(GUIDE_PLUS.trim(),'').trim());
+function showSoundIntro(mode,done){ const [head,...rest]=GUIDE[mode==='taste'?'맛보기 안내':'도전+ 안내']||['🔊 소리 잇기'], m=/^(\S+)\s+(.*)$/.exec(head)||[0,'🔊',head];
+  let html='', inUl=false; rest.forEach(l=>{ const li=l.startsWith('•'); if(li&&!inUl){ html+='<ul>'; inUl=true; } if(!li&&inUl){ html+='</ul>'; inUl=false; }
+    html+=li?`<li>${esc(l.replace(/^•\s*/,''))}</li>`:l.startsWith('⚠️')?`<h4>${esc(l)}</h4>`:`<p>${esc(l)}</p>`; }); if(inUl) html+='</ul>';
+  toast(m[1],esc(m[2]),`<div class="hrules">${html}</div>`,'확인했어요',done); }
+const soundCardHTML=k=>{ const ls=guideLines('카드 '+k,G.L.sound); return ls.length?`<div class="hintbox scard" id="scard" role="note"><b>${esc(soundName(k))}</b>${ls.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''; };
+// 소리 단계 준비(start에서): 출제 단어, 예시·힌트 단어(자음으로 끝나는 단어만)
+function soundSetup(G,L){ const tg=SOUND_TARGET[L.sound];
+  G.pool=G.pool.filter(x=>PRON.has(x.w)&&endCons(x.w).length);
+  G.cpuPool=SOUND_CPU.split('|').map(w=>DICT.get(w)).filter(x=>x&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!formKind(x.w)&&PRON.has(x.w)&&tg.includes(endS(x.w)[0])&&(L.sound==='plus'||x.core<=2||SOUND_ONLY.has(x.w)));
+  G.plan=shuffle(tg.slice()); G.cardSeen=new Set(); G.sawTH=false; G.card=''; G.askedS=[]; }
+// 컴퓨터 단어 고르기: 학생 단어의 끝소리(starts)로 시작하고 목표 끝소리로 끝남. starts가 null이면 시작 소리 제한 없음
+function pickSound(starts){
+  const free=G.cpuPool.filter(x=>!G.used.has(x.w)), withS=starts?free.filter(x=>firstS(x.w).some(s=>starts.includes(s))):free;
+  const byEnd=(arr,k)=>arr.filter(x=>endS(x.w)[0]===k);
+  if(G.L.sound==='taste'){
+    // 5문제 안에 /θ/가 한 번은 나오게: 마지막 문제까지 안 나왔으면 시작 소리 제한을 풀어서라도 냄
+    if(G.streak>=G.L.goal-1&&!G.sawTH){ const th=byEnd(withS,'TH'); return pickCore(th.length?th:byEnd(free,'TH')); }
+    const want=G.plan[G.streak%G.plan.length], c=byEnd(withS,want); if(c.length) return pickCore(c);
+  }
+  if(!withS.length) return null;
+  const ends=[...new Set(withS.map(x=>endS(x.w)[0]))], recent=G.askedS.slice(-2), fresh=ends.filter(k=>!recent.includes(k)), pickE=rnd(fresh.length?fresh:ends);
+  return pickCore(byEnd(withS,pickE));
+}
+function exampleSound(need){ const c=G.pool.filter(x=>!G.used.has(x.w)&&firstS(x.w).some(s=>need.includes(s))); return c.length?pickCore(c):null; }
+// 학생 답 판정: 1부 도전 규칙 → 발음 사전 → 모음으로 끝남 → 첫소리 → 이미 쓴 단어. 앞의 셋은 오답이 아니라 안내
+function submitSound(w,inp){
+  const say=t=>{ msg(t,'info'); inp.select(); };
+  if(w.length<G.L.min) return say(gv('알림','짧음').replace('{글자수}',G.L.min));
+  const fk=formKind(w); if(fk) return say(formMsg(w,fk));
+  if(!PRON.has(w)) return say(gv('알림','발음없음'));
+  if(!endCons(w).length) return say(gv('알림','모음'));
+  const need=endS(G.cur.w);
+  if(!firstS(w).some(s=>need.includes(s))){ if(DICT.has(w)) speak(w); fail(esc(soundWhy(G.cur.w,w)),exampleSound(need)); return; }
+  if(G.used.has(w)){ fail(`<b>${esc(w)}</b>${josa(w)} 이번 끝말잇기에서 이미 쓴 단어예요.`,exampleSound(need)); return; }
+  success(DICT.get(w)||{w,ko:'',outside:true});
+}
 // 자동 테스트용(읽기 전용)
-window.__wordchain={pools:()=>G?{pool:G.pool.map(x=>x.w),cpu:G.cpuPool.map(x=>x.w)}:null,nextCpu:ch=>{ const c=G&&pickCpu(ch); return c?disp(c):null; },forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
+window.__wordchain={sound:{first:w=>firstS(w),end:w=>endS(w),cpu:()=>G?G.cpuPool.map(x=>x.w):[],card:()=>G?G.card:'',saw:()=>G?G.sawTH:false,asked:()=>G?G.askedS:[]},formKind:w=>formKind(w),allowed:w=>ALLOWED.has(w),pools:()=>G?{pool:G.pool.map(x=>x.w),cpu:G.cpuPool.map(x=>x.w)}:null,nextCpu:ch=>{ const c=G&&pickCpu(ch); return c?disp(c):null; },forceTarget:w=>{ if(!G||!GUIDED(G.L.mode)) return false; G.target=DICT.get(w); prepGuided(); render(); return true; },judge,suggest,misspellings:(w,k)=>misspellings(w,k),review:()=>R&&!R.done?R.list[R.i].w:null,studyPhase:()=>R?{phase:R.phase,tries:R.tries,retried:R.retried,done:R.done}:null,target:()=>G&&G.target?G.target.w:null,diff:()=>G?G.diff:null,cpu:()=>G&&G.cur?G.cur.w:null,listening:()=>G?!!(G.listen&&!G.revealed):null,silentNote:(a,b)=>silentNote(a,b),points:(w,c,l,h,n)=>calcScore(DICT.get(w)||{w,outside:true},c,l,h,n),stars:()=>stars,hints:()=>G?{free:G.hints,stored:storedHints(),usedStored:G.usedStored||0}:{stored:storedHints()},core:w=>DICT.get(w)?.core||0,weight:w=>DICT.has(w)?CW(DICT.get(w)):0,pickMany:(ws,n)=>{ const c={}, arr=ws.map(w=>DICT.get(w)).filter(Boolean); for(let i=0;i<n;i++){ const x=pickCore(arr).w; c[x]=(c[x]||0)+1; } return c; },inAll:w=>ALL.some(x=>x.w===w),state:()=>G?{score:G.score,combo:G.combo,best:G.bestCombo,streak:G.streak,lives:G.lives,turns:G.turns,rights:G.rights}:null,tweak:o=>{ if(G) Object.assign(G,o); },rest:()=>REST?{step:REST.step,grade:REST.grade,lost:REST.lost,shown:REST.shown,reward:REST.reward,hl:REST.hl.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w)}:null,setBoxRoll:v=>{ boxRoll=v; },boxGrade:(l,n)=>boxGrade(l,n),restLines:k=>REST_LINES[k],penPattern:w=>penPattern(w),forceCpu:w=>{ if(!G||!G.cur||!DICT.has(w)) return false; G.used.delete(G.cur.w); G.chain.pop(); unfeedLast(); setCpu(DICT.get(w)); render(); return true; },again:()=>{ if(G){ REST=null; start(G.L.id); } },setHintWord:w=>{ if(G&&DICT.has(w)) G.hintWord=DICT.get(w); },restGo:n=>restGo(n),feed:()=>G?G.feed.map(x=>x.div?'---':(x.me?'me':'cpu')+':'+x.w):null,blocked:w=>isBlocked(w,DICT.has(w.toLowerCase())),dirty:()=>({all:ALL.filter(x=>isBlocked(x.w)).length,words:[...WORDS].filter(w=>isBlocked(w)).length,lists:BL.exact.length+BL.strong.length})};
 
 // ---------- 수준별 단계 설정 ----------
 // mode: choice(객관식) / type(주관식), n: 보기 수, pool·cpu: 1=초등 권장 어휘, 2=+중학교 어휘, min: 최소 글자 수, time: 기본 제한 시간(초, 화면에서 조절 가능)
@@ -638,7 +719,10 @@ const TRACKS={
     {id:3,name:'긴 단어 쓰기',desc:'주관식: 5글자 이상 단어만 인정돼요.',mode:'type',pool:2,cpu:2,goal:8,min:5,cpuMin:6},
     {id:4,name:'스피드 챌린지',desc:'주관식: 제한 시간 안에 4글자 이상 단어를 써요. 시간은 조절할 수 있어요.',mode:'type',pool:2,cpu:2,goal:8,min:4,cpuMin:6,time:25},
     {id:5,name:'듣기 챌린지',desc:'컴퓨터 단어를 소리로만 들어요. 들은 단어의 끝 글자로 시작하는 4글자 이상 단어를 써요. 다시 듣기 1번.',mode:'type',pool:2,cpu:2,goal:6,min:4,cpuMin:5,listen:'force'}
-  ]}
+  ]},
+  // 소리 잇기: 끝소리로 잇기. 첫 화면 수준 목록이 아니라 따로 묶은 버튼으로 들어감(sound). goal: 맛보기는 문제 수, 도전+는 성공 수
+  taste:{name:'소리 잇기 맛보기',tag:'Sound',icon:'🔍',sound:true,desc:'끝소리로 이어요.',levels:[{id:1,name:'맛보기',desc:'끝소리로 이어요. 5문제를 끝까지 해요.',mode:'type',pool:2,cpu:2,goal:5,min:3,listen:'force',sound:'taste'}]},
+  plus:{name:'소리 잇기 도전+',tag:'Sound+',icon:'🔊',sound:true,desc:'끝소리로 이어요.',levels:[{id:1,name:'도전+',desc:'끝소리로 이어요.',mode:'type',pool:2,cpu:2,goal:8,min:3,listen:'force',sound:'plus'}]}
 };
 const HINTS=3;
 let track=null, LEVELS=[];
@@ -862,6 +946,8 @@ const BADGES=[
   {id:'master-basic',icon:'🏕️',name:'기초 정복',cond:'기초 수준의 모든 단계 통과'},
   {id:'master-normal',icon:'⛵',name:'보통 정복',cond:'보통 수준의 모든 단계 통과'},
   {id:'master-hard',icon:'🌋',name:'도전 정복',cond:'도전 수준의 모든 단계 통과'},
+  {id:'master-taste',icon:'🔍',name:'소리 탐험가',cond:'소리 잇기 맛보기 5문제를 끝까지 함'},
+  {id:'master-plus',icon:'🏆',name:'소리 잇기 정복',cond:'소리 잇기 도전+ 통과'},
 ];
 const hasBadge=id=>badges.some(b=>b.id===id);
 function award(id){
@@ -939,6 +1025,14 @@ function bindBackup(){ const m=$app.querySelector('#bkMsg'), f=$app.querySelecto
     m.querySelector('#bkYes').focus(); }; }
 
 // ---------- 첫 화면: 제목 · 기초/보통/도전 · 단어 수첩(작게) ----------
+// 소리 잇기 버튼(첫 화면·단계 맵): 맛보기는 보통 이상에 들어간 적이 있으면, 도전+는 도전 수준을 모두 통과하면 열림(선생님 모드는 모두 열림)
+// 도전+가 열리고 소리 탐험가 배지까지 받으면 맛보기 버튼은 감춤
+const tasteOpen=()=>teacherOn()||!!store.prog.normal||!!store.prog.hard;
+const plusOpen=()=>{ const p=store.prog.hard; return teacherOn()||(!!p&&TRACKS.hard.levels.every(L=>p.cleared&&p.cleared[L.id])); };
+const SOUND_BTNS=[['taste','church → cheese','🔒 보통 단계부터',tasteOpen],['plus','laugh → phone','🔒 도전 단계를 통과하면 열려요',plusOpen]];
+function soundBtnsHTML(){ const hideTaste=!teacherOn()&&plusOpen()&&hasBadge('master-taste');
+  return `<div class="sndsel">${SOUND_BTNS.filter(([k])=>!(k==='taste'&&hideTaste)).map(([k,ex,lock,open])=>`<button class="sbtn" data-snd="${k}" ${open()?'':'disabled'}>🔊 ${esc(TRACKS[k].name)}<small lang="en">${esc(ex)}</small>${open()?'':`<small class="lk">${esc(lock)}</small>`}</button>`).join('')}</div>`; }
+function bindSoundBtns(){ $app.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{ const k=b.dataset.snd; setTrack(k); if(window.__wordchainNoIntro) start(1); else showSoundIntro(k,()=>start(1)); }); }
 function chooseTrack(){
   audioKeepAlive(false); stopTimer(); offKeys(); origin='title'; REST=null; lvTheme(null);
   const due=nbList().length;
@@ -946,14 +1040,16 @@ function chooseTrack(){
   <div class="title">
     <h1>영어 끝말잇기 챌린지</h1>
     <p class="sub">Word Chain Challenge</p>
-    <div class="tracksel">${Object.entries(TRACKS).map(([k,T])=>{ const p=store.prog[k]||{};
+    <div class="tracksel">${Object.entries(TRACKS).filter(([,T])=>!T.sound).map(([k,T])=>{ const p=store.prog[k]||{};
       return `<button class="track" data-t="${k}" data-tc="${k}" aria-label="${T.name} 수준"><span class="ic" aria-hidden="true">${T.icon}</span><span class="nm">${T.name}</span><span class="pg" aria-hidden="true">${T.levels.map(L=>`<i class="${p.cleared&&p.cleared[L.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('')}</div>
+    ${soundBtnsHTML()}
     <button class="rvsmall" id="nbBtn">📒 단어 수첩${due?` <span class="cnt" aria-label="학습할 단어 ${due}개">${due}</span>`:''}</button>
   </div>
   ${ownLine()}
   <div class="title-ver"><span id="ver">버전 ${BUILD}</span>${teacherOn()?' · 선생님 모드 켜짐 (수준을 고르면 단계 맵 아래에 버튼이 있어요)':''}</div>`;
   bindTeacherTap($app.querySelector('#ver'),chooseTrack);
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
+  bindSoundBtns();
   $app.querySelectorAll('.track').forEach(b=>b.onclick=()=>{ setTrack(b.dataset.t); home(); trackIntro(); });
   $app.querySelector('#nbBtn').onclick=notebook;
 }
@@ -984,6 +1080,14 @@ function rpg(o){
   ov.querySelector('#rpgSkip').onclick=close;
   page();
 }
+// 도전 수준 규칙: 처음 들어갈 때 한 번(이 기기에 저장) "확인했어요"를 눌러야 시작, 게임 화면의 '규칙 보기'로 다시 봄
+const HARD_RULES_KEY='wordchain-hard-rules';
+const hardRulesDue=()=>{ if(track!=='hard'||window.__wordchainNoIntro) return false; try{ return localStorage.getItem(HARD_RULES_KEY)!=='1'; }catch(e){ return true; } };
+function hardRulesSeen(){ try{ localStorage.setItem(HARD_RULES_KEY,'1'); }catch(e){} }
+const ruleRow=(t,ex)=>`<li><span>${t}</span> <b lang="en">${ex}</b></li>`;
+const showHardRules=done=>toast('🏆','도전 단계 규칙',`<div class="hrules"><p>이 단계에서는 단어의 '기본형'만 쓸 수 있어요.</p>
+  <h4>❌ 쓸 수 없어요</h4><ul>${ruleRow('동사에 -ing, -ed, -s를 붙인 말','playing, played, plays')}${ruleRow('명사에 -s, -es를 붙인 복수형','cats, boxes')}${ruleRow('형용사에 -er, -est를 붙인 말','taller, biggest')}</ul>
+  <h4>⭕ 쓸 수 있어요 <small>(모양이 바뀌는 단어는 따로 외워야 하니까!)</small></h4><ul>${ruleRow('불규칙 과거형','went, ate, took')}${ruleRow('불규칙 복수형','children, teeth, mice')}${ruleRow('불규칙 비교급·최상급','better, best, worse, worst')}${ruleRow('형용사로 쓰는 말','tired, excited, interesting')}</ul></div>`,'확인했어요',done);
 // 수준 규칙(2쪽, 짧게): ① 이 수준은 어떤 곳인지·끝말잇기 방법 ② 모든 단계에 공통인 규칙(하트/연속 기록·힌트·통과). 단계 규칙 창에서는 되풀이하지 않음
 function trackIntro(){
   const T=TRACKS[track], lv=livesOn();
@@ -998,6 +1102,7 @@ function trackIntro(){
 const MODE_TIP={spell:'숫자 키 1~4로도 골라요.',blocks:'키보드로 쳐도 돼요. Backspace로 되돌려요.',blanks:'첫 칸은 내 단어의 <b>끝 글자</b>예요.'};
 // 단계 규칙(2쪽, 짧게): ① 컴퓨터의 한마디·단계 설명 ② 이 단계만의 것(목표 수·팁·듣기·제한 시간 조절)
 function stageIntro(id){
+  if(hardRulesDue()){ showHardRules(()=>{ hardRulesSeen(); stageIntro(id); }); return; }
   const L=LEVELS[id-1], k=`${track}-${L.id}`, lv=livesOn();
   const line=rnd(REST_LINES[k]||(L.listen==='force'?REST_LINES.listen:L.time?REST_LINES.time:REST_LINES.other));
   const how=[lv?`🎯 <b>${L.goal}번</b> 성공하면 통과!`:`🎯 <b>연속 ${L.goal}번</b> 성공하면 통과!`];
@@ -1245,6 +1350,7 @@ function bindTeacherTap(el,redraw){ let taps=[]; el.onclick=()=>{ const n=Date.n
 // 수준 이모지(모험): 기초 🏕️ 캠프(출발) · 보통 ⛵ 항해 · 도전 🌋 화산(정상) — 맵 장식도 그 지형으로
 const MAP_DECO={basic:['🌲','🍄','⛺','🌼'],normal:['🌊','🐚','🐟','☁️'],hard:['🌋','🪨','🦅','⚡']};
 function home(){
+  if(TRACKS[track]?.sound){ audioKeepAlive(false); if(G&&!G.locked) bankStars(); stopTimer(); offKeys(); REST=null; chooseTrack(); return; }
   audioKeepAlive(false); if(G&&!G.locked) bankStars();
   stopTimer(); offKeys(); origin='map'; REST=null; lvTheme(track);
   const T=TRACKS[track], n=LEVELS.length, GAP=150, TOP=86, X=[30,70,32,68,36];
@@ -1266,6 +1372,7 @@ function home(){
       return `<button class="node lv${cleared?' cleared':''}${open?'':' locked'}${L===cur?' cur':''}" data-lv="${L.id}" style="--x:${pts[i].x}%;--y:${pts[i].y}px" aria-label="${L.id}단계 ${esc(L.name)}${cleared?' (통과)':open?'':' (잠김)'}">${open?L.id:'🔒'}${cleared?'<span class="ck" aria-hidden="true">✔</span>':''}<span class="nl">${esc(L.name)}</span></button>`; }).join('')}
     <span class="node goal${all?' cleared':''}" style="--x:${pts[n].x}%;--y:${pts[n].y}px" aria-label="${all?`${T.name} 수준 정복!`:'도착점'}" role="img">👑</span>
   </div>
+  ${soundBtnsHTML()}
   ${backupHTML()}
   <div class="foot">
     <span>진행 기록은 이 기기의 브라우저에 저장돼요. <span class="ver" id="ver">· 버전 ${BUILD}</span></span>
@@ -1309,6 +1416,7 @@ function home(){
   if(teacherOn()){ confirmBtn('#teacher','한 번 더 누르면 모두 열려요',()=>{save.unlocked=LEVELS.length;persist();home();});
     $app.querySelector('#teacherOff').onclick=()=>{ setTeacher(false); home(); }; }
   bindTeacherTap($app.querySelector('#ver'),home);
+  bindSoundBtns();
   const cr=$app.querySelector('#credits'); cr.onclick=()=>showCredits(cr);
   bindBackup();
 }
@@ -1325,6 +1433,8 @@ function showCredits(back){
     <p>교육부 고시 영어과 교육과정 [별표] 기본 어휘 목록 (교육부 고시 제2022-33호 [별책 3] (국가교육위원회 고시 제2026-1호 일부개정 포함)). 국가의 고시는 저작권법 제7조에 따라 보호받지 않는 저작물이며, 한국어 뜻은 이 앱에서 따로 썼어요.</p>
     <p>정답 판정용 영어 단어 목록은 SCOWL/ESDB(wordlist.aspell.net)로 만들었어요. 고지 원문:</p>
     <blockquote lang="en"><p>${esc(copy||'')}</p>${perm.map(l=>`<p>${esc(l)}</p>`).join('')}</blockquote>
+    <p>소리 잇기의 발음 판정에는 CMU 발음 사전을 썼어요. <span lang="en">Copyright (C) 1993-2008 Carnegie Mellon University. All rights reserved.</span> 허가문 전문은 저장소의 NOTICE.md에 있어요.</p>
+    <p>도전 수준의 품사 판단에는 WordNet 3.0을 썼어요. <span lang="en">WordNet 3.0 Copyright 2006 by Princeton University. All rights reserved.</span> 허가문 전문은 저장소의 NOTICE.md에 있어요.</p>
     <h4>글꼴</h4>
     <p>Jua, Lexend, Noto Sans KR (Google Fonts) — <span lang="en">SIL Open Font License 1.1</span></p>
     <p>이모지는 사용자 기기의 시스템 글꼴로 표시됨</p>
@@ -1343,14 +1453,16 @@ function start(id){
   const L=LEVELS[id-1];
   // 별표 규칙(L.star): 교육부 기본 어휘 중 별표 L.star개까지만 출제(컴퓨터 단어·완성할 단어·보기·힌트·예시). a/an은 뺌. 학생 답 인정은 그대로
   const starred=x=>!L.star||(!!x.core&&x.core<=L.star&&x.w!=='an');
-  const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp&&starred(x));
+  const pool=byTier(L.pool).filter(x=>x.w.length>=L.min&&!x.cmp&&starred(x)&&!formKind(x.w));
   // 컴퓨터는 첫 글자와 끝 글자가 같은 단어(dad, trust 등)와 수 단어는 내지 않음
-  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>starred(x)&&!x.cmp&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],lines:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],usedStored:0,buyQty:1,lives:SETTINGS.lives,t0:Date.now(),turns:0,rights:0,combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0,feed:[]};
+  G={L,pool,cpuPool:byTier(L.cpu).filter(x=>starred(x)&&!x.cmp&&!formKind(x.w)&&!NUMW.has(x.w)&&x.w[0]!==last(x.w)&&x.w.length>=(L.cpuMin||L.min)&&x.w.length<=(L.cpuMax||99)),streak:0,hints:HINTS,used:new Set(),chain:[],lines:[],asked:[],cur:null,hintStep:0,removed:new Set(),locked:false,timeLeft:0,diff:0,okRun:0,badRun:0,diffMove:'',clean:true,cleanRun:0,firstTime:!save.cleared[id],usedStored:0,buyQty:1,lives:SETTINGS.lives,t0:Date.now(),turns:0,rights:0,combo:0,bestCombo:0,score:0,newBadges:[],hintUsed:false,turnHint:false,failedBefore:false,listenRun:0,feed:[]};
+  if(L.sound) soundSetup(G,L);
   newChain();
 }
 function startsWith(ch,pool){return pool.filter(x=>x.w[0]===ch&&!G.used.has(x.w));}
 // 컴퓨터가 낼 단어: 학생이 이어 갈 수 있는 끝 글자로 끝나는 단어. 학생 단어가 x로 끝나면 VOCAB_X_REPLY에서 무작위
 function pickCpu(firstCh){
+  if(G.L.sound) return pickSound(firstCh);
   if(firstCh==='x'){ const xs=X_REPLY.filter(x=>!G.used.has(x.w)); if(xs.length) return rnd(xs); }
   let cands=G.cpuPool.filter(x=>!G.used.has(x.w)&&(!firstCh||x.w[0]===firstCh)&&startsWith(last(x.w),G.pool).length>=(G.L.mode==='type'?3:1));
   if(!cands.length) return null;
@@ -1367,10 +1479,12 @@ function pickCpu(firstCh){
   return pickCore(groups.get(letters[letters.length-1]));
 }
 // 하트 방식인지(보통·도전 수준, SETTINGS.lives>0)
-const livesOn=(t=track)=>t!=='basic'&&SETTINGS.lives>0;
+const livesOn=(t=track)=>t!=='basic'&&t!=='taste'&&SETTINGS.lives>0;
 const heartsHTML=()=>`<span class="hearts" aria-label="하트 ${G.lives}개 남음">${'❤️'.repeat(Math.max(0,G.lives))}${'🤍'.repeat(Math.max(0,SETTINGS.lives-G.lives))}</span>`;
 // 오답 한 번: 하트 방식이면 하트 1개(다 잃으면 성공 수 0), 아니면 연속 기록 0. 오답 화면에 붙일 문구와 버튼을 돌려줌
 function loseTurn(){
+  // 맛보기: 틀려도 그 문제가 끝난 것으로 치고 다음 문제로(5문제를 끝까지)
+  if(G.L.sound==='taste'){ G.combo=0; G.listenRun=0; G.streak++; const done=G.streak>=G.L.goal; return {lv:false,text:'',label:done?'결과 보기':'다음 문제',next:()=>{ if(done){ recordPass(); startRest(); } else newChain(); }}; }
   const had=G.streak, lv=livesOn(); if(lv){ G.lives--; G.livesLost=(G.livesLost||0)+1; } const out=!lv||G.lives<=0; if(out) G.streak=0;
   G.combo=0; G.listenRun=0;
   const gotStars=out?bankStars():0;
@@ -1386,6 +1500,7 @@ function feedDivider(){ if(G.feed.length&&!G.feed[G.feed.length-1].div) G.feed.p
 function archiveChain(){ const seg=G.chain.slice(); if(seg.length&&!seg[seg.length-1].me) seg.pop(); if(seg.some(x=>x.me)) G.lines.push(seg); G.chain=[]; }
 function setCpu(c){
   G.listen=listenOn(G.L); G.revealed=false; G.replays=G.L.listen==='force'?SETTINGS.listen.hardReplays:SETTINGS.listen.normalReplays;
+  if(G.L.sound){ const k=endS(c.w)[0]; if(k==='TH') G.sawTH=true; G.askedS.push(k); G.card=G.cardSeen.has(k)?'':k; G.cardSeen.add(k); }
   G.cur=c; G.used.add(c.w); G.chain.push({w:c.w,d:disp(c),me:false}); G.feed.push({w:c.w,d:disp(c),me:false,cpu:c}); G.asked.push(last(c.w)); G.hintStep=0; G.removed=new Set(); G.locked=false; G.wrongTries=0; G.silent=''; G.okNote=''; G.turnHint=false; G.myWord='';
   G.options = G.L.mode==='choice' ? makeOptions() : null;
   if(GUIDED(G.L.mode)){ G.target=chooseTarget(last(c.w)); prepGuided(); }
@@ -1673,15 +1788,17 @@ function celebrate(n){
 function gameShell(){
   const L=G.L;
   $app.innerHTML=`<div class="gscreen" id="gscreen">
-    <div class="ghead"><button class="iconbtn" id="back" aria-label="단계 맵으로">☰</button><h2>${TRACKS[track].name} ${L.id}단계</h2><button class="iconbtn" id="snd">${sndHTML()}</button></div>
+    <div class="ghead"><button class="iconbtn" id="back" aria-label="단계 맵으로">☰</button><h2>${L.sound?TRACKS[track].name:`${TRACKS[track].name} ${L.id}단계`}</h2>${track==='hard'||L.sound?'<button class="linkbtn rulesbtn" id="rulesBtn">규칙 보기</button>':''}<button class="iconbtn" id="snd">${sndHTML()}</button></div>
     <div class="status" id="gstat"></div>
     <div class="gbody" id="gbody"><div class="feed" id="feed"><ol class="fl" id="fl" aria-label="주고받은 단어"></ol></div><div class="qmodal" id="qm" role="group" aria-label="문제"></div></div>
   </div>`;
   $app.querySelector('#gscreen')._g=G; G.feedN=0; setSndBtn(); lvTheme(track);
   $app.querySelector('#back').onclick=home;
+  // 규칙을 보는 동안 제한 시간은 멈춤
+  const rb=$app.querySelector('#rulesBtn'); if(rb) rb.onclick=()=>{ const run=!!timerId; stopTimer(); const back=()=>{ if(run&&G&&!G.locked) startTimer(); ($app.querySelector('#inp')||rb).focus({preventScroll:true}); }; if(L.sound) showSoundIntro(L.sound,back); else showHardRules(back); };
   $app.querySelector('#snd').onclick=()=>{
     if(REST||!G.cur){ soundOn=!soundOn; audioKeepAlive(soundOn); setSndBtn(); return; }
-    if(soundOn&&G.L.listen==='force'&&TTS_OK){ msg('듣기 챌린지에서는 소리를 끌 수 없어요.','info'); return; }
+    if(soundOn&&G.L.listen==='force'&&TTS_OK){ msg(`${G.L.sound?'소리 잇기':'듣기 챌린지'}에서는 소리를 끌 수 없어요.`,'info'); return; }
     soundOn=!soundOn; audioKeepAlive(soundOn); setSndBtn();
     if(!soundOn&&G.listen){ G.listen=false; G.revealed=true; render(); msg('소리를 꺼서 듣고 쓰기를 껐어요.','info'); return; }
     if(G.L.listenOpt) bindListenBar(); };
@@ -1711,8 +1828,9 @@ function syncFeed(){
 function unfeedLast(){ G.feed.pop(); const fl=$app.querySelector('#fl'); if(fl&&G.feedN>G.feed.length){ fl.lastElementChild?.remove(); G.feedN=G.feed.length; } }
 // 상태 줄: 점수·별·성공 수(하트)·콤보·난이도·진행 점
 function drawStatus(){ const st=$app.querySelector('#gstat'), L=G.L; if(!st) return;
-  st.innerHTML=`<div class="label"><span id="score" class="score">${G.score}점</span> <span class="starchip">⭐ <b class="stars-n">${stars}</b></span> · ${livesOn()?`성공 ${G.streak} / ${L.goal} ${heartsHTML()}`:`연속 성공 ${G.streak} / ${L.goal}`}<span id="combo" class="combo">${G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:''}</span>${GUIDED(L.mode)?` · <span class="diff" title="자동 조절 난이도">난이도 ${G.diff+1}${G.diffMove==='up'?' ▲':G.diffMove==='down'?' ▼':''}</span>`:''}</div>
+  st.innerHTML=`<div class="label"><span id="score" class="score">${G.score}점</span> <span class="starchip">⭐ <b class="stars-n">${stars}</b></span> · ${L.sound==='taste'?`문제 ${Math.min(G.streak+1,L.goal)} / ${L.goal}`:livesOn()?`성공 ${G.streak} / ${L.goal} ${heartsHTML()}`:`연속 성공 ${G.streak} / ${L.goal}`}<span id="combo" class="combo">${G.combo>=SETTINGS.combo.show?` · 🔥 ${G.combo}콤보`:''}</span>${GUIDED(L.mode)?` · <span class="diff" title="자동 조절 난이도">난이도 ${G.diff+1}${G.diffMove==='up'?' ▲':G.diffMove==='down'?' ▼':''}</span>`:''}</div>
     <div class="dots">${Array.from({length:L.goal},(_,i)=>`<span class="dot${i<G.streak?' on':''}"></span>`).join('')}</div>`; }
+const soundAsk=()=>esc(gv('화면','묻기')).replace(/&lt;(.*?)&gt;/,'<b class="plain">$1</b>');
 function render(){
   const L=G.L, c=G.cur, ch=last(c.w), hide=G.listen&&!G.revealed;
   if($app.querySelector('#gscreen')?._g!==G) gameShell();
@@ -1724,18 +1842,19 @@ function render(){
     <div class="who">🤖 컴퓨터 · 🎧 듣고 쓰기</div>
     <div class="ear" aria-hidden="true">🎧</div>
     ${L.listen==='force'?'':`<div class="lboxes" aria-label="${c.w.length}글자">${'<span class="lbox"></span>'.repeat(c.w.length)}</div>`}
-    <button class="speak" id="say" ${G.replays<=0?'disabled':''}>🔊 다시 듣기 (${G.replays})</button>
-    ${!G.boughtReplay&&G.replays<=0?buyBtnHTML('buyReplay',SETTINGS.shop.replayPrice,'🔊 다시 듣기 +1'):''}
+    <button class="speak" id="say" ${!L.sound&&G.replays<=0?'disabled':''}>🔊 다시 듣기${L.sound?'':` (${G.replays})`}</button>
+    ${!L.sound&&!G.boughtReplay&&G.replays<=0?buyBtnHTML('buyReplay',SETTINGS.shop.replayPrice,'🔊 다시 듣기 +1'):''}
   </div>
-  <div class="ask">🎧 들은 단어의 <b class="plain">끝 글자</b>로 시작해요</div>`:`<div class="cpu pop">
+  <div class="ask">${L.sound?soundAsk():'🎧 들은 단어의 <b class="plain">끝 글자</b>로 시작해요'}</div>`:`<div class="cpu pop">
     <div class="who">🤖 컴퓨터</div>
     ${c.emoji&&L.mode==='type'?`<div class="emoji" aria-hidden="true">${c.emoji}</div>`:''}
-    <div class="big">${esc(disp(c).slice(0,-1))}<span class="last${/[gjpqy]/.test(ch)?' dsc':''}">${esc(ch)}</span></div>
+    <div class="big">${L.sound?esc(disp(c)):`${esc(disp(c).slice(0,-1))}<span class="last${/[gjpqy]/.test(ch)?' dsc':''}">${esc(ch)}</span>`}</div>
     <div class="ko">${esc(c.ko)}</div>
     ${G.okNote?`<div class="snote" id="okNote" role="note">💡 ${esc(G.okNote)}</div>`:''}
     <button class="speak" id="say">🔊 듣기</button>
   </div>
-  <div class="ask"><b>${ch}</b>로 시작하는 단어${GUIDED(L.mode)?'를 완성해요':'는?'}</div>`}
+  <div class="ask">${L.sound?soundAsk():`<b>${ch}</b>로 시작하는 단어${GUIDED(L.mode)?'를 완성해요':'는?'}`}</div>`}
+  ${L.sound&&G.card?soundCardHTML(G.card):''}
   ${GUIDED(L.mode)?targetHTML():''}
   <div id="answer"></div>
   <div class="qfoot">${hintBtnHTML()}</div>
@@ -1745,13 +1864,14 @@ function render(){
   if(!G.locked) away(false);
   syncFeed();
   $app.querySelector('#say').onclick=()=>{ audioKeepAlive(true);
+    if(hide&&L.sound){ speak(c.w); $app.querySelector('#inp')?.focus({preventScroll:true}); return; }
     if(hide){ if(G.replays<=0) return; G.replays--; speak(c.w);
       if(G.replays<=0&&!G.boughtReplay){ const keep=$app.querySelector('#inp')?.value||''; render(); const ip=$app.querySelector('#inp'); if(ip){ ip.value=keep; ip.focus({preventScroll:true}); } return; }
       const b=$app.querySelector('#say'); b.textContent=`🔊 다시 듣기 (${G.replays})`; b.disabled=G.replays<=0; $app.querySelector('#inp')?.focus({preventScroll:true}); return; }
     const o=soundOn;soundOn=true;speak(c.w);soundOn=o; };
   bindHintBtn();
   if(L.time) armBuy($app.querySelector('#buyTime'),SETTINGS.shop.timePrice,'',()=>{ G.boughtTime=true; G.lim+=SETTINGS.shop.timeAdd; G.timeLeft=G.lim+G.bonus-G.elapsed; $app.querySelector('#buyTime').remove(); msg(`⏱ 이번 단어 시간이 ${SETTINGS.shop.timeAdd}초 늘었어요.`,'info'); $app.querySelector('#inp')?.focus({preventScroll:true}); });
-  if(hide) armBuy($app.querySelector('#buyReplay'),SETTINGS.shop.replayPrice,'',()=>{ G.boughtReplay=true; G.replays++; const b=$app.querySelector('#say'); b.disabled=false; b.textContent=`🔊 다시 듣기 (${G.replays})`; $app.querySelector('#buyReplay').remove(); });
+  if(hide&&!L.sound) armBuy($app.querySelector('#buyReplay'),SETTINGS.shop.replayPrice,'',()=>{ G.boughtReplay=true; G.replays++; const b=$app.querySelector('#say'); b.disabled=false; b.textContent=`🔊 다시 듣기 (${G.replays})`; $app.querySelector('#buyReplay').remove(); });
   if(L.listenOpt) bindListenBar();
   // 시간 늘리기는 이번 단어에 바로 적용, 줄이기는 다음 단어부터
   if(L.time) bindTimeCtl($app,L,(t,d)=>{
@@ -1792,15 +1912,18 @@ function submitTyped(raw){
   if(!w){msg('단어를 입력하세요.','info');return;}
   if(!/^[a-z]+$/.test(w)){msg('영어 알파벳만 써 주세요.','info');return;}
   if(!DICT.has(w)&&isBlocked(w)){ blockedInput(inp); return; }
+  if(G.L.sound){ submitSound(w,inp); return; }
   if(DICT.has(w)&&(w[0]!==ch||G.used.has(w))) speak(w);
   if(w[0]!==ch){ G.silent=G.listen&&!G.revealed?silentNote(G.cur.w,w[0]):''; fail(`<b>${esc(w)}</b>는 <b>${esc(w[0])}</b>로 시작해요. <b>${esc(ch)}</b>로 시작해야 해요.`, example(ch)); return; }
   if(G.used.has(w)){ const k=G.chain.findIndex(x=>x.w===w); const who=k>=0?(G.chain[k].me?'내가':'컴퓨터가'):'';
     fail(`<b>${esc(w)}</b>는 이번 끝말잇기에서 ${k>=0?`${k+1}번째에 ${who} `:''}이미 쓴 단어예요. 위의 단어 줄에서 확인해 보세요.`, example(ch)); return; }
   if(w.length<G.L.min){ msg(`${G.L.min}글자 이상 단어를 써 주세요.`,'info'); inp.select(); return; }
+  // 도전 수준의 규칙 변화형: 오답이 아니라 알림만(하트·연속 기록·힌트·다시 쓸 기회 그대로), 다시 입력
+  const fk=formKind(w); if(fk){ msg(formMsg(w,fk),'info'); inp.select(); return; }
   const d=DICT.get(w);
-  if(d){ success(d); return; }
+  if(d&&!d.snd){ success(d); return; }
   // 단어장 밖이지만 올바른 영어 단어: 정답(뜻은 표시하지 않음)
-  if(isEnglish(w)){ success({w,ko:'',outside:true}); return; }
+  if(isEnglish(w)||(formRuleOn()&&ALLOWED.has(w))){ success({w,ko:'',outside:true}); return; }
   // 틀린 단어: 철자 도움을 보여 주고 다시 쓸 기회(SETTINGS.wrongRetry번), 그다음은 오답
   const sug=suggest(w); G.wrongTries=(G.wrongTries||0)+1;
   if(G.wrongTries<=SETTINGS.wrongRetry){
@@ -1823,7 +1946,7 @@ function success(o){
   if(o.core&&!o.outside&&!nb.tbSeen.includes(o.w)){ nb.tbSeen.push(o.w); nbSave(); } G.chain.push({w:o.w,d:disp(o),me:true}); G.feed.push({w:o.w,d:disp(o),me:true}); G.streak++;
   if(G.streak>(save.best[G.L.id]||0)){save.best[G.L.id]=G.streak;persist();}
   drawStatus();
-  if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); G.okNote=silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
+  if(G.listen&&!G.revealed){ G.revealed=true; G.myWord=disp(o); G.okNote=G.L.sound?'':silentNote(G.cur.w,o.w[0]); render(); const cpuCard=$app.querySelector('.cpu .who'); if(cpuCard) cpuCard.textContent='🎧 컴퓨터가 읽은 단어'; }
   msg((o.outside?`좋아요! ${disp(o)} — 📗 단어장 밖 단어`:`좋아요! ${disp(o)} = ${o.ko}`)+(inNb?' 📒 수첩 단어!':'')+` (+${pts}점)`,'good');
   const g=G, P=SETTINGS.pace[track]||SETTINGS.pace.basic;
   const hold=wasHidden?(G.L.listen==='force'?SETTINGS.listen.challengeRevealHold:SETTINGS.listen.revealHold):0;   // 듣고 쓰기로 공개한 컴퓨터 단어를 보여 주는 여유
@@ -1833,8 +1956,9 @@ function success(o){
   if(G.streak>=G.L.goal){ recordPass(); (wasHidden?spoken.then(()=>wait((soundOn?P.after:0)+hold)):wait(AWAY_MS+500)).then(()=>{ if(G===g&&$app.querySelector('#hintArea')) startRest(); }); return; }
   // 학생 단어를 다 읽고 쉰 뒤에 컴퓨터 단어로(SETTINGS.pace: 모든 수준 1초·최소 2초)
   Promise.all([spoken.then(()=>wait((soundOn?P.after:0)+hold)),wait(P.gap)]).then(()=>{ if(G!==g) return;
-    const next=pickCpu(last(o.w));
-    if(!next){ toast('🤖','컴퓨터가 졌어요!',`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();archiveChain();feedDivider();setCpu(pickCpu(null));}); return; }
+    // 소리 잇기: 학생 단어의 끝소리로 시작
+    const next=pickCpu(G.L.sound?endCons(o.w):last(o.w));
+    if(!next){ toast('🤖','컴퓨터가 졌어요!',G.L.sound?esc(gv('알림','컴퓨터짐')):`컴퓨터가 <b>${esc(last(o.w))}</b>로 시작하는 단어를 못 찾았어요. 새 단어로 다시 시작해요.`,'계속',()=>{G.used.clear();archiveChain();feedDivider();setCpu(pickCpu(null));}); return; }
     setCpu(next);
   });
 }
@@ -2004,6 +2128,14 @@ function useHint(){
     const keepPlaced=G.placed; render(); G.placed=keepPlaced; if(G.blockDraw&&m==='blocks') G.blockDraw();
     msg('💡 한 글자를 더 보여 줬어요.','info'); return;
   }
+  // 소리 잇기: ① 끝소리 이름 ② 뜻 ③ 이어 갈 단어의 뜻과 첫 글자
+  if(G.L.sound){
+    if(G.hintStep>=3){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
+    G.hintUsed=true; G.clean=false; G.turnHint=true; consumeHint(); G.hintStep++;
+    if(G.hintStep===3){ G.hintWord=exampleSound(endS(G.cur.w)); if(G.hintWord) nbAdd(G.hintWord.w,'hint'); }
+    const keep=$app.querySelector('#inp')?.value||''; render(); const inp=$app.querySelector('#inp'); if(inp) inp.value=keep;
+    return;
+  }
   // 듣고 쓰기·듣기 챌린지(단어가 아직 안 보일 때): 시작 글자 대신 끝 글자를 찾을 단서. ① 끝에서 두 번째 글자와 위치 ② 뜻
   if(G.listen&&!G.revealed){
     if(G.hintStep>=LISTEN_HINTS){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
@@ -2034,6 +2166,8 @@ const LISTEN_HINTS=2;
 const penPattern=w=>w.split('').map((c,i)=>i===w.length-2?c:'□').join(' ');
 function showHint(){
   const area=$app.querySelector('#hintArea'); const ch=last(G.cur.w);
+  if(G.L.sound){ const c=G.cur, n=G.hintStep, h=G.hintWord;
+    area.innerHTML=`<div class="hintbox">💡 ${esc(gv('힌트','끝소리').replace('{끝소리}',soundName(endS(c.w)[0],c.w)))}${n>=2?`<div>${esc(gv('힌트','뜻').replace('{뜻}',plainKo(c.ko)))}</div>`:''}${n>=3&&h?`<div>${esc(gv('힌트','예시'))} <b>${esc(plainKo(h.ko))}</b> <span class="word">${esc(disp(h)[0]+' _'.repeat(h.w.length-1))}</span></div>`:''}</div>`; return; }
   if(G.listen&&!G.revealed){
     const c=G.cur, w=c.w, k=w.length, n=G.hintStep;
     area.innerHTML=`<div class="hintbox lhint">

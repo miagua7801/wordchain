@@ -33,6 +33,7 @@ jobs:
           cp dist/version.json _site/version.json
           cp -r icons manifest.webmanifest _site/
           cp intro.html _site/intro.html
+          cp allowed-words.txt sound-guide.txt _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

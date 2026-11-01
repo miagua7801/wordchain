@@ -1,0 +1,39 @@
+소리 잇기: 컴퓨터 출제 후보 단어 (교사 검토용, tools/make-sound.py가 만듦. 이 파일을 고쳐도 앱은 바뀌지 않음)
+표시: * 맛보기에도 나올 수 있는 단어(기본 어휘 ★·★★ 또는 소리 잇기용 추가 단어). 맛보기는 /tʃ/ /ʃ/ /θ/ /ð/ /f/ 소리만 냄
+
+[/tʃ/ ch '취' 소리] 27개
+approach* attach* beach* bench* branch* bunch* catch* church* coach* each* lunch* march* match* much* peach* pitch* punch* reach* rich* scratch* search* speech* stretch* such* switch* teach* touch*
+  발음이 여럿이라 출제에서 뺀 단어: research sandwich watch which
+
+[/ʃ/ sh '쉬' 소리] 16개
+brush* bush* cash* crash* dish* finish* fish* flash* fresh* publish punish* push* rush* smash* trash* wish*
+  발음이 여럿이라 출제에서 뺀 단어: establish wash
+
+[/θ/ 떨리지 않는 th] 38개
+bath* beneath* birth* booth* both* breath* cloth* death* depth* earth* faith* forth* fourth growth* health* hundredth math* month* moth* mouth* myth ninth* north* path* seventh sheath* sixth south* teeth tenth* tooth* truth* twelfth wealth* width* worth* wreath* youth*
+  발음이 여럿이라 출제에서 뺀 단어: eighth eleventh fifth length strength twentieth with
+
+[/ð/ 떨리는 th] 9개
+bathe* breathe* clothe* loathe* seethe* smooth* soothe* sunbathe* teethe*
+  발음이 여럿이라 출제에서 뺀 단어: with
+
+[/f/ f 소리] 34개
+beef* belief* brief* chef* chief* cliff* deaf giraffe* graph* half* herself himself itself knife* laugh* leaf* life* loaf myself off* photograph* proof* rough* safe* scarf* self* shelf* staff* stuff* thief* tough* wife* wildlife wolf
+  발음이 여럿이라 출제에서 뺀 단어: cough enough golf paragraph relief roof yourself
+
+[/k/ k 소리] 137개
+ache antique ask attack awake back backpack bake bank bark basic bike black blank blink block book brake break brick cake carsick characteristic check cheek chopstick classic clerk click clock comic cook crack crosswalk dark deck desk disc disk dislike domestic drink drumstick duck earthquake electric fabric fantastic feedback folk fork graphic headache hike homework ink joke junk kick knock lack lake landmark like link lock logic look luck magic make mark mask milk mistake music neck network notebook oak pack panic park pick picnic pink plastic pork programmatic public quick risk rock romantic seek shake shock sick sink smoke snack snake sock speak steak stick stock stomach stomachache strike stuck symbolic take talk tank teamwork technique textbook thank thick think toothache topic track traffic trick truck trunk unique unlike wake weak week wink work wreck yolk
+  발음이 여럿이라 출제에서 뺀 단어: arctic automatic chalk mechanic remark specific walk
+
+[/s/ s 소리] 182개
+access across actress advance ambulance announce annoyance appearance assess attendance avoidance awareness balance base bless bounce box brightness bus canvas carelessness case chance chase choice circumstance class coldness commerce compass conscious convince course crisis cross curious dance dangerous darkness defense delicious dependence depress device discuss displace distance divorce dress else embarrass enforce entrance evidence expense experience express face fairness false famous fence fitness fix floss force fox freshness gas geese generous genius glance glass goose gorgeous grace grass greatness guess happiness horse house ice ignorance illness influence instance insurance intense juice kindness laziness less lettuce license lighthouse loneliness loose loss madness mass mathematics mess mice miss mix mouse necklace nervous nevertheless nice nurse obvious occurrence octopus office once palace pants pass patience peace performance perhaps piece place plus police politeness politics possess presence press previous price priceless prince princess promise pronounce purchase purpose quietness race release resource rice rudeness sadness sauce science sense sentence serious shyness sickness since slice source space stress success surface sweetness tax tense thickness thus tiredness trace twice universe unless usefulness various voice waitress wax weakness worse yes
+  발음이 여럿이라 출제에서 뺀 단어: acceptance address advice analysis anxious audience basis boss business close complex converse database difference disappearance emptiness enormous excuse finance focus forgiveness goodness impress increase introduce its justice last most next notice practice process produce progress reduce relax replace service softness tennis this use
+
+[/dʒ/ j '쥐' 소리] 21개
+age arrange bridge cage challenge change charge college edge engage exchange garbage judge large marriage page range stage strange teenage wage
+  발음이 여럿이라 출제에서 뺀 단어: advantage average cabbage cottage courage damage disadvantage discharge encourage heritage huge image knowledge language manage message orange package sausage village
+
+[/n/ n 소리] 259개
+action addiction admiration affection afternoon airline airplane alien alone appreciation assign attention attraction bacon badminton balloon bean begin billion bin bone brain broken brown burn button cameraman campaign cancellation cannon captain cartoon celebration certain chain chairman champion chicken children civilization clean coin collection combination comedian common communication comparison competition complain completion concern condition cone congratulation connection consideration contain conversation corn correction cousin crayon creation crown curtain dawn decision decoration define description design destruction discipline discussion division dolphin donation down downtown dozen dragon drone earn electrician even everyone examination examine exhibition expectation explain explanation expression fan fashion fasten fiction fine formation foundation frighten frozen fun function gain garden govern green happen headline heaven hidden hometown imagination imagine inspiration installation intention invention invitation iron join kindergarten kitchen lane lantern lawn lean learn lemon lesson librarian line lion listen loan machine magazine magician main maintain man marathon mean medicine melon men mention mine mission modern moon motion mountain musician nation none noon notion occasion occupation ocean onion online open opinion organization origin outline oven own oxen pain pan pardon participation pattern pen person pin pine plain plan plane poison politician pollen pollination pollution population preparation prevention prison profession queen rain reason recommendation recreation region relation relaxation repetition reproduction ribbon run scan scene screen season section sensation session shine sign situation skin slogan snowman son soon spin spoon station stone sudden suggestion sun teen telephone television then thin tin tone town tradition train transportation tune turn twin union upon vacation van version violin vision warn watermelon weapon win woman women wooden yawn zone
+  발음이 여럿이라 출제에서 뺀 단어: admission again anyone around between businessman can citizen combine consumption cooperation cotton determine direction education emotion engine entertain exploration fisherman foreign fortune gentleman graduation human hurricane information introduction often postman production pronunciation protection pumpkin question reception reduction remain return ruin second submarine sunscreen surgeon than translation veterinarian western when within
+

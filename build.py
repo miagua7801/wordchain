@@ -26,7 +26,20 @@ def scowl_notice(src):
     return cp+'\n'+' '.join(perm)
 notice=scowl_notice(words) if words else ''
 if words and not notice: sys.exit('wordlist.js 머리 주석에서 SCOWL 고지문을 찾지 못함')
-out=app.replace('/*__VOCAB__*/',open('vocab.js',encoding='utf-8').read()+'\n'+words+'\n'+bl)
+# 도전 수준 판정 자료: 변화형(data/inflections.tsv, 앱에는 종류별 변화형만)과 허용 목록(allowed-words.txt, 웹에서는 앱이 이 파일을 다시 읽음)
+import json
+forms={'v':[],'n':[],'a':[]}
+for l in open('data/inflections.tsv',encoding='utf-8').read().splitlines()[1:]:
+    w,_,k=l.split('\t')
+    if not BL.blocked(w,block): forms[k].append(w)
+allowed=[w for w in (l.strip().lower() for l in open('allowed-words.txt',encoding='utf-8')) if re.fullmatch('[a-z]+',w) and not BL.blocked(w,block)]
+forms_js='const INFLECT='+json.dumps({k:'|'.join(v) for k,v in forms.items()})+';\nconst ALLOWED_WORDS='+json.dumps('|'.join(allowed))+';\n'
+# 소리 잇기 자료: 단어별 첫소리·끝소리(data/sound-pron.tsv), 출제 후보(data/sound-cpu.txt), 문구(sound-guide.txt, 웹에서는 앱이 이 파일을 다시 읽음)
+pron={}
+for l in open('data/sound-pron.tsv',encoding='utf-8').read().splitlines()[1:]:
+    k,ws=l.split('\t'); pron[k]=ws
+forms_js+='const SOUND_PRON='+json.dumps(pron)+';\nconst SOUND_CPU='+json.dumps('|'.join(open('data/sound-cpu.txt',encoding='utf-8').read().split()))+';\nconst SOUND_GUIDE='+json.dumps(open('sound-guide.txt',encoding='utf-8').read(),ensure_ascii=False)+';\n'
+out=app.replace('/*__VOCAB__*/',open('vocab.js',encoding='utf-8').read()+'\n'+words+'\n'+bl+'\n'+forms_js)
 # 화면 아래 '버전' 표시용 빌드 시각(한국 시간) — 예전 페이지가 캐시에 남아 있는지 확인할 때 씀
 build=datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
 out=out.replace('__BUILD__',build)

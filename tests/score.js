@@ -55,7 +55,7 @@ const {target,open,startLevel}=require('./lib');
   ok((await p.textContent('#tip')).includes('최고')&&(await p.textContent('#tip')).includes('점'),'단계 맵 말풍선: 이 단계 최고 점수');
   await p.click('#bdBtn'); await p.waitForTimeout(200);
   const nb=(await p.$$('.bdg')).length, ng=(await p.$$('.bdg.got')).length;
-  ok(nb===14&&ng>=2,`배지 화면(저장소를 비운 뒤 얻은 첫걸음·힌트 없이): ${nb}개 중 ${ng}개 획득(진하게), 나머지는 조건과 함께 흐리게`);
+  ok(nb===16&&ng>=2,`배지 화면(저장소를 비운 뒤 얻은 첫걸음·힌트 없이): ${nb}개 중 ${ng}개 획득(진하게), 나머지는 조건과 함께 흐리게`);
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);
 })();
