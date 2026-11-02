@@ -21,7 +21,7 @@ const {target,open,startLevel}=require('./lib');
   await p.hover('[data-lv="3"]'); await p.waitForTimeout(150); const tip3=await p.textContent('#tip');
   ok(rn.includes('하트 3개')&&rn.includes('다 잃으면 처음부터')&&!rn.includes('연속 기록')&&tip3.includes('7번 성공 · ❤️ 3'),'보통 규칙 창: "하트 3개 … 다 잃으면 처음부터", 단계 맵 말풍선 "7번 성공 · ❤️ 3"');
   await p.click('#chg'); const rh=await introRules('hard'); await p.click('#chg'); const rb=await introRules('basic');
-  ok(rh.includes('하트 3개')&&rb.includes('연속 기록이 0부터')&&rb.includes('연속으로 성공')&&!rb.includes('하트'),'도전은 하트, 기초는 그대로(연속 기록)');
+  ok(rh.includes('하트 3개')&&rb.includes('하트 2개')&&rb.includes('성공'),'도전은 하트, 기초는 그대로(연속 기록)');
 
   // 2. 틀리면 하트 1개, 성공 수 그대로
   await startLevel(p,url,'normal',2); await p.waitForTimeout(900);
@@ -55,11 +55,17 @@ const {target,open,startLevel}=require('./lib');
   await p.goto(url); await p.click('[data-t="hard"]');
   ok((await p.$$('.map .lv.cleared')).length===4&&!(await p.$eval('[data-lv="5"]',e=>e.classList.contains('locked'))),'예전 진도(도전 1~4 통과, 5단계 열림) 그대로');
 
-  // 6. 기초는 예전 방식: 틀리면 연속 기록 0, 하트 없음
+  // 6. 기초는 하트 2개: 한 번 틀리면 하트만 잃고 기록 유지, 두 번째 틀리면 처음부터
   await startLevel(p,url,'basic',4); await p.waitForTimeout(900);
   cw=await answer(); await nextCpu(cw); await wrong();
-  st=await ST(); const ovb=await p.textContent('.overlay');
-  ok(st.streak===0&&!(await p.$('.status .hearts'))&&ovb.includes('연속 기록 1 → 0'),'기초: 하트 없이 예전처럼 연속 기록 0');
+  st=await ST(); let ovb=await p.textContent('.overlay');
+  ok(st.streak===1&&st.lives===1&&ovb.includes('하트를 1개 잃었어요')&&ovb.includes('그대로예요'),'기초: 첫 번째 오답은 하트만 잃고 기록 유지');
+  cw=await p.evaluate(()=>window.__wordchain.cpu()); await p.click('#ov1'); await p.waitForTimeout(300); await wrong();
+  st=await ST(); ovb=await p.textContent('.overlay');
+  ok(st.streak===0&&ovb.includes('처음부터 다시'),'기초: 두 번째 오답은 처음부터 다시');
+  await p.click('#ov1'); await p.waitForTimeout(300); st=await ST(); ok(st.lives===2,'기초: 다시 시작하면 하트 2개');
+  await wrong(); ovb=await p.textContent('.overlay');
+  ok(!ovb.includes('0 →')&&!ovb.includes('→ 0')&&!!(await p.$('#ansBox')),'기초: 기록이 0일 때 숫자 없이 정답 강조 — '+(await p.textContent('#ansBox')).trim());
   await p.click('#ov1');
   if(errs.length) console.log('errors',errs);
   await b.close(); process.exit(fail||errs.length?1:0);

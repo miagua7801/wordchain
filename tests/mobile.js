@@ -21,6 +21,26 @@ const {target,open,startLevel}=require('./lib');
     }
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close();
   }
+  // 휴대폰 잘림·겹침: 힌트 상자, 배지 알림, 키보드 뒤 메시지, 키보드 안내
+  { const {b,p,errs}=await open({viewport:{width:375,height:700},isMobile:true,hasTouch:true}); await p.addInitScript(fakeVV);
+    await startLevel(p,url,'normal',3); await p.waitForTimeout(500);
+    for(let i=0;i<3;i++){ await p.evaluate(()=>document.querySelector('#hintBtn').click()); await p.waitForTimeout(500); }
+    let r=await p.evaluate(()=>{ const q=document.querySelector('#hintArea .hintbox').getBoundingClientRect(); return [q.top,q.bottom,innerHeight]; });
+    ok(r[0]>=0&&r[1]<=r[2]+1,`휴대폰: 힌트 3번 뒤 힌트 상자가 화면 안(${Math.round(r[0])}~${Math.round(r[1])}/${r[2]})`);
+    await startLevel(p,url,'normal',3); await p.waitForTimeout(500);
+    const cw=await p.evaluate(()=>window.__wordchain.cpu()), w=await p.evaluate(ch=>window.__wordchain.nextCpu(ch),cw[cw.length-1]);
+    await p.fill('#inp',w.toLowerCase()); await p.press('#inp','Enter'); await p.waitForSelector('.badge-note',{timeout:3000});
+    r=await p.evaluate(()=>{ const n=document.querySelector('.badge-note').getBoundingClientRect(), s=getComputedStyle(document.querySelector('.badge-note')), h=document.querySelector('#hintBtn')?.getBoundingClientRect(); return {top:n.top,h:n.height,pe:s.pointerEvents,hit:!!h&&!(n.bottom<h.top||n.top>h.bottom)}; });
+    ok(r.top<80&&r.h<70&&r.pe==='none'&&!r.hit,'휴대폰: 배지 알림이 위쪽에 뜨고 힌트 버튼을 가리지 않음 '+JSON.stringify(r));
+    await startLevel(p,url,'normal',3); await p.waitForTimeout(500); await p.focus('#inp'); const K=360; await p.evaluate(k=>window.__kb(k),K); await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('#hintBtn').click()); await p.waitForTimeout(300); await p.focus('#inp'); const c0=await p.evaluate(()=>{ const c=window.__wordchain.cpu(); return c[c.length-1]; });
+    await p.fill('#inp',c0+'zzqxv'); await p.press('#inp','Enter'); await p.waitForTimeout(400);
+    r=await p.evaluate(()=>{ const m=document.querySelector('#msg'), q=m.getBoundingClientRect(), i=document.querySelector('#inp').getBoundingClientRect(), h=document.querySelector('#hintArea .hintbox')?.getBoundingClientRect(); return {t:m.textContent.slice(0,20),m:[q.top,q.bottom],i:[i.top,i.bottom],h:h&&[h.top,h.bottom]}; });
+    ok(!!r.t&&r.m[0]>=0&&r.m[1]<=K&&r.i[1]<=K,'휴대폰: 키보드가 떠 있어도 메시지와 입력칸이 보임 '+JSON.stringify(r));
+    ok(!!r.h&&r.h[1]<=K,'  힌트 상자 아래쪽도 키보드 위 '+JSON.stringify(r.h));
+    await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },700);
+    await startLevel(p,url,'basic',3); await p.waitForTimeout(500); ok(!/Enter/.test(await p.textContent('#answer')),'휴대폰: 빈칸 안내에 Enter 없음');
+    ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 아이폰: 자판 위에 떠 있는 주소창(약 64px)에 입력칸·뜻이 가리지 않게
   { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'}); await p.addInitScript(fakeVV);
     const K=330;
