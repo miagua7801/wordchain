@@ -1,24 +1,24 @@
 소리 잇기: 컴퓨터 출제 후보 단어 (교사 검토용, tools/make-sound.py가 만듦. 이 파일을 고쳐도 앱은 바뀌지 않음)
-표시: * 맛보기에도 나올 수 있는 단어(기본 어휘 ★·★★ 또는 소리 잇기용 추가 단어). 맛보기는 /tʃ/ /ʃ/ /θ/ /ð/ /f/ 소리만 냄
+표시: * 맛보기에도 나올 수 있는 단어(기본 어휘 ★, /ð/만 smooth·breathe 예외). 맛보기는 /tʃ/ /ʃ/ /θ/ /ð/ /f/ 소리만 냄
 
 [/tʃ/ ch '취' 소리] 27개
-approach* attach* beach* bench* branch* bunch* catch* church* coach* each* lunch* march* match* much* peach* pitch* punch* reach* rich* scratch* search* speech* stretch* such* switch* teach* touch*
+approach attach beach* bench branch bunch catch* church* coach each lunch* march match much* peach pitch punch reach rich* scratch search speech stretch such switch teach* touch*
   발음이 여럿이라 출제에서 뺀 단어: research sandwich watch which
 
 [/ʃ/ sh '쉬' 소리] 16개
-brush* bush* cash* crash* dish* finish* fish* flash* fresh* publish punish* push* rush* smash* trash* wish*
+brush* bush cash* crash dish finish* fish* flash fresh* publish punish push* rush smash trash wish*
   발음이 여럿이라 출제에서 뺀 단어: establish wash
 
 [/θ/ 떨리지 않는 th] 38개
-bath* beneath* birth* booth* both* breath* cloth* death* depth* earth* faith* forth* fourth growth* health* hundredth math* month* moth* mouth* myth ninth* north* path* seventh sheath* sixth south* teeth tenth* tooth* truth* twelfth wealth* width* worth* wreath* youth*
+bath* beneath birth* booth both* breath cloth death* depth earth* faith forth fourth growth health hundredth math month* moth mouth* myth ninth north* path seventh sheath sixth south* teeth tenth tooth* truth twelfth wealth width worth wreath youth
   발음이 여럿이라 출제에서 뺀 단어: eighth eleventh fifth length strength twentieth with
 
 [/ð/ 떨리는 th] 9개
-bathe* breathe* clothe* loathe* seethe* smooth* soothe* sunbathe* teethe*
+bathe breathe* clothe loathe seethe smooth* soothe sunbathe teethe
   발음이 여럿이라 출제에서 뺀 단어: with
 
 [/f/ f 소리] 34개
-beef* belief* brief* chef* chief* cliff* deaf giraffe* graph* half* herself himself itself knife* laugh* leaf* life* loaf myself off* photograph* proof* rough* safe* scarf* self* shelf* staff* stuff* thief* tough* wife* wildlife wolf
+beef* belief brief chef chief cliff deaf giraffe graph half herself himself itself knife* laugh leaf life* loaf myself off* photograph proof rough safe* scarf self shelf staff* stuff thief tough wife* wildlife wolf
   발음이 여럿이라 출제에서 뺀 단어: cough enough golf paragraph relief roof yourself
 
 [/k/ k 소리] 137개

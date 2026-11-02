@@ -39,6 +39,14 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
     await p.fill('#inp',ans0); await p.press('#inp','Enter'); await p.waitForSelector('#qm #scard'); const c1=await p.textContent('#qm #scard'); ok(c1.includes(card0)&&c1.includes(card1),'  맞히면 소리 카드 — '+c1.slice(0,24));
     await p.waitForTimeout(3000); ok(!!(await p.$('#qm #scard')),'  3초 뒤에도 카드를 읽을 수 있음');
     await p.waitForFunction(w=>window.__wordchain.cpu()!==w,cw0,{timeout:12000}); ok(!(await p.$('#scard'))&&!!(await p.$('#inp')),'  다음 단어에서는 다시 답 전이라 카드 없음'); }
+  // 힌트: 문제당 2번. ① 컴퓨터 단어의 뜻 ② 그 단어의 앞쪽 철자(끝 글자는 숨김)
+  { await p.evaluate(()=>window.__wordchain.again()); await p.waitForSelector('#inp'); await p.evaluate(()=>window.__wordchain.forceCpu('fish')); await p.waitForSelector('#inp');
+    const hint=async()=>{ await p.evaluate(()=>document.querySelector('#hintBtn').click()); await p.waitForTimeout(100); return (await p.textContent('#hintArea')).replace(/\s+/g,' ').trim(); };
+    const left=()=>p.evaluate(()=>window.__wordchain.hints().free);
+    const f0=await left(); const h1=await hint(); ok(h1.includes('물고기')&&!/끝소리|\/[^ ]+\/|철자/.test(h1),'힌트 1: 컴퓨터 단어의 뜻 — '+h1);
+    const h2=await hint(); ok(h2.includes('물고기')&&(await p.textContent('#spellHint'))==='f i _ _','힌트 2: 앞쪽 철자(fish → f i _ _) — '+h2);
+    const f1=await left(); ok(f0-f1===2,'  힌트 2번에 2개 사용 '+f0+'→'+f1);
+    const h3=await hint(); ok((await p.textContent('#spellHint'))==='f i _ _'&&(await left())===f1&&/다 봤어요/.test(await p.textContent('#msg')),'힌트 3번째: 더 보여 주지 않고 힌트도 쓰지 않음'); }
   // 컴퓨터는 학생 단어의 끝소리로 시작하는 단어로 답함
   for(const [a,w] of [['book','kite'],['nice','sun'],['laugh','phone']]){ const o=await play(p,a,w); await p.waitForFunction(w0=>{ const c=window.__wordchain.cpu(); return c&&c!==w0; },a,{timeout:9000}); const c=await p.evaluate(()=>window.__wordchain.cpu()), m=await p.evaluate(([c,w])=>[window.__wordchain.sound.first(c),window.__wordchain.sound.end(w)],[c,w]); ok(o.r==='o'&&m[0].some(x=>m[1].includes(x)),`컴퓨터 답: ${w} 뒤에 ${c} (${m[1]} → ${m[0]})`); }
   // 출제 범위
@@ -53,7 +61,7 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
     // 앞 네 번은 모두 틀림(배지 없음). 뒤 두 번은 맞힌 것으로 쳐서 배지가 한 번만 나오는지 봄
     if(round===4) ok(await p.evaluate(()=>!(JSON.parse(localStorage.getItem('wordchain-badges-v1')||'[]').some(x=>x.id==='master-taste'||x.id==='nohint'))),'맛보기를 다 틀리면 소리 탐험가·힌트 배지 없음');
     if(round>=4) await p.evaluate(()=>window.__wordchain.tweak({rights:1}));
-    if(!round){ const te=await end(await p.evaluate(()=>window.__wordchain.sound.cpu())); ok(te.join()==='CH,DH,F,SH,TH','맛보기 끝소리 5가지 '+te); ok(/문제 1 \/ 5/.test(await p.textContent('#gstat')),'상태 줄: 문제 1 / 5'); ok(!(await p.$('#scard')),'첫 문제: 답을 내기 전에는 소리 카드 없음');
+    if(!round){ const te=await end(await p.evaluate(()=>window.__wordchain.sound.cpu())); ok(te.join()==='CH,DH,F,SH,TH','맛보기 끝소리 5가지 '+te); { const tw=await p.evaluate(()=>window.__wordchain.sound.cpu()), bad=await p.evaluate(ws=>ws.filter(w=>window.__wordchain.core(w)!==1&&!['smooth','breathe'].includes(w)),tw); ok(!bad.length&&tw.includes('smooth')&&tw.includes('breathe'),'맛보기 출제: ★ 단어와 /ð/ 예외 2개만 '+tw.length+'개 '+bad.slice(0,5)); } ok(/문제 1 \/ 5/.test(await p.textContent('#gstat')),'상태 줄: 문제 1 / 5'); ok(!(await p.$('#scard')),'첫 문제: 답을 내기 전에는 소리 카드 없음');
       // 첫 문제가 이미 /θ/였으면 math는 처음 만난 소리가 아니라 카드가 없으므로 fish로
       const fw=(await p.evaluate(()=>window.__wordchain.sound.asked()[0]))==='TH'?'fish':'math';
       await p.evaluate(w=>window.__wordchain.forceCpu(w),fw); await p.waitForSelector('#inp'); ok(!(await p.$('#scard')),'  컴퓨터 단어가 바뀌어도 답 전에는 없음');

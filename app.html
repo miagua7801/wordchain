@@ -674,6 +674,8 @@ const formMsg=(w,k)=>`${w}${josa(w)} 쓸 수 없어요. ${FORM_BASE[k]}으로 �
 const PRON=new Map(); Object.entries(SOUND_PRON).forEach(([k,ws])=>{ const [f,l]=k.split(' '); ws.split('|').forEach(w=>{ if(!PRON.has(w)) PRON.set(w,[]); PRON.get(w).push([f,l]); }); });
 const VOWEL_SOUNDS=new Set('AA AE AH AO AW AY EH ER EY IH IY OW OY UH UW'.split(' '));
 const IPA={AA:'ɑ',AE:'æ',AH:'ʌ',AO:'ɔ',AW:'aʊ',AY:'aɪ',EH:'ɛ',ER:'ɝ',EY:'eɪ',IH:'ɪ',IY:'i',OW:'oʊ',OY:'ɔɪ',UH:'ʊ',UW:'u',B:'b',CH:'tʃ',D:'d',DH:'ð',F:'f',G:'g',HH:'h',JH:'dʒ',K:'k',L:'l',M:'m',N:'n',NG:'ŋ',P:'p',R:'r',S:'s',SH:'ʃ',T:'t',TH:'θ',V:'v',W:'w',Y:'j',Z:'z',ZH:'ʒ'};
+// 맛보기 출제는 기본 어휘 ★만. /ð/로 끝나는 ★ 단어는 없어 쉬운 ★★ 두 개만 예외
+const TASTE_DH=['smooth','breathe'];
 const SOUND_TARGET={taste:['CH','SH','TH','DH','F'],plus:['CH','SH','TH','DH','F','K','S','JH','N']};
 function parseGuide(t){ const g={}; let sec=null; t.split(/\r?\n/).forEach(l=>{ l=l.trim(); if(!l||l[0]==='#') return; const m=/^\[(.+)\]$/.exec(l); if(m){ sec=m[1]; g[sec]=[]; } else if(sec) g[sec].push(l); }); return g; }
 let GUIDE=parseGuide(SOUND_GUIDE);
@@ -697,7 +699,7 @@ const soundCardHTML=k=>{ const ls=guideLines('카드 '+k,G.L.sound); return ls.l
 // 소리 단계 준비(start에서): 출제 단어, 예시·힌트 단어(자음으로 끝나는 단어만)
 function soundSetup(G,L){ const tg=SOUND_TARGET[L.sound];
   G.pool=G.pool.filter(x=>PRON.has(x.w)&&endCons(x.w).length);
-  G.cpuPool=SOUND_CPU.split('|').map(w=>DICT.get(w)).filter(x=>x&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!formKind(x.w)&&PRON.has(x.w)&&tg.includes(endS(x.w)[0])&&(L.sound==='plus'||x.core<=2||SOUND_ONLY.has(x.w)));
+  G.cpuPool=SOUND_CPU.split('|').map(w=>DICT.get(w)).filter(x=>x&&!isBlocked(x.w)&&!NO_ASK.has(x.w)&&!formKind(x.w)&&PRON.has(x.w)&&tg.includes(endS(x.w)[0])&&(L.sound==='plus'||x.core===1||TASTE_DH.includes(x.w)));
   G.plan=shuffle(tg.slice()); G.cardSeen=new Set(); G.sawTH=false; G.card=''; G.askedS=[]; }
 // 컴퓨터 단어 고르기: 학생 단어의 끝소리(starts)로 시작하고 목표 끝소리로 끝남. starts가 null이면 시작 소리 제한 없음
 function pickSound(starts){
@@ -753,7 +755,7 @@ const TRACKS={
     {id:5,name:'듣기 챌린지',desc:'컴퓨터 단어를 소리로만 들어요. 들은 단어의 끝 글자로 시작하는 4글자 이상 단어를 써요. 다시 듣기 1번.',mode:'type',pool:2,cpu:2,goal:6,min:4,cpuMin:5,listen:'force'}
   ]},
   // 소리 잇기: 끝소리로 잇기. 첫 화면 수준 목록이 아니라 따로 묶은 버튼으로 들어감(sound). goal: 맛보기는 문제 수, 도전+는 성공 수
-  taste:{name:'소리 잇기 맛보기',tag:'Sound',icon:'🔍',sound:true,desc:'끝소리로 이어요.',levels:[{id:1,name:'맛보기',desc:'끝소리로 이어요. 5문제를 끝까지 해요.',mode:'type',pool:2,cpu:2,goal:5,min:3,listen:'force',sound:'taste'}]},
+  taste:{name:'소리 잇기 맛보기',tag:'Sound',icon:'🔍',sound:true,desc:'끝소리로 이어요.',levels:[{id:1,name:'맛보기',desc:'끝소리로 이어요. 5문제를 끝까지 해요.',mode:'type',pool:2,cpu:2,goal:5,min:3,star:1,listen:'force',sound:'taste'}]},
   plus:{name:'소리 잇기 도전+',tag:'Sound+',icon:'🔊',sound:true,desc:'끝소리로 이어요.',levels:[{id:1,name:'도전+',desc:'끝소리로 이어요.',mode:'type',pool:2,cpu:2,goal:8,min:3,listen:'force',sound:'plus'}]}
 };
 const HINTS=3;
@@ -2186,11 +2188,11 @@ function giveHint(){
     const keepPlaced=G.placed; render(); G.placed=keepPlaced; if(G.blockDraw&&m==='blocks') G.blockDraw();
     msg('💡 한 글자를 더 보여 줬어요.','info'); return;
   }
-  // 소리 잇기: ① 끝소리 이름 ② 뜻 ③ 이어 갈 단어의 뜻과 첫 글자
+  // 소리 잇기: 문제당 2번. ① 컴퓨터 단어의 뜻 ② 그 단어의 앞쪽 철자(절반, 끝 글자는 숨김)
   if(G.L.sound){
-    if(G.hintStep>=3){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
+    if(G.hintStep>=2){ msg('이 단어에 쓸 수 있는 힌트를 다 봤어요.','info'); return; }
     G.hintUsed=true; G.clean=false; G.turnHint=true; consumeHint(); G.hintStep++;
-    if(G.hintStep===3){ G.hintWord=exampleSound(endS(G.cur.w)); if(G.hintWord) nbAdd(G.hintWord.w,'hint'); }
+    if(G.hintStep===1) nbAdd(G.cur.w,'hint');
     const keep=$app.querySelector('#inp')?.value||''; render(); const inp=$app.querySelector('#inp'); if(inp) inp.value=keep;
     return;
   }
@@ -2224,8 +2226,8 @@ const LISTEN_HINTS=2;
 const penPattern=w=>w.split('').map((c,i)=>i===w.length-2?c:'□').join(' ');
 function showHint(){
   const area=$app.querySelector('#hintArea'); const ch=last(G.cur.w);
-  if(G.L.sound){ const c=G.cur, n=G.hintStep, h=G.hintWord;
-    area.innerHTML=`<div class="hintbox">💡 ${esc(gv('힌트','끝소리').replace('{끝소리}',soundName(endS(c.w)[0],c.w)))}${n>=2?`<div>${esc(gv('힌트','뜻').replace('{뜻}',plainKo(c.ko)))}</div>`:''}${n>=3&&h?`<div>${esc(gv('힌트','예시'))} <b>${esc(plainKo(h.ko))}</b> <span class="word">${esc(disp(h)[0]+' _'.repeat(h.w.length-1))}</span></div>`:''}</div>`; return; }
+  if(G.L.sound){ const c=G.cur, n=G.hintStep, w=disp(c), shown=Math.ceil(w.length/2);
+    area.innerHTML=`<div class="hintbox">💡 ${esc(gv('힌트','뜻').replace('{뜻}',plainKo(c.ko)))}${n>=2?`<div>${esc(gv('힌트','철자'))} <span class="word" id="spellHint">${esc(w.split('').map((x,i)=>i<shown?x:'_').join(' '))}</span></div>`:''}</div>`; return; }
   if(G.listen&&!G.revealed){
     const c=G.cur, w=c.w, k=w.length, n=G.hintStep;
     area.innerHTML=`<div class="hintbox lhint">

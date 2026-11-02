@@ -67,13 +67,14 @@ for w, raw in raw_of.items():
         for e in ends:
             if e in NAME: multi[e].append(w)
     elif prons[w][0][-1] in NAME: cand[prons[w][0][-1]].append(w)
-taste = lambda w: w in snd or w in core
+TASTE_DH = {'smooth', 'breathe'}   # 맛보기는 ★만. /ð/로 끝나는 ★ 단어가 없어 예외로 둠(app.html TASTE_DH와 같게)
+taste = lambda w: core.get(w) == 1 or w in TASTE_DH
 order = TARGET['plus']
 with open('data/sound-cpu.txt', 'w', encoding='utf-8', newline='\n') as f:
     f.write('\n'.join(sorted(w for e in order for w in cand[e])) + '\n')
 with open('sound-candidates.txt', 'w', encoding='utf-8', newline='\n') as f:
     f.write('소리 잇기: 컴퓨터 출제 후보 단어 (교사 검토용, tools/make-sound.py가 만듦. 이 파일을 고쳐도 앱은 바뀌지 않음)\n')
-    f.write('표시: * 맛보기에도 나올 수 있는 단어(기본 어휘 ★·★★ 또는 소리 잇기용 추가 단어). 맛보기는 /tʃ/ /ʃ/ /θ/ /ð/ /f/ 소리만 냄\n\n')
+    f.write('표시: * 맛보기에도 나올 수 있는 단어(기본 어휘 ★, /ð/만 smooth·breathe 예외). 맛보기는 /tʃ/ /ʃ/ /θ/ /ð/ /f/ 소리만 냄\n\n')
     for e in order:
         ws = sorted(cand[e])
         f.write(f'[{NAME[e]}] {len(ws)}개\n' + ' '.join(w + ('*' if taste(w) and e in TARGET['taste'] else '') for w in ws) + '\n')
