@@ -41,6 +41,18 @@ const {target,open,startLevel}=require('./lib');
     await p.evaluate(h=>{ document.activeElement.blur(); window.__kb(h); },700);
     await startLevel(p,url,'basic',3); await p.waitForTimeout(500); ok(!/Enter/.test(await p.textContent('#answer')),'휴대폰: 빈칸 안내에 Enter 없음');
     ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
+  // 휴대폰: 단계 통과 뒤 다시 보기에서 막 올라온 말풍선이 맨 아래 안내 문구에 가리지 않음
+  { const {b,p,errs}=await open({viewport:{width:375,height:700},isMobile:true,hasTouch:true});
+    await startLevel(p,url,'normal',2); await p.waitForTimeout(600); const goal=await p.evaluate(()=>document.querySelectorAll('.status .dot').length);
+    for(let k=0;k<goal;k++){ const c=await p.evaluate(()=>window.__wordchain.cpu()), w=await p.evaluate(ch=>window.__wordchain.nextCpu(ch),c[c.length-1]);
+      await p.fill('#inp',w.toLowerCase()); await p.press('#inp','Enter'); if(k<goal-1) await p.waitForFunction(c0=>window.__wordchain.cpu()!==c0&&document.querySelector('#inp'),c,{timeout:15000}); }
+    await p.waitForSelector('#rest',{timeout:15000}); await p.evaluate(()=>window.__wordchain.restGo(2)); await p.waitForTimeout(1800);
+    let worst=-1e9, n=0; for(let i=0;i<12;i++){ const r=await p.evaluate(()=>{ const t=document.querySelector('#hlTip'); if(!t) return null; const lis=[...document.querySelectorAll('#fl li')].filter(li=>!li.classList.contains('wait')&&!li.classList.contains('up')); const l=lis[lis.length-1]; return l?[l.getBoundingClientRect().bottom,t.getBoundingClientRect().top,innerHeight,t.textContent]:null; });
+      if(r){ worst=Math.max(worst,r[0]-r[1]); n++; } await p.waitForTimeout(300); }
+    const tip=await p.textContent('#hlTip').catch(()=>'');
+    ok(n>0&&worst<=0,`휴대폰 다시 보기: 막 올라온 말풍선이 안내 문구 위에 멈춤(겹침 ${Math.round(worst)}px, ${n}번 잼)`);
+    ok(!/Enter/.test(tip),'  휴대폰 안내 문구에 Enter 없음 — '+tip);
+    ok(!errs.length,'페이지 오류 없음 '+errs.join(' | ')); await b.close(); }
   // 아이폰: 자판 위에 떠 있는 주소창(약 64px)에 입력칸·뜻이 가리지 않게
   { const {b,p,errs}=await open({viewport:{width:390,height:664},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'}); await p.addInitScript(fakeVV);
     const K=330;

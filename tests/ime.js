@@ -75,6 +75,10 @@ const KO={a:'ㅁ',b:'ㅠ',c:'ㅊ',d:'ㅇ',e:'ㄷ',f:'ㄹ',g:'ㅎ',h:'ㅗ',i:'ㅑ
   await p.waitForTimeout(100);
   const vals=await p.$$eval('.bin',a=>a.map(e=>e.value).join(''));
   ok(vals===idx.map(i=>w[i]).join('')&&!/[ㄱ-ㅣ가-힣]/.test(vals),`빈칸 채우기(${w}): 한글 자판으로 친 글자 → 칸마다 "${vals}"`);
+  // 같은 글자가 들어가는 두 빈칸을 한글 자판으로 연달아 쳐도 두 칸 모두 들어감(남은 입력 막기에 걸리지 않음)
+  for(const ww of ['every','mommy','little']){ for(let r=0;r<3;r++){ await startLevel(p,url,'basic',3); await p.waitForTimeout(300); if(!(await H(x=>window.__wordchain.forceTarget(x),ww))) continue; await p.waitForTimeout(150);
+    const ix=await p.$$eval('.bin',a=>a.map(e=>+e.dataset.i)); if(ix.length<2) continue; for(const i of ix) await koKey(ww[i]); await p.waitForTimeout(100);
+    const vv=await p.$$eval('.bin',a=>a.map(e=>e.value).join('')), want=ix.map(i=>ww[i]).join(''); if(vv!==want||r===2) ok(vv===want,`  같은 글자를 연달아(${ww}, 칸 ${ix}): "${vv}"`); if(vv!==want) break; } }
 
   // ④ 실제 한글 입력기처럼 영문 고정(읽기 전용) 칸에도 조합한 한글을 넣는 경우: 키마다 영어 한 글자만, 다음 칸에 같은 글자가 들어가지 않음
   // (입력기가 읽기 전용을 무시하는 것을 흉내: 키를 누른 뒤 지금 초점 칸의 읽기 전용을 잠깐 풀고 한글 조합을 확정)

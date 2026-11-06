@@ -73,7 +73,8 @@ const {target,open}=require('./lib');
     await typeW(mine[i]); if(i<3) await nextCpu(cw); }
   await p.waitForSelector('#rest',{timeout:5000});
   const s0=await stars(); await toReplay();
-  const pos=()=>H(()=>{ const b=document.getElementById('feed').getBoundingClientRect(), li=[...document.querySelectorAll('#fl li:not(.wait)')]; return {n:li.length,boxBottom:b.bottom,boxTop:b.top,first:li[0].getBoundingClientRect().toJSON(),last:li[li.length-1].getBoundingClientRect().toJSON()}; });
+  // boxBottom: 말풍선이 쌓이는 바닥(다시 보기 중 아래 안내 문구 자리로 늘린 여백은 빼고, 원래 여백 12px 기준)
+  const pos=()=>H(()=>{ const f=document.getElementById('feed'), b=f.getBoundingClientRect(), li=[...document.querySelectorAll('#fl li:not(.wait)')]; return {n:li.length,boxBottom:b.bottom-(parseFloat(getComputedStyle(f).paddingBottom)-12),boxTop:b.top,first:li[0].getBoundingClientRect().toJSON(),last:li[li.length-1].getBoundingClientRect().toJSON()}; });
   const shown0=(await RS()).shown;
   const an=await H(()=>{ const li=document.querySelector('#fl li.up'), cs=li&&getComputedStyle(li); return cs?{d:cs.animationDuration,f:cs.animationTimingFunction}:null; });
   await p.waitForTimeout(250); const mid=await H(()=>document.querySelector('#fl li').getBoundingClientRect().height);

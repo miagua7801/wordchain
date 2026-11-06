@@ -198,6 +198,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .feed{position:absolute;inset:0;display:flex;flex-direction:column-reverse;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:12px 4px;pointer-events:none;transition:opacity .35s;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 56px);mask-image:linear-gradient(to bottom,transparent,#000 56px)}
 .gbody:not(.free) .feed{opacity:.38}
 .gbody.resting .feed{pointer-events:auto}
+/* 다시 보기: 맨 아래 안내 문구(.hlnote) 높이만큼 비워 막 올라온 말풍선이 글자에 가리지 않게(--note는 restShow가 잼). 휴대폰 아래쪽 막대 영역도 비움 */
+.gbody.free .feed{padding-bottom:calc(var(--note,48px) + 8px + env(safe-area-inset-bottom,0px))}
 /* 휴대폰(좁은 화면·가로로 눕힌 휴대폰): 퀴즈 중에는 채팅을 숨기고(화면이 좁아 말풍선이 보였다 안 보였다 함) 통과 뒤 다시 보기에서만, 문제 창은 위쪽에 */
 @media (max-width:640px),(pointer:coarse) and (max-height:500px){.gbody:not(.resting) .feed{display:none}.gbody:not(.resting){place-items:start center}}
 .fl{list-style:none;margin:0 auto;padding:0;width:100%;max-width:540px;display:flex;flex-direction:column;gap:12px}   /* PC: 좌우 말풍선이 너무 멀지 않게 문제 창 폭으로 */
@@ -397,7 +399,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background-im
 .gift{font-size:72px;line-height:1.1;margin:6px 0}.gift.opening{animation:giftshake .7s ease}.gift.open{animation:pop .35s ease}
 @keyframes giftshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg) scale(1.05)}40%{transform:rotate(12deg) scale(1.1)}60%{transform:rotate(-8deg) scale(1.15)}80%{transform:scale(1.3);opacity:.6}}
 .hlnote{font-size:13px;color:var(--muted);margin:4px 0}
-.restlayer .hlnote{position:absolute;bottom:0;left:0;right:0;text-align:center;pointer-events:none}
+.restlayer .hlnote{position:absolute;bottom:env(safe-area-inset-bottom,0px);left:0;right:0;text-align:center;pointer-events:none}
 @media (max-width:480px),(max-height:700px){.rcard{padding:12px}.rcard .big-e{font-size:40px}.rcard p{margin:6px 0}.rstats{margin:8px 0}.rstats b{font-size:18px}.gift{font-size:56px}.nohint{margin:2px 0 4px}}
 .pop{animation:pop .35s ease}
 @keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
@@ -1662,10 +1664,11 @@ function renderGuided(){
       <p class="note center">빈칸 ${G.blankIdx.length}칸을 채우고 ${touchOnly()?'확인':'Enter'} · 첫 칸은 끝 글자</p><div class="row"><button class="btn" type="submit">확인</button></div></form>`;
     const ins=[...ans.querySelectorAll('.bin')];
     // 철자 겹침 막기: 다음 칸으로는 이번 키 입력이 다 끝난 뒤에 옮기고(같은 키의 남은 입력이 다음 칸에 들어가지 않게),
-    // 그래도 방금 다른 칸에 쓴 글자가 40ms 안에 이 빈칸에 또 들어오면 같은 키의 남은 입력으로 보고 버림(입력기·브라우저·운영체제와 관계없이)
+    // 그래도 방금 다른 칸에 쓴 글자가 40ms 안에 이 빈칸에 또 들어오면 같은 키의 남은 입력으로 보고 버림(입력기·브라우저·운영체제와 관계없이).
+    // 단, 이 칸에서 키를 새로 눌렀으면(kd: 이 칸의 마지막 키 누름 시각) 같은 글자를 연달아 친 것이므로 받음(every의 e·e, mommy의 m·m)
     let lastPut=null;
     const fix=(el,e)=>{ if(e&&e.isComposing) return; const raw=el.value; const v=koToEn(raw).toLowerCase().replace(/[^a-z]/g,''), ch=v.slice(-1);
-      if(ch&&lastPut&&lastPut.el!==el&&lastPut.ch===ch&&Date.now()-lastPut.t<40&&!G.blankVals[el.dataset.i]){ el.value=''; G.blankVals[el.dataset.i]=''; return; }
+      if(ch&&lastPut&&lastPut.el!==el&&lastPut.ch===ch&&Date.now()-lastPut.t<40&&!(el._kd>=lastPut.t)&&!G.blankVals[el.dataset.i]){ el.value=''; G.blankVals[el.dataset.i]=''; return; }
       el.value=ch; G.blankVals[el.dataset.i]=el.value;
       if(KO_RE.test(raw)) msg('한글 자판이에요. 한/영 키를 눌러 영어로 바꿔 주세요.','info');
       // 첫 글자 칸: 맞으면 연결선이 이어지고, 틀리면 끝 글자를 다시 보게 함(다음 칸으로 넘어가지 않음)
@@ -1675,7 +1678,7 @@ function renderGuided(){
       // 터치 기기는 바로 옮김(아이폰은 setTimeout 안에서 초점을 옮기면 자판이 내려갔다 올라오며 화면이 흔들릴 수 있음). 실제 키보드(PC·크롬북)는 키 입력이 끝난 뒤에
       if(el.value){ lastPut={el,ch:el.value,t:Date.now()}; const nx=ins[ins.indexOf(el)+1];
         if(nx){ if(window.matchMedia&&matchMedia('(pointer:coarse)').matches) nx.focus({preventScroll:true}); else setTimeout(()=>{ if(document.activeElement===el) nx.focus({preventScroll:true}); },0); } } };
-    ins.forEach(el=>{ el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
+    ins.forEach(el=>{ el.addEventListener('keydown',()=>{ el._kd=Date.now(); },true); el.addEventListener('input',e=>fix(el,e)); el.addEventListener('compositionend',()=>setTimeout(()=>fix(el),0));
       el.addEventListener('focus',()=>el.select());
       el.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!el.value){ const pv=ins[ins.indexOf(el)-1]; if(pv){ e.preventDefault(); pv.focus({preventScroll:true}); pv.value=''; G.blankVals[pv.dataset.i]=''; } } }); });
     ins.forEach(el=>engKeys(el,true));
@@ -2097,8 +2100,8 @@ function restSummary(box){
 function restShow(box){
   if(REST.L.sound==='taste'&&!REST.rights){ restGo(4); return; }   // 맛보기를 하나도 못 맞히면 다시 보기·상자 없이 끝
   const S=REST, n=S.hl.length, fl=$app.querySelector('#fl');
-  box.innerHTML=`<p class="hlnote" id="hlTip">말풍선을 누르면 단어를 읽어 줘요.${S.shown<n?' 화면을 누르거나 Enter를 누르면 전부 보여요.':''}</p>`;
-  $app.querySelector('#gbody').classList.add('free');
+  box.innerHTML=`<p class="hlnote" id="hlTip">말풍선을 누르면 단어를 읽어 줘요.${S.shown<n?(touchOnly()?' 화면을 누르면 전부 보여요.':' 화면을 누르거나 Enter를 누르면 전부 보여요.'):''}</p>`;
+  const gb=$app.querySelector('#gbody'); gb.classList.add('free'); gb.style.setProperty('--note',box.querySelector('#hlTip').offsetHeight+'px');
   fl.innerHTML=''; fl.setAttribute('aria-label','방금 통과한 단계의 끝말잇기');
   S.hl.forEach((x,i)=>{ const li=feedLi(x,i,false,true); if(i>=S.shown) li.classList.add('wait'); fl.appendChild(li); });
   // 말풍선을 누르면 읽기(다시 보기 중에도, 이미 나온 말풍선이면). "다음 ▶"이 나온 뒤에는 화면 전체 딤드가 덮어 눌리지 않음
