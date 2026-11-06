@@ -684,7 +684,8 @@ let GUIDE=parseGuide(SOUND_GUIDE);
 if(/^https?:$/.test(location.protocol)) fetch('sound-guide.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{ if(t&&/\[소리 이름\]/.test(t)) GUIDE=parseGuide(t); }).catch(()=>{});
 const gv=(sec,key)=>{ const l=(GUIDE[sec]||[]).find(x=>x.startsWith(key+'=')); return l?l.slice(key.length+1):''; };
 const firstS=w=>[...new Set((PRON.get(w)||[]).map(x=>x[0]))];
-const endS=w=>[...new Set((PRON.get(w)||[]).map(x=>x[1]))];
+// 끝소리: -er로 끝나는 단어(shoulder, teacher의 /ɚ/)는 r이 들리므로 모음이 아니라 /r/로 봄(r로 시작하는 단어로 이어 감)
+const endS=w=>[...new Set((PRON.get(w)||[]).map(x=>x[1]==='ER'?'R':x[1]))];
 const endCons=w=>endS(w).filter(x=>!VOWEL_SOUNDS.has(x));
 const soundName=(k,w)=>gv('소리 이름',k)||`/${IPA[k]||k}/ ${w?w[0]:''} 소리`;
 // 오답 설명: sound-guide.txt [오답 설명]의 자리에 단어와 소리 이름을 넣음

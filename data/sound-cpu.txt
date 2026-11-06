@@ -582,6 +582,7 @@ since
 sink
 situation
 sixth
+skeleton
 skin
 slice
 slogan

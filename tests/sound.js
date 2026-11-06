@@ -27,7 +27,11 @@ async function play(p,a,w){ await p.evaluate(()=>window.__wordchain.again()); aw
   await startSnd(p,url,'plus');
   const note=async(w,want,name)=>{ const before=await p.evaluate(()=>window.__wordchain.state()); const o=await play(p,'book',w); const st=await p.evaluate(()=>window.__wordchain.state()); ok(o.r==='i'&&o.text.includes(want)&&st.lives===before.lives,`${name}: "${o.text}"`); };
   await note('happy','모음 소리로 끝나는 단어는 쓸 수 없어요. 다른 단어를 입력해 보세요','(학생) happy');
-  await note('tea','모음 소리로 끝나는','(학생) tea'); await note('teacher','모음 소리로 끝나는','(학생) teacher');
+  await note('tea','모음 소리로 끝나는','(학생) tea');
+  // -er로 끝나는 단어는 /r/로 끝남: kite 뒤에 teacher는 정답, 컴퓨터는 r로 시작하는 단어로 이어 감
+  { ok((await p.evaluate(()=>window.__wordchain.sound.end('shoulder'))).join()==='R','shoulder의 끝소리는 /r/'); const o=await play(p,'kite','teacher'); ok(o.r==='o','(학생) teacher: 모음 안내가 아니라 정답 — '+o.r);
+    await p.waitForFunction(()=>{ const c=window.__wordchain.cpu(); return c&&c!=='kite'||!!document.querySelector('.overlay'); },null,{timeout:9000}); const nx=await p.evaluate(()=>window.__wordchain.cpu()), lost=!!(await p.$('.overlay'));
+    if(lost) await p.click('#ov1'); ok(lost||(await p.evaluate(w=>window.__wordchain.sound.first(w),nx)).includes('R'),'  컴퓨터는 r 소리로 시작하는 단어로 이어 감 — '+(lost?'(이을 단어 없음)':nx)); }
   await note('cats','cats는 쓸 수 없어요. 단수형으로 입력해 보세요.','(학생) cats');
   await note('running','running은 쓸 수 없어요. 원형으로','(학생) running');
   await note('zzqxv','다른 단어를 입력해 보세요','(학생) 사전에 없는 단어');
